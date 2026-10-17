@@ -121,8 +121,7 @@
     preloadName();
   }
 
-  // 占位，后续用 Edit 补全 loadApprove / loadCustomer / 子页 / 消息 等
-  window.APP_STUB = true;
+  // ===== 导出（HTML onclick 使用）=====
 
   window.App = {
     init: init,
@@ -458,6 +457,9 @@
       var el = $('sub-loading'); if (el) el.remove();
       if (!res || res.code !== 0) { box.innerHTML = '<div class="empty retry" onclick="App.loadSubList()">' + OA.esc((res && res.msg) || '加载失败') + '，点击重试</div>'; s.loading = false; return; }
       var rows = res.data || [];
+      // 缓存行数据（问答详情直接用列表数据渲染，对齐 App openArticleDetail）
+      if (!s.rows) s.rows = {};
+      for (var ri = 0; ri < rows.length; ri++) { if (rows[ri] && rows[ri].id != null) s.rows[rows[ri].id] = rows[ri]; }
       if (s.page === 1 && !rows.length) { box.innerHTML = '<div class="empty">暂无数据</div>'; s.done = true; s.loading = false; return; }
       var html = '';
       for (var i = 0; i < rows.length; i++) html += s.def.row(rows[i], cid);
@@ -508,18 +510,25 @@
     return '<div class="card"><div class="card-title">' + OA.esc(r.name || r.title || r.code || '条目') + '</div><div class="card-line">金额：' + OA.esc(r.amount || r.money || r.total || '-') + ' · 时间：' + OA.fmtTime(r.create_time || r.addtime) + '</div></div>';
   }
 
-  // 基本资料
+  // 基本资料（字段对齐 App renderProfilePage：昵称/性别/个人简介，indexInfo 回显）
   function showProfile() {
     var c = $('page-container');
-    c.innerHTML = '<div class="detail-head"><div class="dh-title">基本资料</div><div class="dh-sub">编辑个人信息</div></div>' +
+    c.innerHTML = '<div class="detail-head"><div class="dh-title">基本资料</div><div class="dh-sub">昵称 · 性别 · 个人简介</div></div>' +
       '<div class="form-card">' +
-      '<div class="form-row"><label class="form-label req">姓名</label><input class="form-input" id="pf-name" placeholder="请输入姓名"></div>' +
-      '<div class="form-row"><label class="form-label">电话</label><input class="form-input" id="pf-phone" placeholder="请输入电话"></div>' +
-      '<div class="form-row"><label class="form-label">部门</label><input class="form-input" id="pf-dept" placeholder="请输入部门"></div>' +
+      '<div class="form-row"><label class="form-label">昵称</label><input class="form-input" id="pf-nickname" placeholder="昵称"></div>' +
+      '<div class="form-row"><label class="form-label">性别</label><select class="form-input" id="pf-sex"><option value="1">男</option><option value="2">女</option></select></div>' +
+      '<div class="form-row"><label class="form-label">个人简介</label><textarea class="form-input" id="pf-desc" rows="4" placeholder="个人简介"></textarea></div>' +
       '</div><button class="form-submit" onclick="App.saveProfile()">保存</button>';
+    OA.API.indexInfo().then(function (res) {
+      var d = (res && res.code === 0 && res.data) ? (Array.isArray(res.data) ? res.data[0] : res.data) : null;
+      if (!d) return;
+      if ($('pf-nickname')) $('pf-nickname').value = d.nickname || d.name || '';
+      if ($('pf-sex')) $('pf-sex').value = String(d.sex || 1);
+      if ($('pf-desc')) $('pf-desc').value = d.desc || '';
+    }).catch(function () { /* 拉取失败保持表单空，可手动填写保存 */ });
   }
   function saveProfile() {
-    var data = { name: $('pf-name').value, phone: $('pf-phone').value, department: $('pf-dept').value };
+    var data = { nickname: $('pf-nickname').value.trim(), sex: $('pf-sex').value, desc: $('pf-desc').value.trim() };
     OA.API.editPersonal(data).then(function (res) {
       if (res && res.code === 0) { toast('保存成功'); } else { toast((res && res.msg) || '保存失败'); }
     }).catch(function () { toast('网络异常'); });
@@ -583,7 +592,19 @@
       content: content
     };
   }
-  function openArticle(id) { toast('打开问答 ' + id); }
+  // 问答详情：对齐 App openArticleDetail——直接用列表行数据渲染，不调详情接口
+  function openArticle(id) {
+    var r = (subState && subState.rows) ? subState.rows[id] : null;
+    if (!r) { toast('详情未加载，请返回列表刷新'); return; }
+    var title = (r.title || '').split('\n')[0];
+    var c = $('page-container');
+    c.innerHTML = '<div class="detail-head"><div class="dh-title">' + OA.esc(title || '问答详情') + '</div>' +
+      '<div class="dh-sub"><span class="tag">' + OA.esc(r.cate_title || r.cate_name || '问答') + '</span>　' +
+      OA.esc(r.user || r.username || '') + '　' + OA.fmtTime(r.create_time || r.addtime) + '</div></div>' +
+      '<div class="detail-content">' + (r.content || '<div class="empty">暂无内容</div>') + '</div>' +
+      '<div style="text-align:center;margin:16px 0"><span class="load-more" onclick="App.openSub(\'article\')">‹ 返回问答列表</span></div>';
+    window.scrollTo(0, 0);
+  }
   function openOrder(id) {
     OA.API.orderView(id).then(function (res) {
       if (res && res.code === 0 && res.data) {
