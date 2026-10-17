@@ -62,6 +62,7 @@
   function renderApprove() {
     var c = $('page-container');
     c.innerHTML =
+      '<div class="card launch-card" onclick="App.openApproveType()"><span class="lc-left">＋ 发起新的审批</span><span class="lc-right">选择类型 ›</span></div>' +
       '<div class="seg">' +
       '<div class="seg-item active" data-s="0" onclick="App.loadApprove(0)">全部</div>' +
       '<div class="seg-item" data-s="1" onclick="App.loadApprove(1)">待审批</div>' +
@@ -122,16 +123,16 @@
   window.App = {
     init: init,
     switchTab: switchTab,
-    onQuick: function (i) {
-      var names = ['请假', '用车', '报销', '采购', '用章', '出入库', '预付', '更多审批'];
-      var n = names[i];
-      // 发起审批需要 /oa/approve/add + 流程配置，此处先引导到桌面版发起
-      toast('「' + n + '」发起页请走桌面版（oa.upingbio.cn）');
-      window.open(OA.BASE + '/');
-    },
+    onQuick: function (i) { App.openApproveType(); },
     loadApprove: loadApprove,
     openApproveDetail: openApproveDetail,
     doCheck: doCheck,
+    openApproveType: openApproveType,
+    openApproveForm: openApproveForm,
+    onFlowChange: onFlowChange,
+    toggleCheck: toggleCheck,
+    submitApproveForm: submitApproveForm,
+    retryApproveFile: retryApproveFile,
     loadCustomer: loadCustomer,
     openCustomer: openCustomer,
     searchCustomer: searchCustomer,
@@ -188,6 +189,193 @@
     location.replace('login.html');
   }
   function openDesktop() { window.open(OA.BASE + '/'); }
+
+  // ===== 发起审批（接口对齐 App 源码：/oa/approve/add + get_flow_users）=====
+  var APPROVE_TYPES = [
+    { type: 1, name: '请假', icon: '🏖' },
+    { type: 2, name: '出差', icon: '✈' },
+    { type: 3, name: '外出', icon: '🏃' },
+    { type: 4, name: '加班', icon: '⏰' },
+    { type: 15, name: '采购', icon: '🛒' },
+    { type: 7, name: '维修', icon: '🔧' },
+    { type: 9, name: '用章', icon: '🔏' },
+    { type: 10, name: '用车', icon: '🚗' }
+  ];
+  var formState = null;
+  function openApproveType() {
+    var c = $('page-container');
+    var html = '<div class="section-title">选择审批类型</div><div class="type-grid">';
+    for (var i = 0; i < APPROVE_TYPES.length; i++) {
+      var t = APPROVE_TYPES[i];
+      html += '<div class="type-item" onclick="App.openApproveForm(' + t.type + ')"><span class="ti-icon">' + t.icon + '</span><span class="ti-text">' + t.name + '</span></div>';
+    }
+    html += '</div>';
+    c.innerHTML = html;
+    $('top-title').textContent = '发起审批';
+  }
+  function formFieldHtml(f) {
+    if (f.type === 'textarea') return '<div class="form-row"><label class="form-label' + (f.req ? ' req' : '') + '">' + OA.esc(f.label) + '</label><textarea class="form-input" data-key="' + f.key + '" placeholder="' + OA.esc(f.label) + '" rows="3"></textarea></div>';
+    if (f.type === 'select') {
+      var ops = '<option value="">请选择</option>';
+      for (var i = 0; i < (f.options || []).length; i++) ops += '<option value="' + OA.esc(f.options[i].v) + '">' + OA.esc(f.options[i].t) + '</option>';
+      return '<div class="form-row"><label class="form-label' + (f.req ? ' req' : '') + '">' + OA.esc(f.label) + '</label><select class="form-input" data-key="' + f.key + '">' + ops + '</select></div>';
+    }
+    var inpType = (f.type === 'datetime') ? 'datetime-local' : 'text';
+    return '<div class="form-row"><label class="form-label' + (f.req ? ' req' : '') + '">' + OA.esc(f.label) + '</label><input class="form-input" data-key="' + f.key + (f.type === 'datetime' ? '" data-half="datetime' : '') + '" type="' + inpType + '" placeholder="' + OA.esc(f.label) + '"></div>';
+  }
+  function openApproveForm(type) {
+    var meta = (typeof APPROVE_FORMS !== 'undefined') ? APPROVE_FORMS[type] : null;
+    if (!meta) { toast('该审批类型暂不支持'); return; }
+    var c = $('page-container');
+    var html = '<div class="detail-head"><div class="dh-title">' + OA.esc(meta.title || ('审批' + type)) + '</div><div class="dh-sub">请填写申请信息</div></div>';
+    html += '<div class="form-card">';
+    for (var j = 0; j < meta.fields.length; j++) {
+      var f = meta.fields[j];
+      if (f.type === 'hidden' || f.key === 'file_ids' || f.key === 'flow_id' || f.key.indexOf('check_admin') === 0 || f.key.indexOf('copy_') === 0 || f.key.indexOf('_span') > 0) continue;
+      html += formFieldHtml(f);
+    }
+    html += '</div>';
+    var hasFile = false;
+    for (var k = 0; k < meta.fields.length; k++) if (meta.fields[k].key === 'file_ids') hasFile = true;
+    if (hasFile) {
+      html += '<div class="form-card"><div class="form-row"><label class="form-label">附件</label><input type="file" id="ap-file" multiple style="flex:1;font-size:13px"></div><div id="ap-attach-list"></div></div>';
+    }
+    var flowSel = '';
+    for (var m = 0; m < meta.fields.length; m++) {
+      if (meta.fields[m].key === 'flow_id' && meta.fields[m].type === 'select') {
+        var opts = meta.fields[m].options || [];
+        flowSel = '<div class="form-card"><div class="form-row"><label class="form-label req">审批流程</label><select class="form-input" id="ap-flow" onchange="App.onFlowChange()"><option value="">请选择</option>';
+        for (var n = 0; n < opts.length; n++) flowSel += '<option value="' + OA.esc(opts[n].v) + '">' + OA.esc(opts[n].t) + '</option>';
+        flowSel += '</select></div></div>';
+      }
+    }
+    html += flowSel;
+    html += '<div class="form-card" id="ap-people"><div class="form-flow-box"><div class="form-flow-line">选择审批流程后加载审核人</div></div></div>';
+    html += '<button class="form-submit" onclick="App.submitApproveForm(' + type + ')">提 交 申 请</button>';
+    c.innerHTML = html;
+    $('top-title').textContent = meta.title || '发起审批';
+    formState = { type: type, flowId: '', checkIds: [], checkNames: [], copyIds: [], copyNames: [], files: [] };
+    if (hasFile) bindApproveFile();
+  }
+  function bindApproveFile() {
+    var inp = $('ap-file'); if (!inp) return;
+    inp.addEventListener('change', function () {
+      var fs = inp.files; if (!fs || !fs.length) return;
+      for (var i = 0; i < fs.length; i++) uploadApproveFile(fs[i]);
+      inp.value = '';
+    });
+  }
+  function uploadApproveFile(file) {
+    var item = { id: 0, name: file.name, size: file.size, uploading: true, err: '' };
+    formState.files.push(item); renderAttachList();
+    OA.API.uploadFile(file).then(function (res) {
+      item.uploading = false;
+      var id = (res && res.data && (res.data.id || res.data)) || (res && res.id);
+      if (res && res.code === 0 && id) item.id = id; else item.err = (res && res.msg) || '上传失败';
+      renderAttachList();
+    }).catch(function () { item.uploading = false; item.err = '网络异常'; renderAttachList(); });
+  }
+  function renderAttachList() {
+    var box = $('ap-attach-list'); if (!box) return;
+    var h = '';
+    for (var i = 0; i < formState.files.length; i++) {
+      var f = formState.files[i];
+      var st = f.uploading ? '上传中…' : (f.err ? ('失败：' + f.err) : '已上传');
+      var cls = f.uploading ? 'att-up' : (f.err ? 'att-err' : 'att-ok');
+      h += '<div class="attach-item ' + cls + '"><span>' + OA.esc(f.name) + '</span><span>' + st + (f.err ? ' · 删除重选' : '') + '</span></div>';
+    }
+    box.innerHTML = h;
+  }
+  function onFlowChange() {
+    var sel = $('ap-flow'); if (!sel) return;
+    var flowId = sel.value; formState.flowId = flowId;
+    var box = $('ap-people');
+    if (!flowId) { box.innerHTML = '<div class="form-flow-box"><div class="form-flow-line">选择审批流程后加载审核人</div></div>'; return; }
+    box.innerHTML = '<div class="form-flow-box"><div class="loading">加载审批人…</div></div>';
+    OA.API.flowUsers(flowId).then(function (res) {
+      if (!res || res.code !== 0 || !res.data) { box.innerHTML = '<div class="form-flow-box"><div class="form-flow-line">审批人加载失败</div></div>'; return; }
+      var d = res.data;
+      var copyIds = String(d.copy_uids == null ? '' : d.copy_uids).split(',').filter(function (x) { return x; }).map(Number);
+      var copyNames = String(d.copy_unames == null ? '' : d.copy_unames).split(',').filter(function (x) { return x; });
+      formState.copyIds = copyIds; formState.copyNames = copyNames;
+      var html = '';
+      if (copyIds.length) html += '<div class="chip-label">抄送人</div><div class="form-flow-line">' + OA.esc(copyNames.join('、')) + '</div>';
+      var steps = d.flow_data || d.step_data || [];
+      for (var i = 0; i < steps.length; i++) {
+        var st = steps[i];
+        var stepName = st.flow_name || ('第' + (i + 1) + '级审核');
+        var stepType = parseInt(st.flow_type, 10);
+        if (stepType === 1 || stepType === 2) { html += '<div class="chip-label">' + OA.esc(stepName) + '</div><div class="form-flow-line">' + (stepType === 1 ? '当前部门负责人(系统指定)' : '上级部门负责人(系统指定)') + '</div>'; continue; }
+        var users = st.user_id_info || [];
+        if (typeof users === 'string') users = [];
+        html += '<div class="chip-label">' + OA.esc(stepName) + '</div><div class="person-grid" data-step="' + i + '">';
+        if (!users.length) html += '<div class="form-flow-line">未配置可选人员</div>';
+        for (var u = 0; u < users.length; u++) {
+          var uid = Number(users[u].id), uname = users[u].name || users[u].user_name || ('用户' + uid);
+          html += '<div class="person-chip" data-uid="' + uid + '" data-name="' + OA.esc(uname) + '" onclick="App.toggleCheck(this,' + uid + ')">' + OA.esc(uname) + '</div>';
+        }
+        html += '</div>';
+      }
+      box.innerHTML = '<div class="form-flow-box">' + html + '</div>';
+      var first = box.querySelector('.person-chip');
+      if (first) App.toggleCheck(first, Number(first.getAttribute('data-uid')));
+    }).catch(function () { box.innerHTML = '<div class="form-flow-box"><div class="form-flow-line">审批人加载失败</div></div>'; });
+  }
+  function toggleCheck(chip, uid) {
+    if (!chip) return;
+    var on = chip.className.indexOf(' sel') >= 0;
+    var box = chip.parentNode;
+    var chips = box.querySelectorAll('.person-chip');
+    for (var i = 0; i < chips.length; i++) chips[i].className = chips[i].className.replace(' sel', '');
+    if (!on) chip.className += ' sel';
+    refreshCheckState();
+  }
+  function refreshCheckState() {
+    var ids = [], names = [];
+    var chips = document.querySelectorAll('.person-chip.sel');
+    for (var i = 0; i < chips.length; i++) { ids.push(Number(chips[i].getAttribute('data-uid'))); names.push(chips[i].getAttribute('data-name')); }
+    formState.checkIds = ids; formState.checkNames = names;
+  }
+  function submitApproveForm(type) {
+    var meta = (typeof APPROVE_FORMS !== 'undefined') ? APPROVE_FORMS[type] : null;
+    if (!meta) return;
+    var data = { type: type, id: 0 };
+    var fields = document.querySelectorAll('#page-container [data-key]');
+    for (var i = 0; i < fields.length; i++) {
+      var el = fields[i], key = el.getAttribute('data-key');
+      if (el.getAttribute('data-half') === 'datetime') data[key] = el.value ? el.value.replace('T', ' ') : '';
+      else data[key] = el.value;
+    }
+    var keyFields = {};
+    for (var j = 0; j < meta.fields.length; j++) {
+      var f = meta.fields[j];
+      if (f.type !== 'hidden' && f.key !== 'file_ids' && f.key !== 'flow_id' && f.key.indexOf('check_admin') !== 0 && f.key.indexOf('copy_') !== 0 && f.key !== 'duration' && f.key !== 'remark' && f.key.indexOf('_span') === -1) keyFields[f.key] = f.label;
+    }
+    for (var kk in keyFields) {
+      var v = data[kk];
+      if (v === undefined || v === null || v === '') { toast('请填写' + keyFields[kk]); return; }
+    }
+    if (!formState.flowId) { toast('请选择审批流程'); return; }
+    data.flow_id = formState.flowId;
+    if (!formState.checkIds.length) { toast('请选择审核人'); return; }
+    data.check_admin_ids = formState.checkIds.join(',');
+    data.check_admin_name = formState.checkNames.join(',');
+    if (formState.copyIds.length) { data.copy_uids = formState.copyIds.join(','); data.copy_names = formState.copyNames.join(','); }
+    var okIds = [], upCnt = 0, failCnt = 0;
+    for (var ai = 0; ai < formState.files.length; ai++) {
+      var af = formState.files[ai];
+      if (af.uploading) upCnt++; else if (af.err) failCnt++; else if (af.id) okIds.push(af.id);
+    }
+    if (upCnt) { toast('附件上传中，请稍候'); return; }
+    if (failCnt) { toast('有附件上传失败，请删除后重选或去掉附件再提交'); return; }
+    if (okIds.length) data.file_ids = okIds.join(',');
+    var btn = document.querySelector('.form-submit');
+    if (btn) { btn.disabled = true; btn.textContent = '提交中…'; }
+    OA.API.approveSubmit(data).then(function (res) {
+      if (res && res.code === 0) { toast('提交成功'); App.switchTab('approve'); }
+      else { toast((res && res.msg) || '提交失败'); if (btn) { btn.disabled = false; btn.textContent = '提 交 申 请'; } }
+    }).catch(function () { toast('网络异常，提交失败'); if (btn) { btn.disabled = false; btn.textContent = '提 交 申 请'; } });
+  }
   // ===== 通用子页（公告/问答/产品/消息/通讯录/财务等）=====
   // 每个子页 = 一个接口 + 行渲染器；进页顶栏可返回，支持"加载更多"
   var SUB_DEFS = {

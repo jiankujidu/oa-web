@@ -96,6 +96,26 @@ body{
 .form-input{flex:1;border:none;outline:none;font-size:15px;padding:14px 0;background:transparent;color:var(--ink)}
 .form-submit{display:block;width:calc(100% - 24px);margin:16px 12px 24px;padding:13px 0;border:none;border-radius:12px;background:linear-gradient(90deg,var(--blue),var(--blue2));color:#fff;font-size:16px;font-weight:600;cursor:pointer}
 
+/* ===== 发起审批 ===== */
+.launch-card{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(90deg,#1E6FFF,#4A9BFF);color:#fff;margin:12px;border-radius:12px;padding:14px 16px;cursor:pointer;box-shadow:0 4px 14px rgba(30,111,255,.25)}
+.launch-card .lc-left{font-size:15px;font-weight:600}
+.launch-card .lc-right{font-size:13px;opacity:.9}
+.type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 12px}
+.type-item{background:#fff;border-radius:12px;padding:14px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.05);cursor:pointer}
+.type-item .ti-icon{font-size:24px;display:block}
+.type-item .ti-text{font-size:13px;color:var(--ink);margin-top:6px;display:block}
+.form-flow-box{background:#fafcff;border-radius:10px;padding:10px 12px;margin:8px 0}
+.form-flow-line{font-size:13px;color:#666;padding:4px 0}
+.chip-label{font-size:12px;color:#8a8f99;margin:8px 0 4px}
+.person-grid{display:flex;flex-wrap:wrap;gap:8px}
+.person-chip{padding:6px 12px;border:1px solid #dbe7ff;border-radius:18px;font-size:13px;color:#335;background:#fff;cursor:pointer;user-select:none}
+.person-chip.sel{background:var(--blue);color:#fff;border-color:var(--blue)}
+.attach-item{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid #f2f4f8;color:#555}
+.attach-item.att-ok{color:#52c41a}
+.attach-item.att-err{color:#ff4d4f}
+.attach-item.att-up{color:#d48806}
+@media(min-width:860px){.type-grid{max-width:680px;margin:0 auto;grid-template-columns:repeat(8,1fr)}}
+
 /* toast */
 .toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.75);color:#fff;font-size:14px;padding:12px 20px;border-radius:10px;z-index:3000;display:none;max-width:80%;text-align:center}
 
