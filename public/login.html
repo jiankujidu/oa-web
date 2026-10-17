@@ -34,10 +34,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
 .field input{flex:1;border:none;outline:none;font-size:15.5px;background:transparent;color:var(--ink)}
 .field input::placeholder{color:#aab0ba}
 .captcha-row{display:flex;align-items:center;gap:10px;margin:-2px 2px 10px}
-.captcha-field{flex:1;display:flex;align-items:center;border:1px solid var(--line);border-radius:11px;padding:10px 12px;background:#fafcff;transition:.15s}
+.captcha-field{flex:1;min-width:0;display:flex;align-items:center;border:1px solid var(--line);border-radius:11px;padding:10px 12px;background:#fafcff;transition:.15s}
 .captcha-field:focus-within{border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(30,111,255,.10)}
 .captcha-field input{flex:1;border:none;outline:none;font-size:15px;background:transparent;min-width:0}
-.captcha-img{height:44px;width:160px;object-fit:contain;background:#f2f6ff;border:1px solid #dbe7ff;border-radius:7px;cursor:pointer;flex:none;user-select:none}
+/* 宽度用百分比自适应窄屏：绝不超出所在行（旧版固定 160px 在手机上会被挤出卡片） */
+.captcha-img{height:44px;width:40%;max-width:160px;min-width:104px;object-fit:contain;background:#f2f6ff;border:1px solid #dbe7ff;border-radius:7px;cursor:pointer;flex:none;user-select:none}
 .captcha-hint{font-size:12px;color:#9aa0aa;line-height:1.45}
 .remember{display:flex;align-items:center;gap:7px;font-size:13px;color:#666;cursor:pointer;user-select:none;margin:2px 2px 0}
 .remember input{width:16px;height:16px;accent-color:var(--blue);cursor:pointer}
@@ -48,13 +49,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
 .btn:disabled{opacity:.6;cursor:not-allowed}
 .tip{color:var(--err);font-size:13px;margin-top:12px;text-align:center;min-height:18px}
 .foot{color:#9aa0aa;font-size:12px;margin-top:22px;text-align:center;line-height:1.6}
-.note{font-size:11px;color:#b6bcc6;text-align:center;margin-top:6px}
-.proxy{margin-top:14px;font-size:12px;color:#8a8f99;border:1px dashed #d7e0ee;border-radius:10px;padding:8px 10px;background:#f7faff;text-align:left}
-.proxy summary{cursor:pointer;color:#5b6b85;user-select:none}
-.proxy-row{display:flex;gap:8px;margin-top:8px}
-.proxy-row input{flex:1;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;outline:none;min-width:0}
-.proxy-row button{border:none;background:var(--blue);color:#fff;border-radius:8px;padding:0 14px;font-size:13px;cursor:pointer;flex:none}
-.proxy-hint{margin-top:6px;color:var(--blue);min-height:14px;word-break:break-all}
 @media (min-width:860px){
   body{background:#eaf1ff}
   .card{max-width:960px;padding:0;display:flex;overflow:hidden;box-shadow:0 18px 60px rgba(30,111,255,.22)}
@@ -105,15 +99,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
       <button class="btn" id="login-btn">登 录</button>
       <div class="tip" id="tip"></div>
       <div class="foot" id="foot"></div>
-      <div class="note">接口调用第三方 OA：oa.upingbio.cn（非自有服务器，故由代理做同域反代）。推荐用 <b>proxy/worker-all.js</b> 部署一个 Cloudflare Worker，得到一个网址、手机电脑都能直接登录；也可在此填代理地址临时使用。</div>
-      <details class="proxy" id="proxy-box">
-        <summary>⚙ 部署说明 / 代理设置（可选）</summary>
-        <div class="proxy-row">
-          <input id="proxy-input" type="text" placeholder="https://你的代理.workers.dev/?url=">
-          <button id="proxy-save" type="button">保存</button>
-        </div>
-        <div class="proxy-hint" id="proxy-hint"></div>
-      </details>
     </div>
   </div>
 </div>
@@ -157,23 +142,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
         refreshCaptcha(); cEl.value='';
       }
     }).catch(function(){
-      tip.textContent='网络异常：请求被跨域拦截。若已用 worker-all.js 部署不应出现此提示；否则请点开下方「代理设置」填入代理地址并刷新';
+      tip.textContent='网络异常，请检查网络后重试；若持续失败请刷新页面';
       refreshCaptcha();
     }).finally(function(){ btn.disabled=false; btn.textContent='登 录'; });
   }
 
   btn.addEventListener('click', doLogin);
   [uEl,pEl,cEl].forEach(function(el){ el.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); doLogin(); } }); });
-  // 跨域代理：从 localStorage 回填，保存后刷新生效（oa.js 启动时已读取）
-  var proxyInput=$('proxy-input'), proxySave=$('proxy-save'), proxyHint=$('proxy-hint');
-  try{ var sp=localStorage.getItem('oa_cors_proxy'); if(sp) proxyInput.value=sp; }catch(e){}
-  proxySave.addEventListener('click', function(){
-    var v=proxyInput.value.trim();
-    try{
-      if(v){ localStorage.setItem('oa_cors_proxy', v); proxyHint.textContent='已保存 ✓ 刷新页面后生效'; }
-      else { localStorage.removeItem('oa_cors_proxy'); proxyHint.textContent='已清除'; }
-    }catch(e){ proxyHint.textContent='保存失败'; }
-  });
 
   $('foot').textContent = '网页版 · ' + OA.BASE.replace('https://','');
   fillSaved(); refreshCaptcha();
