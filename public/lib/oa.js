@@ -60,7 +60,7 @@
     if (v && v.code === 404) {
       var msg = String(v.msg || '');
       if (sessionExpiredFromText(msg) || /登录/.test(msg)) {
-        if (g.OA && g.OA._onSessionExpired) g.OA._onSessionExpired();
+        if (g.OA && g.OA._onSessionExpired) g.OA._onSessionExpired(msg);
       }
     }
     return v;
@@ -106,7 +106,7 @@
         var txt = r.text();
         return txt.then(function (raw) {
           var se = sessionExpiredFromText(raw);
-          if (se) { if (g.OA && g.OA._onSessionExpired) g.OA._onSessionExpired(); }
+          if (se) { if (g.OA && g.OA._onSessionExpired) g.OA._onSessionExpired('页面接口返回未登录提示'); }
           return raw;
         });
       });

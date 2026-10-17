@@ -8,9 +8,13 @@
   var currentTab = 'home';
   var listState = {};
 
-  // 会话失效 → 回登录页
-  OA._setSessionHook(function () {
-    try { localStorage.removeItem('uping_user'); localStorage.removeItem('uping_me'); } catch (e) {}
+  // 会话失效 → 记录诊断信息（登录页展示）→ 回登录页
+  OA._setSessionHook(function (why) {
+    try {
+      localStorage.removeItem('uping_user'); localStorage.removeItem('uping_me');
+      localStorage.setItem('uping_session_lost', String(Date.now()));
+      localStorage.setItem('uping_session_lost_msg', String(why || '未知原因'));
+    } catch (e) {}
     location.replace('login.html');
   });
 
