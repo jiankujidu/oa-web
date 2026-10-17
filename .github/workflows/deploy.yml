@@ -9,6 +9,8 @@ on:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
 
 env:
   CF_ACCOUNT_ID: "36dc817a796a8f194ad1631a646d6762"
@@ -50,3 +52,22 @@ jobs:
               sys.exit(1)
           print("DEPLOY OK")
           PY
+
+  # GitHub Pages 不再承载前端（跨域+慢），只放跳转页：
+  # 任何旧链接（/oa-web/login.html 等）都会自动跳到 https://oa.jk93.qzz.io 对应页面
+  deploy-pages-redirect:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: https://oa.jk93.qzz.io/
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4

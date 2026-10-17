@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>优品OA · 已迁移</title>
+<style>
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1E6FFF,#4E9AFF);font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:#fff}
+  .card{background:rgba(255,255,255,.14);backdrop-filter:blur(10px);border-radius:16px;padding:32px 40px;text-align:center;max-width:340px;margin:20px}
+  .logo{font-size:40px;margin-bottom:8px}
+  h1{font-size:18px;margin:0 0 10px}
+  p{font-size:13px;line-height:1.7;opacity:.85;margin:0 0 20px}
+  a.btn{display:inline-block;background:#fff;color:#1E6FFF;text-decoration:none;font-weight:600;font-size:14px;padding:10px 28px;border-radius:999px}
+  .mono{font-size:11px;opacity:.7;margin-top:14px;word-break:break-all}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">🤝</div>
+  <h1>站点已迁移</h1>
+  <p>优品OA 网页版现在由 Cloudflare 边缘直出，速度更快。<span id="count">3</span> 秒后自动跳转，也可以直接点击按钮前往。</p>
+  <a class="btn" id="go" href="https://oa.jk93.qzz.io/">立即打开</a>
+  <div class="mono" id="target"></div>
+</div>
+<script>
+(function () {
+  var DEST = 'https://oa.jk93.qzz.io';
+  // 把旧 Pages 路径映射到新站点对应页面：/oa-web/login.html -> /login.html
+  var path = location.pathname.replace(/^\/oa-web\/?/, '/');
+  var qs = location.search || '';
+  var hash = location.hash || '';
+  var target = DEST + path + qs + hash;
+  document.getElementById('go').href = target;
+  document.getElementById('target').textContent = target;
+  var n = 3;
+  var t = setInterval(function () {
+    n--;
+    if (n <= 0) { clearInterval(t); location.replace(target); }
+    else { document.getElementById('count').textContent = n; }
+  }, 1000);
+})();
+</script>
+</body>
+</html>
