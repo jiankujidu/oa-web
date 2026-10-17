@@ -135,7 +135,6 @@
     onFlowChange: onFlowChange,
     toggleCheck: toggleCheck,
     submitApproveForm: submitApproveForm,
-    retryApproveFile: retryApproveFile,
     loadCustomer: loadCustomer,
     openCustomer: openCustomer,
     searchCustomer: searchCustomer,
