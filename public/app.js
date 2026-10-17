@@ -89,6 +89,7 @@
       '<div class="search-bar"><input id="cust-kw" type="text" placeholder="搜索客户名称"><span class="search-btn" onclick="App.searchCustomer()">搜索</span></div>' +
       '<div id="customer-list"><div class="loading">加载中…</div></div>' +
       '<div class="section-title">客户功能</div><div class="grid">' +
+      '<div class="grid-item" onclick="App.openCustomerAdd()"><span class="gi-icon">➕</span><span class="gi-text">新增客户</span></div>' +
       '<div class="grid-item" onclick="App.openSub(\'contact-list\')"><span class="gi-icon">👤</span><span class="gi-text">联系人</span></div>' +
       '<div class="grid-item" onclick="App.openSub(\'chance-list\')"><span class="gi-icon">🎯</span><span class="gi-text">销售机会</span></div>' +
       '<div class="grid-item" onclick="App.openSub(\'trace-list\')"><span class="gi-icon">📝</span><span class="gi-text">跟进记录</span></div>' +
@@ -148,7 +149,21 @@
     openDesktop: openDesktop,
     logout: logout,
     closePanel: closePanel,
-    toast: toast
+    toast: toast,
+    openCustomerAdd: openCustomerAdd,
+    submitCustomerAdd: submitCustomerAdd,
+    subRowHtml: subRowHtml,
+    delSubRow: delSubRow,
+    openTraceAdd: openTraceAdd,
+    submitTraceAdd: submitTraceAdd,
+    openContactAdd: openContactAdd,
+    submitContactAdd: submitContactAdd,
+    openChanceAdd: openChanceAdd,
+    submitChanceAdd: submitChanceAdd,
+    delTrace: delTrace,
+    delContact: delContact,
+    delChance: delChance,
+    customerToSea: customerToSea
   };
 
   // 铃铛 → 收件箱；顶栏「退出」→ 确认后退出登录
@@ -417,7 +432,12 @@
 
   function showSubShell(title, key) {
     var c = $('page-container');
-    c.innerHTML = '<div id="sub-list"><div class="loading">加载中…</div></div>';
+    // 联系人/商机/跟进子页顶部提供"新增"入口
+    var addBtn = '';
+    if (key === 'contact-list') addBtn = '<div class="sub-add-bar"><span class="sub-add-btn" onclick="App.openContactAdd()">＋ 新增联系人</span></div>';
+    else if (key === 'chance-list') addBtn = '<div class="sub-add-bar"><span class="sub-add-btn" onclick="App.openChanceAdd()">＋ 新增销售机会</span></div>';
+    else if (key === 'trace-list') addBtn = '<div class="sub-add-bar"><span class="sub-add-btn" onclick="App.openTraceAdd(0)">＋ 新增跟进记录</span></div>';
+    c.innerHTML = addBtn + '<div id="sub-list"><div class="loading">加载中…</div></div>';
     // 顶部返回：暂时复用 toast 占位（后续接 showDetailShell）
     subState.key = key;
   }
@@ -462,7 +482,8 @@
       if (s.page === 1 && !rows.length) { box.innerHTML = '<div class="empty">暂无数据</div>'; s.done = true; s.loading = false; return; }
       var html = '';
       for (var i = 0; i < rows.length; i++) html += s.def.row(rows[i], cid);
-      box.innerHTML = s.page === 1 ? html : box.innerHTML;
+      if (s.page === 1) box.innerHTML = html;
+      else box.insertAdjacentHTML('beforeend', html);
       s.page++; s.loading = false; s.done = rows.length < 20;
       if (!s.done) box.insertAdjacentHTML('beforeend', '<div class="load-more" onclick="App.loadSubList()">加载更多</div>');
     }).catch(function () {
@@ -494,13 +515,13 @@
     return '<div class="card" onclick="App.openMsg(' + r.id + ')"><div class="card-title">' + OA.esc(r.title || '消息') + '</div><div class="card-line"><b>来自：</b>' + OA.esc(r.from_name || r.sender || '-') + ' · <b>时间：</b>' + OA.fmtTime(r.create_time || r.addtime) + '</div></div>';
   }
   function contactRow(r) {
-    return '<div class="card"><div class="card-title">' + OA.esc(r.name || r.real_name || '联系人') + '</div><div class="card-line">电话：' + OA.esc(r.phone || r.mobile || '-') + ' · 职位：' + OA.esc(r.position || '-') + '</div></div>';
+    return '<div class="card"><div class="card-title">' + OA.esc(r.name || r.real_name || '联系人') + ' <span class="row-del" onclick="event.stopPropagation();App.delContact(' + r.id + ')">删除</span></div><div class="card-line">电话：' + OA.esc(r.phone || r.mobile || '-') + ' · 职位：' + OA.esc(r.position || '-') + '</div></div>';
   }
   function chanceRow(r) {
-    return '<div class="card"><div class="card-title">' + OA.esc(r.name || r.title || '销售机会') + '</div><div class="card-line">阶段：' + OA.esc(r.stage || '-') + ' · 金额：' + OA.esc(r.amount || '-') + '</div></div>';
+    return '<div class="card"><div class="card-title">' + OA.esc(r.name || r.title || '销售机会') + ' <span class="row-del" onclick="event.stopPropagation();App.delChance(' + r.id + ')">删除</span></div><div class="card-line">阶段：' + OA.esc(r.stage || '-') + ' · 金额：' + OA.esc(r.amount || '-') + '</div></div>';
   }
   function traceRow(r) {
-    return '<div class="card"><div class="card-title">跟进 · ' + OA.fmtTime(r.create_time || r.addtime) + '</div><div class="card-line">' + OA.esc(r.content || r.remark || r.trace || '') + '</div></div>';
+    return '<div class="card"><div class="card-title">跟进 · ' + OA.fmtTime(r.create_time || r.addtime) + ' <span class="row-del" onclick="event.stopPropagation();App.delTrace(' + r.id + ')">删除</span></div><div class="card-line">' + OA.esc(r.content || r.remark || r.trace || '') + '</div></div>';
   }
   function orderRow(r) {
     return '<div class="card" onclick="App.openOrder(' + r.id + ')"><div class="card-title">' + OA.esc(r.title || r.order_no || '订单') + '</div><div class="card-line">客户：' + OA.esc(r.customer_name || '-') + ' · 金额：' + OA.esc(r.total || r.amount || '-') + '</div></div>';
@@ -781,8 +802,10 @@
       '<div class="detail-row"><div class="dl">保证金</div><div class="dv">' + OA.esc(r.margin_deposit || '0.00') + '</div></div>' +
       '</div>' +
       '<div class="detail-actions">' +
+      '<button class="dbtn" onclick="App.openTraceAdd(' + id + ')">＋ 跟进</button>' +
       '<button class="dbtn" onclick="App.openSub(\'contact-list\', ' + id + ')">联系人</button>' +
       '<button class="dbtn" onclick="App.openSub(\'trace-list\', ' + id + ')">跟进记录</button>' +
+      '<button class="dbtn" style="color:#ff4d4f" onclick="App.customerToSea(' + id + ')">转公海</button>' +
       '</div>';
     openPanel(head + body);
     API.customerContact(id).then(function (res) {
@@ -797,6 +820,247 @@
         if (anchor) anchor.insertAdjacentHTML('beforebegin', h);
       }
     }).catch(function () {});
+  }
+
+  // ===== 客户写操作（表单字段与提交参数对齐 App renderCustomerAddPage / openTraceAdd / openContactAdd / openChanceAdd）=====
+  function subRowHtml() {
+    function inp(key, label) {
+      return '<div><div style="font-size:12px;color:#8a8f99;margin-bottom:2px">' + label + '</div><input data-f="' + key + '" class="form-input" type="text" style="font-size:13px;padding:10px 0"></div>';
+    }
+    return '<div class="sub-row" style="border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 12px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b style="font-size:13px">子公司记录</b><span style="font-size:12px;color:#ff4d4f;cursor:pointer" onclick="App.delSubRow(this)">删除</span></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+      inp('name', '公司名称 *') + inp('contact_name', '联系人') + inp('contact_mobile', '联系电话') + inp('address', '地址') +
+      inp('bank', '开户银行') + inp('bank_sn', '银行帐号') + '</div></div>';
+  }
+  function delSubRow(el) {
+    var row = el.closest('.sub-row');
+    if (row) row.remove();
+  }
+  function openCustomerAdd() {
+    var c = $('page-container');
+    var srcOpts = '<option value="">请选择来源</option><option value="1">独立开发</option><option value="2">自媒体（星星分配）</option><option value="3">第三方（爱采购 阿仪网 丁香通）</option><option value="4">官方抖音号</option><option value="5">官方视频号</option><option value="6">官方小红书</option><option value="7">客户介绍</option><option value="8">官网</option><option value="9">官方公众号</option><option value="10">小红书（石安琪）</option><option value="11">小红书（李俐）</option>';
+    var indOpts = '<option value="">请选择行业</option><option value="1">工业品企业</option><option value="2">互联网企业</option><option value="3">服务行业</option><option value="4">消费品企业</option><option value="5">原材料企业</option><option value="6">农业企业</option><option value="7">科技企业</option><option value="8">其他行业</option>';
+    var gradeOpts = '<option value="">请选择等级</option><option value="1">AA类成交经销商</option><option value="2">A类客户(经营elisa并且沟通良好)</option><option value="7">休眠名单（仑）</option><option value="8">休眠名单（睿）</option><option value="9">休眠名单（优）</option><option value="10">休眠名单（博）</option><option value="11">无归属客户</option><option value="12">成交关联</option><option value="13">引流资源</option><option value="14">AA类成交终端</option><option value="15">成交代理</option>';
+    c.innerHTML =
+      '<div class="detail-head"><div class="dh-title">新增客户</div><div class="dh-sub">字段与提交格式对齐 App / 桌面端</div></div>' +
+      '<div class="sec-title">基本信息</div><div class="form-card">' +
+      '<div class="form-row"><label class="form-label req">客户名称</label><input class="form-input" id="cu-name" placeholder="请输入客户名称"></div>' +
+      '<div class="form-row"><label class="form-label">是否加微</label><select class="form-input" id="cu-is-wechat"><option value="0">否</option><option value="1">是</option></select></div>' +
+      '<div class="form-row"><label class="form-label req">客户来源</label><select class="form-input" id="cu-source">' + srcOpts + '</select></div>' +
+      '<div class="form-row"><label class="form-label req">联系地址</label><input class="form-input" id="cu-address" placeholder="请输入客户联系地址"></div>' +
+      '<div class="form-row"><label class="form-label req">所属行业</label><select class="form-input" id="cu-industry">' + indOpts + '</select></div>' +
+      '<div class="form-row"><label class="form-label req">客户等级</label><select class="form-input" id="cu-grade">' + gradeOpts + '</select></div>' +
+      '<div class="form-row"><label class="form-label req">归属员工</label><input class="form-input" id="cu-belong-name" placeholder="默认当前登录用户" readonly></div>' +
+      '<div class="form-row"><label class="form-label">归属部门</label><input class="form-input" id="cu-belong-dept" placeholder="自动带出" readonly></div>' +
+      '</div>' +
+      '<div class="sec-title">客户介绍</div><div class="form-card">' +
+      '<div class="form-row"><label class="form-label req">客户介绍</label><textarea class="form-input" id="cu-content" rows="4" placeholder="请输入客户介绍信息"></textarea></div>' +
+      '<div class="form-row"><label class="form-label">经营业务</label><textarea class="form-input" id="cu-market" rows="3" placeholder="请输入客户主要经营业务"></textarea></div>' +
+      '</div>' +
+      '<div class="sec-title">子公司信息</div>' +
+      '<div id="cu-subs"></div>' +
+      '<div style="margin:0 12px 10px"><span class="sub-add-btn" onclick="document.getElementById(\'cu-subs\').insertAdjacentHTML(\'beforeend\', App.subRowHtml())">＋ 添加子公司记录</span></div>' +
+      '<div class="sec-title">首要联系人</div><div class="form-card">' +
+      '<div class="form-row"><label class="form-label req">联系人</label><input class="form-input" id="cu-c-name" placeholder="请输入联系人姓名"></div>' +
+      '<div class="form-row"><label class="form-label req">联系电话</label><input class="form-input" id="cu-c-mobile" placeholder="请输入联系人电话"></div>' +
+      '<div class="form-row"><label class="form-label req">性别</label><select class="form-input" id="cu-c-sex"><option value="1">男</option><option value="2">女</option></select></div>' +
+      '<div class="form-row"><label class="form-label">微信号</label><input class="form-input" id="cu-c-wechat" placeholder="请输入联系人微信号"></div>' +
+      '<div class="form-row"><label class="form-label">QQ号码</label><input class="form-input" id="cu-c-qq" placeholder="请输入联系人QQ号码"></div>' +
+      '<div class="form-row"><label class="form-label">电子邮箱</label><input class="form-input" id="cu-c-email" placeholder="请输入联系人电子邮箱"></div>' +
+      '</div>' +
+      '<div class="sec-title">开票信息</div><div class="form-card">' +
+      '<div class="form-row"><label class="form-label">开户银行</label><input class="form-input" id="cu-bank" placeholder="请输入开户银行"></div>' +
+      '<div class="form-row"><label class="form-label">银行帐号</label><input class="form-input" id="cu-bank-sn" placeholder="请输入银行帐号"></div>' +
+      '<div class="form-row"><label class="form-label">银行网点</label><input class="form-input" id="cu-bank-branch" placeholder="请输入银行网点"></div>' +
+      '<div class="form-row"><label class="form-label">纳税人识别号</label><input class="form-input" id="cu-tax-num" placeholder="请输入纳税人识别号"></div>' +
+      '<div class="form-row"><label class="form-label">开票电话</label><input class="form-input" id="cu-cperson-mobile" placeholder="请输入开票电话"></div>' +
+      '<div class="form-row"><label class="form-label">开票地址</label><input class="form-input" id="cu-cperson-address" placeholder="请输入开票地址"></div>' +
+      '</div>' +
+      '<div class="sec-title">沟通内容</div><div class="form-card">' +
+      '<div class="form-row"><label class="form-label">备注</label><textarea class="form-input" id="cu-remark" rows="4" placeholder="请输入沟通内容"></textarea></div>' +
+      '</div>' +
+      '<button class="form-submit" onclick="App.submitCustomerAdd()">立即提交</button>';
+    // 归属员工/部门默认值（对齐 App：从 /customer/index/add.html 提取服务端默认）
+    OA.API.customerAddDefaults().then(function (d) {
+      var bn = $('cu-belong-name'), bd = $('cu-belong-dept');
+      if (bn && d) { bn.value = d.belong_name || ''; bn.setAttribute('data-uid', d.belong_uid || ''); bn.setAttribute('data-did', d.belong_did || ''); }
+      if (bd && d) bd.value = d.belong_department || '';
+    }).catch(function () {});
+  }
+  function submitCustomerAdd() {
+    function v(id) { var el = $(id); return el ? el.value.trim() : ''; }
+    if (!v('cu-name')) { toast('请填写客户名称'); return; }
+    if (!v('cu-source')) { toast('请选择客户来源'); return; }
+    if (!v('cu-address')) { toast('请填写联系地址'); return; }
+    if (!v('cu-industry')) { toast('请选择所属行业'); return; }
+    if (!v('cu-grade')) { toast('请选择客户等级'); return; }
+    if (!v('cu-content')) { toast('请填写客户介绍'); return; }
+    var bn = $('cu-belong-name');
+    if (!bn.value.trim()) { toast('请填写归属员工'); return; }
+    if (!v('cu-c-name')) { toast('请填写联系人姓名'); return; }
+    if (!v('cu-c-mobile')) { toast('请填写联系人电话'); return; }
+    var data = {
+      name: v('cu-name'), is_add_wechat: v('cu-is-wechat') || '0',
+      source_id: v('cu-source'), address: v('cu-address'),
+      industry_id: v('cu-industry'), grade_id: v('cu-grade'),
+      belong_name: bn.value.trim(), belong_uid: bn.getAttribute('data-uid') || '', belong_did: bn.getAttribute('data-did') || '',
+      belong_department: v('cu-belong-dept'),
+      share_names: '', share_ids: '',
+      content: v('cu-content'), market: v('cu-market'),
+      c_name: v('cu-c-name'), c_mobile: v('cu-c-mobile'), c_sex: v('cu-c-sex') || '1',
+      c_wechat: v('cu-c-wechat'), c_qq: v('cu-c-qq'), c_email: v('cu-c-email'),
+      bank: v('cu-bank'), bank_sn: v('cu-bank-sn'), bank_branch: v('cu-bank-branch'),
+      tax_num: v('cu-tax-num'), cperson_mobile: v('cu-cperson-mobile'), cperson_address: v('cu-cperson-address'),
+      remark: v('cu-remark')
+    };
+    // 子公司记录（数组，对齐 App subsidiary_records_*）
+    var subNames = [], subs = { contact_name: [], contact_mobile: [], address: [], bank: [], bank_sn: [] };
+    var srows = document.querySelectorAll('#cu-subs .sub-row');
+    for (var i = 0; i < srows.length; i++) {
+      var ins = srows[i].querySelectorAll('input');
+      var row = {};
+      for (var j = 0; j < ins.length; j++) row[ins[j].getAttribute('data-f')] = ins[j].value.trim();
+      if (!row.name) { toast('请填写第' + (i + 1) + '行子公司名称'); return; }
+      subNames.push(row.name);
+      subs.contact_name.push(row.contact_name || ''); subs.contact_mobile.push(row.contact_mobile || '');
+      subs.address.push(row.address || ''); subs.bank.push(row.bank || ''); subs.bank_sn.push(row.bank_sn || '');
+    }
+    if (subNames.length) {
+      data.subsidiary_records_name = subNames.join(',');
+      data.subsidiary_records_contact_name = subs.contact_name.join(',');
+      data.subsidiary_records_contact_mobile = subs.contact_mobile.join(',');
+      data.subsidiary_records_address = subs.address.join(',');
+      data.subsidiary_records_bank = subs.bank.join(',');
+      data.subsidiary_records_bank_sn = subs.bank_sn.join(',');
+    }
+    var btn = document.querySelector('.form-submit');
+    if (btn) { btn.disabled = true; btn.textContent = '提交中…'; }
+    OA.API.customerAdd(data).then(function (res) {
+      if (res && res.code === 0) { toast('客户创建成功'); switchTab('customer'); }
+      else { toast((res && res.msg) || '保存失败'); if (btn) { btn.disabled = false; btn.textContent = '立即提交'; } }
+    }).catch(function () { toast('网络异常'); if (btn) { btn.disabled = false; btn.textContent = '立即提交'; } });
+  }
+
+  function openTraceAdd(cid) {
+    cid = cid || (subState && subState.customerId) || 0;
+    var c = $('page-container');
+    c.innerHTML =
+      '<div class="detail-head"><div class="dh-title">新增跟进记录</div><div class="dh-sub">接口 /customer/api/add_trace</div></div>' +
+      '<div class="form-card">' +
+      '<div class="form-row"><label class="form-label req">跟进内容</label><textarea class="form-input" id="tr-content" rows="5" placeholder="跟进内容"></textarea></div>' +
+      '<div class="form-row"><label class="form-label">跟进方式</label><select class="form-input" id="tr-type"><option value="">请选择</option><option value="0">其他</option><option value="1">电话</option><option value="2">微信</option><option value="3">QQ</option><option value="4">上门</option></select></div>' +
+      '<div class="form-row"><label class="form-label">客户ID</label><input class="form-input" id="tr-cid" type="text" value="' + (cid || '') + '" placeholder="客户ID"></div>' +
+      '<div class="form-row"><label class="form-label">联系人ID</label><input class="form-input" id="tr-contact-id" type="text" placeholder="联系人ID（可选）"></div>' +
+      '<div class="form-row"><label class="form-label">跟进时间</label><input class="form-input" id="tr-follow-time" type="date"></div>' +
+      '<div class="form-row"><label class="form-label">下次跟进</label><input class="form-input" id="tr-next-time" type="date"></div>' +
+      '</div><button class="form-submit" onclick="App.submitTraceAdd()">保存</button>';
+  }
+  function submitTraceAdd() {
+    var content = $('tr-content').value.trim();
+    if (!content) { toast('请填写跟进内容'); return; }
+    var data = { content: content };
+    if ($('tr-type').value) data.type = $('tr-type').value;
+    if ($('tr-cid').value.trim()) data.cid = $('tr-cid').value.trim();
+    if ($('tr-contact-id').value.trim()) data.contact_id = $('tr-contact-id').value.trim();
+    if ($('tr-follow-time').value.trim()) data.follow_time = $('tr-follow-time').value.trim();
+    if ($('tr-next-time').value.trim()) data.next_time = $('tr-next-time').value.trim();
+    OA.API.traceAdd(data).then(function (res) {
+      if (res && res.code === 0) { toast('保存成功'); openSub('trace-list', subState && subState.customerId); }
+      else toast((res && res.msg) || '保存失败');
+    }).catch(function () { toast('网络异常'); });
+  }
+
+  function openContactAdd(cid) {
+    cid = cid || (subState && subState.customerId) || 0;
+    var c = $('page-container');
+    c.innerHTML =
+      '<div class="detail-head"><div class="dh-title">新增联系人</div><div class="dh-sub">接口 /customer/contact/contact_add</div></div>' +
+      '<div class="form-card">' +
+      '<div class="form-row"><label class="form-label req">姓名</label><input class="form-input" id="ct-name" placeholder="姓名"></div>' +
+      '<div class="form-row"><label class="form-label">手机</label><input class="form-input" id="ct-mobile" placeholder="手机"></div>' +
+      '<div class="form-row"><label class="form-label">QQ</label><input class="form-input" id="ct-qq" placeholder="QQ"></div>' +
+      '<div class="form-row"><label class="form-label">微信</label><input class="form-input" id="ct-wechat" placeholder="微信"></div>' +
+      '<div class="form-row"><label class="form-label">邮箱</label><input class="form-input" id="ct-email" placeholder="邮箱"></div>' +
+      '<div class="form-row"><label class="form-label">部门</label><input class="form-input" id="ct-dept" placeholder="部门"></div>' +
+      '<div class="form-row"><label class="form-label">职位</label><input class="form-input" id="ct-pos" placeholder="职位"></div>' +
+      '<div class="form-row"><label class="form-label">所属客户</label><input class="form-input" id="ct-cid" type="text" value="' + (cid || '') + '" placeholder="客户ID（可在客户列表查看）"></div>' +
+      '</div><button class="form-submit" onclick="App.submitContactAdd()">保存</button>';
+  }
+  function submitContactAdd() {
+    var name = $('ct-name').value.trim();
+    if (!name) { toast('请填写姓名'); return; }
+    var data = { name: name, mobile: $('ct-mobile').value.trim(), qq: $('ct-qq').value.trim(), wechat: $('ct-wechat').value.trim(), email: $('ct-email').value.trim(), department: $('ct-dept').value.trim(), position: $('ct-pos').value.trim() };
+    if ($('ct-cid').value.trim()) data.cid = $('ct-cid').value.trim();
+    OA.API.contactAdd(data).then(function (res) {
+      if (res && res.code === 0) { toast('保存成功'); openSub('contact-list', subState && subState.customerId); }
+      else toast((res && res.msg) || '保存失败');
+    }).catch(function () { toast('网络异常'); });
+  }
+
+  function openChanceAdd(cid) {
+    cid = cid || (subState && subState.customerId) || 0;
+    var c = $('page-container');
+    var stageOpts = '<option value="">请选择</option><option value="0">未设置</option><option value="1">立项评估</option><option value="2">初期沟通</option><option value="3">需求分析</option><option value="4">商务谈判</option><option value="5">方案制定</option><option value="6">合同签订</option><option value="7">失单</option>';
+    c.innerHTML =
+      '<div class="detail-head"><div class="dh-title">新增销售机会</div><div class="dh-sub">接口 /customer/chance/chance_add</div></div>' +
+      '<div class="form-card">' +
+      '<div class="form-row"><label class="form-label req">标题</label><input class="form-input" id="ch-title" placeholder="机会标题"></div>' +
+      '<div class="form-row"><label class="form-label">客户ID</label><input class="form-input" id="ch-cid" type="text" value="' + (cid || '') + '" placeholder="客户ID"></div>' +
+      '<div class="form-row"><label class="form-label">联系人ID</label><input class="form-input" id="ch-contact-id" type="text" placeholder="联系人ID（可选）"></div>' +
+      '<div class="form-row"><label class="form-label">阶段</label><select class="form-input" id="ch-stage">' + stageOpts + '</select></div>' +
+      '<div class="form-row"><label class="form-label">预计金额</label><input class="form-input" id="ch-amount" type="text" placeholder="预计金额"></div>' +
+      '<div class="form-row"><label class="form-label">预计成交</label><input class="form-input" id="ch-expected-time" type="date"></div>' +
+      '<div class="form-row"><label class="form-label">发现时间</label><input class="form-input" id="ch-discovery-time" type="date"></div>' +
+      '<div class="form-row"><label class="form-label">产品名称</label><input class="form-input" id="ch-products" type="text" placeholder="产品名称"></div>' +
+      '<div class="form-row"><label class="form-label">内容</label><textarea class="form-input" id="ch-content" rows="4" placeholder="机会内容"></textarea></div>' +
+      '</div><button class="form-submit" onclick="App.submitChanceAdd()">保存</button>';
+  }
+  function submitChanceAdd() {
+    var title = $('ch-title').value.trim();
+    if (!title) { toast('请填写标题'); return; }
+    var data = { title: title };
+    if ($('ch-cid').value.trim()) data.cid = $('ch-cid').value.trim();
+    if ($('ch-contact-id').value.trim()) data.contact_id = $('ch-contact-id').value.trim();
+    data.stage = $('ch-stage').value || '0';
+    if ($('ch-amount').value.trim()) data.expected_amount = $('ch-amount').value.trim();
+    if ($('ch-expected-time').value.trim()) data.expected_time = $('ch-expected-time').value.trim();
+    if ($('ch-discovery-time').value.trim()) data.discovery_time = $('ch-discovery-time').value.trim();
+    if ($('ch-products').value.trim()) data.product_names = $('ch-products').value.trim();
+    if ($('ch-content').value.trim()) data.content = $('ch-content').value.trim();
+    OA.API.chanceAdd(data).then(function (res) {
+      if (res && res.code === 0) { toast('保存成功'); openSub('chance-list', subState && subState.customerId); }
+      else toast((res && res.msg) || '保存失败');
+    }).catch(function () { toast('网络异常'); });
+  }
+
+  function delTrace(id) {
+    if (!window.confirm('确定删除该跟进记录？')) return;
+    OA.API.traceDel(id).then(function (res) {
+      if (res && res.code === 0) { toast('已删除'); subState.page = 1; subState.done = false; subState.rows = {}; loadSubList(); }
+      else toast((res && res.msg) || '删除失败');
+    }).catch(function () { toast('网络异常'); });
+  }
+  function delContact(id) {
+    if (!window.confirm('确定删除该联系人？')) return;
+    OA.API.contactDel(id).then(function (res) {
+      if (res && res.code === 0) { toast('已删除'); subState.page = 1; subState.done = false; subState.rows = {}; loadSubList(); }
+      else toast((res && res.msg) || '删除失败');
+    }).catch(function () { toast('网络异常'); });
+  }
+  function delChance(id) {
+    if (!window.confirm('确定删除该销售机会？')) return;
+    OA.API.chanceDel(id).then(function (res) {
+      if (res && res.code === 0) { toast('已删除'); subState.page = 1; subState.done = false; subState.rows = {}; loadSubList(); }
+      else toast((res && res.msg) || '删除失败');
+    }).catch(function () { toast('网络异常'); });
+  }
+  function customerToSea(id) {
+    if (!window.confirm('确定把该客户转入公海？转入后此客户将不再归属你名下。')) return;
+    OA.API.customerToSea(id).then(function (res) {
+      if (res && res.code === 0) { toast('已转入公海'); closePanel(); listState.customer = { page: 1, type: 1, kw: '', loading: false, done: false, rows: {} }; loadCustomer(1); }
+      else toast((res && res.msg) || '操作失败');
+    }).catch(function () { toast('网络异常'); });
   }
 
   // ===== 弹层（详情/消息通用）=====

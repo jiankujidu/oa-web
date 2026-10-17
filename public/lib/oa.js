@@ -260,6 +260,33 @@
     // 个人资料 / 密码
     editPersonal: function (data) { return apiPost('/home/index/edit_personal', data); },
     editPassword: function (data) { return apiPost('/home/index/edit_password', data); },
+
+    // ===== 客户写操作（接口与参数对齐 App api.js）=====
+    customerAdd: function (data) { return apiPost('/customer/index/add', data); },
+    // 新增客户页默认值（页面型接口，从 HTML 表单提取归属员工/部门默认值，对齐 App customerAddDefaults）
+    customerAddDefaults: function () {
+      return apiGetPlain('/customer/index/add.html').then(function (html) {
+        function val(name) { var m = html.match(new RegExp('name="' + name + '"[^>]*value="([^"]*)"')); return m ? m[1] : ''; }
+        function selVal(name) { var m = html.match(new RegExp('name="' + name + '"[\\s\\S]*?<option value="([^"]*)"[^>]*selected')); return m ? m[1] : ''; }
+        return {
+          belong_name: val('belong_name'),
+          belong_uid: val('belong_uid'),
+          belong_did: val('belong_did'),
+          belong_department: selVal('belong_department') || val('belong_department')
+        };
+      });
+    },
+    customerToSea: function (id) { return apiPost('/customer/index/to_sea', { id: id }); },
+    customerTransfer: function (data) { return apiPost('/customer/index/transfer', data); },
+    // 跟进
+    traceAdd: function (data) { return apiPost('/customer/api/add_trace', data); },
+    traceDel: function (id) { return apiPost('/customer/api/del_trace', { id: id }); },
+    // 联系人
+    contactAdd: function (data) { return apiPost('/customer/contact/contact_add', data); },
+    contactDel: function (id) { return apiPost('/customer/contact/contact_del', { id: id }); },
+    // 商机
+    chanceAdd: function (data) { return apiPost('/customer/chance/chance_add', data); },
+    chanceDel: function (id) { return apiPost('/customer/chance/chance_del', { id: id }); },
     // 附件上传（/api/index/upload，multipart，字段名 file）
     uploadFile: function (file) {
       var fd = new FormData();
