@@ -24,32 +24,29 @@
 
 > 自定义域名（可选）：在 Worker 设置里绑定你自己的子域（如 `oa.你的域名.com`），并在 Cloudflare DNS 加一条 CNAME 指向 Worker。
 
-### 绑定自定义域名 `oa.jk93.qzz.io`（当前账号已就绪的部分）
+### 绑定自定义域名 `oa.jk93.qzz.io` ✅ 已上线
 
-Worker 脚本 `oa-web` 已部署到 Cloudflare 账户 `jiankujidu`，**默认地址 `https://oa-web.jiankujidu.workers.dev/` 现已可直接使用**（手机/电脑打开即登录，无需任何代理）。
+Worker 脚本 `oa-web` 已部署到 Cloudflare 账户 `jiankujidu`。
 
-要把它绑定到 `oa.jk93.qzz.io`，二选一：
+- **默认地址**：`https://oa-web.jiankujidu.workers.dev/`（手机/电脑打开即登录，无需任何代理）
+- **自定义域名**：`https://oa.jk93.qzz.io/` —— 已绑定并验证可用（首页 200、验证码经反代返回 `image/png`）
 
-**方式一 · 控制台点 2 下（推荐，无需给我任何凭据）**
-1. 打开 https://dash.cloudflare.com → 进入 `oa-web` Worker → 左侧 **Triggers**（或 Domains & Routes）→ **Add route**
-2. 填 `oa.jk93.qzz.io/*` → 保存；系统会提示自动加一条**橙云（proxied）DNS 记录**，确认即可
-3. 约 1 分钟后生效，访问 `https://oa.jk93.qzz.io/` 即可（Worker 会自动把前端 `OA_BASE` 设为同域，接口照常走通）
+> 绑定方式：Cloudflare **Worker 自定义域名（Custom Domain）** 接口，它会自动建好橙云 DNS 记录 + 签发证书，比手动加 Route 更干净。
 
-**方式二 · API 自动绑定（需更宽权限的 Token）**
-当前部署用的 Token 仅含 `Workers Scripts:Edit`，不足以建 DNS/Route。需要另发一个 Token（或账户 Global API Key），权限含：
-- `Zone → DNS → Edit`
-- `Zone → Workers Routes → Edit`
+**方式一 · 控制台点几下（无需给我任何凭据）**
+1. 打开 https://dash.cloudflare.com → 进入 `oa-web` Worker → 左侧 **Settings → Domains & Routes → Add**
+2. 选 **Custom Domain**，填 `oa.jk93.qzz.io` → 确认（自动加橙云 DNS + 证书）
+3. 约 1 分钟生效，浏览器打开即登录（Worker 自动把前端 `OA_BASE` 设为同域，接口照常走通）
 
-随后执行：
+**方式二 · API 自动绑定（已实测成功 ✅）**
+只要 Token 含 `Workers Scripts:Edit` + `Zone:Read`（含 R2 类令牌），即可调用**账户级自定义域名接口**完成绑定，无需 `DNS Edit` / `Workers Routes Edit` 权限：
+
 ```bash
-# 1. DNS 记录（橙云）
-curl -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records" \
+# 把 oa-web 挂到自定义域名 oa.jk93.qzz.io（zone_id 用 jk93.qzz.io 的）
+curl -X PUT "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/domains" \
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"type":"A","name":"oa.jk93.qzz.io","content":"192.0.2.1","proxied":true,"ttl":1}'
-# 2. Worker Route
-curl -X PUT "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/workers/routes" \
-  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-  -d '{"pattern":"oa.jk93.qzz.io/*","script":"oa-web"}'
+  -d '{"zone_id":"'$ZONE_ID'","hostname":"oa.jk93.qzz.io","service":"oa-web","environment":"production"}'
+# 返回 success:true 即绑定完成（自动建 DNS + 证书）
 ```
 
 ### 方案 B：GitHub Pages + 纯代理 Worker（备选）
