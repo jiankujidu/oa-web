@@ -164,17 +164,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
 
   $('foot').textContent = '网页版 · ' + OA.BASE.replace('https://','');
 
-  // 诊断：登录成功后会话被服务端判失效（自动退回本页）时，90 秒内显示红色诊断条
-  (function checkSessionLost(){
+  // 诊断：被自动退回登录页时（90 秒内），红条显示服务端/启动的真实原因
+  (function checkKickReasons(){
     try {
+      var msgs = [];
       var lostAt = parseInt(localStorage.getItem('uping_session_lost') || '0', 10);
       if (lostAt && Date.now() - lostAt < 90000) {
         var lostMsg = localStorage.getItem('uping_session_lost_msg') || '';
         localStorage.removeItem('uping_session_lost');
         localStorage.removeItem('uping_session_lost_msg');
-        tip.innerHTML = '⚠️ 上次登录后会话未保持，已自动退回。服务端提示：' + OA.esc(lostMsg) +
-          '。常见原因：① 账号在别处登录被顶下线 ② 浏览器禁用了 Cookie。请重试一次，若反复出现请截图此条反馈';
-        // 提示要醒目且能多显示几行
+        msgs.push('登录后会话未保持，服务端提示：' + (lostMsg || '（无）') +
+          '。常见原因：① 账号在别处登录被顶下线 ② 浏览器限制 Cookie');
+      }
+      var beRaw = localStorage.getItem('uping_boot_err');
+      if (beRaw) {
+        localStorage.removeItem('uping_boot_err');
+        var be = JSON.parse(beRaw);
+        if (be && be.t && Date.now() - be.t < 90000) {
+          msgs.push('主界面异常退回[' + (be.tag || '?') + ']：' + (be.m || '') +
+            (be.s ? ' ｜ ' + be.s.split('\n')[0] : ''));
+        }
+      }
+      if (msgs.length) {
+        tip.innerHTML = '⚠️ ' + msgs.map(OA.esc).join('<br>⚠️ ') +
+          '<br>请截图此红色提示反馈，可一击定位';
         tip.style.whiteSpace = 'normal';
         tip.style.lineHeight = '1.6';
       }
