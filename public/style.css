@@ -15,6 +15,19 @@ body{
 
 /* ===== 主框架 ===== */
 .app-view{position:fixed;inset:0;display:flex;flex-direction:column}
+/* 左侧导航（桌面端专用；移动端隐藏） */
+.sidebar{display:none;flex-direction:column;width:232px;flex-shrink:0;background:#fff;border-right:1px solid var(--line);padding:18px 12px 14px}
+.sb-brand{display:flex;align-items:center;gap:10px;padding:2px 10px 18px}
+.sb-logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sb-name{font-size:17px;font-weight:700;color:var(--ink)}
+.sb-nav{display:flex;flex-direction:column;gap:4px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;font-size:14px;color:#5b6472;cursor:pointer;user-select:none}
+.sb-item:hover{background:#f5f7fb;color:var(--ink)}
+.sb-item.active{background:#eaf1ff;color:var(--blue);font-weight:600}
+.sbi-icon{width:22px;text-align:center;font-size:16px}
+.sb-foot{margin-top:auto;border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:4px}
+/* 主列（顶栏+内容+移动端tabbar 的竖排容器） */
+.main-col{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
 .topbar{min-height:52px;background:var(--blue);color:#fff;display:flex;align-items:center;padding:0 14px;position:relative;z-index:10;padding-top:env(safe-area-inset-top)}
 .topbar-title{font-size:18px;font-weight:600;flex:1}
 .topbar-right{display:flex;align-items:center;gap:8px}
@@ -138,4 +151,46 @@ body{
   .grid{grid-template-columns:repeat(3,1fr)}
   .form-label{width:74px;flex:0 0 74px}
   .detail-row .dl{width:74px}
+}
+
+/* ===== 电脑端正式布局（≥992px）：左侧导航 + 白顶栏 + 宽幅内容区 ===== */
+@media (min-width:992px){
+  .app-view{flex-direction:row}
+  .sidebar{display:flex}
+  .tabbar{display:none}
+  /* 顶栏改白底细线，融入桌面风格 */
+  .topbar{background:#fff;color:var(--ink);border-bottom:1px solid var(--line);min-height:56px;padding:0 26px}
+  .topbar-title{font-size:16px;font-weight:600;color:var(--ink)}
+  .topbar-btn{color:#5b6472;background:#f2f4f7}
+  .topbar-btn:hover{color:var(--blue);background:#eaf1ff}
+  /* 内容区：通宽 + 大留白（内层不再做 680 居中） */
+  .page-container{display:block;padding:26px clamp(24px,5vw,56px) 48px}
+  .page-container::before,.page-container::after{display:none}
+  .section-title{font-size:15px;color:var(--ink);padding:6px 2px 12px}
+  /* 宫格：8 列悬浮卡片 */
+  .grid{grid-template-columns:repeat(8,1fr);gap:12px;padding:0 0 6px}
+  .grid-item{border:1px solid var(--line);box-shadow:none;padding:18px 4px 14px;transition:.15s}
+  .grid-item:hover{border-color:var(--blue2);box-shadow:0 6px 16px rgba(30,111,255,.12);transform:translateY(-2px)}
+  .grid-item .gi-icon{font-size:26px}
+  /* 卡片通宽 + 悬浮反馈 */
+  .card,.form-card,.detail-card,.search-bar,.seg,.menu-item{max-width:none;width:100%;margin:0 0 14px}
+  .search-bar{margin-top:0}
+  .seg{margin:0 0 14px}
+  .card{transition:box-shadow .15s}
+  .card:hover{box-shadow:0 4px 14px rgba(0,0,0,.08)}
+  .menu-item{margin:0 0 10px}
+  .launch-card{margin:0 0 14px}
+  .sub-add-bar{margin:0 0 14px}
+  .detail-actions{margin:0 0 14px}
+  .detail-card{margin:0 0 14px;padding:6px 16px}
+  /* 首页"我的待办"两栏 */
+  .home-duo{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .home-duo .card{margin:0;cursor:pointer}
+  /* 表单/审批类型页 */
+  .type-grid{max-width:none;margin:0;grid-template-columns:repeat(8,1fr)}
+  .form-submit{width:100%;margin:0 0 22px;padding:12px 0}
+  /* 弹层改居中对话框 */
+  .mask-overlay{align-items:center;justify-content:center}
+  .mask-panel{width:660px;max-width:92vw;max-height:82vh;border-radius:14px;margin:0}
+  .app-ver{padding:22px 0 8px}
 }

@@ -54,8 +54,10 @@
     }
     html += '</div>';
     html += '<div class="section-title">我的待办</div>';
+    html += '<div class="home-duo">';
     html += '<div class="card" onclick="App.switchTab(\'approve\')"><div class="card-title">待审审批</div><div class="card-line">点击查看我发起的与待我处理的审批</div></div>';
     html += '<div class="card" onclick="App.switchTab(\'customer\')"><div class="card-title">客户跟进</div><div class="card-line">客户列表 · 公海 · 联系人 · 订单 · 样本</div></div>';
+    html += '</div>';
     c.innerHTML = html;
     // 预热名字 + 未读消息数
     preloadName();
@@ -185,6 +187,9 @@
     currentTab = tab;
     var items = document.querySelectorAll('.tab-item');
     for (var i = 0; i < items.length; i++) items[i].className = 'tab-item' + (items[i].getAttribute('data-tab') === tab ? ' active' : '');
+    // 桌面端左侧导航同步高亮
+    var sbs = document.querySelectorAll('.sb-item[data-tab]');
+    for (var s = 0; s < sbs.length; s++) sbs[s].className = 'sb-item' + (sbs[s].getAttribute('data-tab') === tab ? ' active' : '');
     var titles = { home: '首页', approve: '审批', customer: '客户', mine: '我的' };
     $('top-title').textContent = titles[tab] || '优品OA';
     if (tab === 'home') renderHome();
