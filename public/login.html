@@ -49,6 +49,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
 .btn:disabled{opacity:.6;cursor:not-allowed}
 .tip{color:var(--err);font-size:13px;margin-top:12px;text-align:center;min-height:18px}
 .foot{color:#9aa0aa;font-size:12px;margin-top:22px;text-align:center;line-height:1.6}
+.diag{margin-top:14px;font-size:12px;color:#8a8f99;border:1px dashed #d7e0ee;border-radius:10px;padding:8px 10px;background:#f7faff;text-align:left}
+.diag summary{cursor:pointer;color:#5b6b85;user-select:none}
+.diag-out{margin-top:8px;white-space:normal;line-height:1.7;word-break:break-all;color:#41506b}
+.diag-btn{margin-top:8px;border:none;background:var(--blue);color:#fff;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer}
 @media (min-width:860px){
   body{background:#eaf1ff}
   .card{max-width:960px;padding:0;display:flex;overflow:hidden;box-shadow:0 18px 60px rgba(30,111,255,.22)}
@@ -99,6 +103,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
       <button class="btn" id="login-btn">登 录</button>
       <div class="tip" id="tip"></div>
       <div class="foot" id="foot"></div>
+      <details class="diag" id="diag-box">
+        <summary>🔧 连接诊断（登录不了时点开运行）</summary>
+        <div id="diag-out" class="diag-out">点击下方按钮，在你当前网络里实测登录链路三步。</div>
+        <button type="button" id="diag-run" class="diag-btn">运行诊断</button>
+      </details>
     </div>
   </div>
 </div>
@@ -129,20 +138,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
   // 登录成功 → 进网页版主界面（index.html）
   function doLogin(){
     var u=uEl.value.trim(), p=pEl.value, c=cEl.value.trim();
-    tip.textContent='';
-    if(!u||!p||!c){ tip.textContent='请填写账号、密码和验证码'; return; }
+    tip.textContent=''; tip.style.color='';
+    if(!u||!p||!c){ tip.textContent='请填写账号、密码和验证码（验证码看右侧算式，如 2+6 填 8）'; return; }
     btn.disabled=true; btn.textContent='登录中…';
     OA.API.login(u,p,c).then(function(res){
-      if(res && res.code===0){
+      if(res && (res.code===0 || res.code==='0')){
         saveRemembered();
         try{ localStorage.setItem('uping_user','1'); localStorage.setItem('uping_me', JSON.stringify((res&&res.data)||{})); }catch(e){}
-        setTimeout(function(){ location.replace('index.html'); }, 250);
+        tip.style.color='#1a9c52';
+        tip.textContent='✓ 登录成功，正在进入…';
+        setTimeout(function(){ location.replace('index.html'); }, 400);
       }else{
-        tip.textContent=(res&&res.msg)||'登录失败';
+        tip.textContent='❌ 未通过：' + ((res && res.msg) || '服务端无返回内容') + '（验证码已刷新，请重新填写）';
         refreshCaptcha(); cEl.value='';
       }
-    }).catch(function(){
-      tip.textContent='网络异常，请检查网络后重试；若持续失败请刷新页面';
+    }).catch(function(err){
+      tip.textContent='❌ 网络请求失败：' + (err && err.message ? err.message : '未知') +
+        '。可点下方「连接诊断」定位；若反复出现请截图反馈';
       refreshCaptcha();
     }).finally(function(){ btn.disabled=false; btn.textContent='登 录'; });
   }
@@ -167,6 +179,40 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
         tip.style.lineHeight = '1.6';
       }
     } catch (e) {}
+  })();
+
+  // 一键连接诊断：在用户当前网络实测三步链路，结果直接显示
+  (function bindDiag(){
+    var run=document.getElementById('diag-run'), out=document.getElementById('diag-out');
+    if(!run||!out) return;
+    run.addEventListener('click', function(){
+      run.disabled=true; out.textContent='诊断中…';
+      var lines=[];
+      var p1 = fetch(OA.BASE + '/home/login', {method:'GET', credentials:'include'})
+        .then(function(r){ lines.push('① 登录页接口: HTTP '+r.status+(r.ok?' ✓':' ✗')); })
+        .catch(function(e){ lines.push('① 登录页接口: 请求失败 '+(e&&e.message||e)+' ✗'); });
+      var p2 = fetch(OA.BASE + '/captcha.html?t=' + Date.now(), {method:'GET', credentials:'include'})
+        .then(function(r){ var ct=r.headers.get('content-type')||'?';
+          return r.arrayBuffer().then(function(b){ lines.push('② 验证码接口: HTTP '+r.status+' '+ct.split(';')[0]+' '+b.byteLength+'B'+(r.ok?' ✓':' ✗')); }); })
+        .catch(function(e){ lines.push('② 验证码接口: 请求失败 '+(e&&e.message||e)+' ✗'); });
+      var p3 = p2.then(function(){
+        return fetch(OA.BASE + '/home/login/login_submit', {method:'POST', credentials:'include',
+          headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','X-Requested-With':'XMLHttpRequest'},
+          body:'username=diag_probe&password=diag&captcha=0'})
+          .then(function(r){ return r.text().then(function(t){
+            var v=null; try{ v=JSON.parse(t); }catch(e){}
+            lines.push('③ 登录接口探测: HTTP '+r.status+' → 服务端返回「'+(v?(v.msg||'空'):(t.slice(0,60)||'空'))+'」');
+            if(v && String(v.msg||'').indexOf('验证码')>=0) lines.push('✔ 结论：链路完全正常。登录失败只可能是账号/密码/验证码输入问题');
+            else if(v) lines.push('✔ 结论：链路正常，服务端已正常应答');
+          }); })
+          .catch(function(e){ lines.push('③ 登录接口探测: 请求失败 '+(e&&e.message||e)+' —— 你当前网络到服务器的 POST 被拦截'); });
+      });
+      Promise.all([p1,p3]).catch(function(){}).then(function(){
+        out.innerHTML = lines.map(function(l){ return '<div>'+OA.esc(l)+'</div>'; }).join('');
+        run.disabled=false;
+        refreshCaptcha(); // 探测会消耗当前会话验证码，刷一张新的
+      });
+    });
   })();
 
   fillSaved(); refreshCaptcha();
