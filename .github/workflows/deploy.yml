@@ -1,5 +1,7 @@
-name: Deploy 优品OA Web to Pages
+name: Build & Deploy 优品OA Web Worker
 
+# 推送到 main 自动：构建（前端资源内联进 Worker）-> 部署到 Cloudflare Worker
+# 自定义域名 oa.jk93.qzz.io 的绑定是独立配置，不会因重新部署而丢失。
 on:
   push:
     branches: [main, master]
@@ -7,31 +9,44 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
-concurrency:
-  group: pages
-  cancel-in-progress: true
+env:
+  CF_ACCOUNT_ID: "36dc817a796a8f194ad1631a646d6762"
+  CF_SCRIPT_NAME: "oa-web"
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: .   # 整个 oa_web 目录即站点根
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Build Worker (inline frontend assets)
+        run: python build_worker.py
+
+      - name: Deploy to Cloudflare Worker
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          CODE="dist/worker.js"
+          echo "Deploying $CODE ($(wc -c < "$CODE") bytes) to script $CF_SCRIPT_NAME"
+          curl -s -m 60 -X PUT \
+            "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT_ID/workers/scripts/$CF_SCRIPT_NAME" \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+            -H "Content-Type: application/javascript" \
+            --data-binary "@$CODE" | tee /tmp/cf_resp.json
+          # 校验 Cloudflare 返回的 success 字段
+          python - <<'PY'
+          import json,sys
+          d=json.load(open('/tmp/cf_resp.json'))
+          if not d.get('success'):
+              print("DEPLOY FAILED:", d.get('errors'))
+              sys.exit(1)
+          print("DEPLOY OK")
+          PY
