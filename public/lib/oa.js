@@ -228,6 +228,8 @@
     messageList: function (tab, page, limit, kw) {
       var p = { page: page, limit: limit }; if (kw) p.keywords = kw; return apiGet('/message/index/' + tab, p);
     },
+    // 消息已读+详情（页面型接口，返回 HTML，由调用方提取字段；对齐 App /message/index/read）
+    messageRead: function (id) { return apiGetPlain('/message/index/read', { id: id }); },
     contactList: function (page, limit, kw) {
       var p = { page: page, limit: limit }; if (kw) p.keywords = kw; return apiGet('/customer/contact/index', p);
     },

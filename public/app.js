@@ -149,10 +149,14 @@
     toast: toast
   };
 
-  // 铃铛 → 收件箱
+  // 铃铛 → 收件箱；顶栏「退出」→ 确认后退出登录
   document.addEventListener('DOMContentLoaded', function () {
     var b = document.getElementById('bell');
     if (b) b.addEventListener('click', function () { openSub('message-inbox'); });
+    var lo = document.getElementById('logout-btn');
+    if (lo) lo.addEventListener('click', function () {
+      if (window.confirm('确定退出登录？')) App.logout();
+    });
   });
 
   // ===== 通用 =====
@@ -536,11 +540,44 @@
     }).catch(function () { toast('网络异常'); });
   }
 
-  // 消息详情
+  // 消息详情（接口对齐 App：/message/index/read 页面型 HTML，同时标记已读）
   function openMsg(id) {
-    OA.API.messageList('inbox', 1, 1).then(function () {});
-    // 简化：直接提示
-    toast('打开消息 ' + id + '（详情接口后续补全）');
+    openPanel('<div class="detail-head"><div class="dh-title">消息详情</div><div class="dh-sub">加载中…</div></div>');
+    OA.API.messageRead(id).then(function (html) {
+      if (!html) { openPanel('<div class="empty">内容加载失败，点击重试</div>'); return; }
+      var d = parseMsgDetailHtml(String(html));
+      var head = '<div class="detail-head"><div class="dh-title">' + OA.esc(d.title || '消息') + '</div>' +
+        '<div class="dh-sub">' + OA.esc(d.from || '-') + ' · ' + OA.esc(d.time || '-') + '</div></div>';
+      var body = '<div class="detail-card">' +
+        (d.to ? '<div class="detail-row"><div class="dl">收件人</div><div class="dv">' + OA.esc(d.to) + '</div></div>' : '') +
+        '<div class="detail-row"><div class="dl">内容</div><div class="dv" style="white-space:pre-wrap;word-break:break-all">' + (d.content || '（无内容）') + '</div></div>' +
+        '</div>';
+      openPanel(head + body);
+    }).catch(function () {
+      openPanel('<div class="empty retry" onclick="App.openMsg(' + id + ')">网络异常，点击重试</div>');
+    });
+  }
+  // 从 /message/index/read 返回的 HTML 里提取字段（对齐 App parseMsgDetailHtml）
+  function parseMsgDetailHtml(html) {
+    function g(pat) {
+      var m = html.match(pat);
+      if (!m) return '';
+      return m[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+    }
+    var cm = html.match(/消息内容<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>/);
+    var content = cm ? cm[1] : '';
+    // 正文里的链接改为新窗口打开（相对链接经 Worker 同域代理，仍可访问）
+    content = content.replace(/<a\s+[^>]*href="((?!javascript:)[^"]+)"[^>]*>([\s\S]*?)<\/a>/gi,
+      function (m, href, txt) {
+        return '<a href="' + OA.esc(href) + '" target="_blank" rel="noopener" style="color:#1E6FFF">' + txt + '</a>';
+      });
+    return {
+      title: g(/信息主题<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>/),
+      from: g(/发送人<\/td>\s*<td>([\s\S]*?)<\/td>/),
+      time: g(/发送时间<\/td>\s*<td>([\s\S]*?)<\/td>/),
+      to: g(/收件人<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>/),
+      content: content
+    };
   }
   function openArticle(id) { toast('打开问答 ' + id); }
   function openOrder(id) {
