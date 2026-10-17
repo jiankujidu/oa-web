@@ -15,14 +15,27 @@
 
 ## 部署方式
 
-### 方案 A：单一 Cloudflare Worker（推荐，最省事）
-前端页面 + OA 接口全部收拢到你的 `*.workers.dev` 同域，浏览器不拦，手机电脑打开一个网址就能登录，**无需填任何代理**。
+### 方案 A：单一 Cloudflare Worker（推荐，最省事、最快）
+前端页面**直接打包进 Worker**（CF 边缘节点就近返回，不再绕 GitHub Pages），OA 接口同域反代。手机电脑打开一个网址就能登录，**无需填任何代理**。
 
-1. 登录 https://dash.cloudflare.com → **Workers & Pages → 创建 Worker**（Hello World 模板）
-2. 把 `proxy/worker-all.js` 全部内容粘贴覆盖，点 **Deploy**
-3. 得到 `https://<你的子域>.workers.dev` —— 直接打开就是登录页，登录后所有功能可用
+```
+源码布局
+  public/            前端（login.html / index.html / app.js / style.css / lib/*）—— 这才是你要改的东西
+  build_worker.py     构建脚本：把 public/ 内联成 dist/worker.js
+  dist/worker.js      构建产物（自动生成，勿手改）
+  deploy.sh           构建 + 上传到 CF（需 CF_API_TOKEN 环境变量）
 
-> 自定义域名（可选）：在 Worker 设置里绑定你自己的子域（如 `oa.你的域名.com`），并在 Cloudflare DNS 加一条 CNAME 指向 Worker。
+本地改完前端后：
+  python3 build_worker.py        # 重新生成 dist/worker.js
+  CF_API_TOKEN=xxxx bash deploy.sh   # 构建并部署
+```
+
+1. 改 `public/` 下的前端文件
+2. `python3 build_worker.py` 生成 `dist/worker.js`（前端资源以 base64 内联，Worker 自己托管，飞快）
+3. `CF_API_TOKEN=xxxx bash deploy.sh` 一键构建+部署
+4. 打开 `https://oa.jk93.qzz.io/`（或 `https://oa-web.workers.dev`）即登录页，登录后功能可用
+
+> 为什么快：之前前端从 GitHub Pages 拉取，国内常被墙/慢；现在静态由 CF 边缘直接返回，去掉了最慢的一跳。
 
 ### 绑定自定义域名 `oa.jk93.qzz.io` ✅ 已上线
 
@@ -49,8 +62,9 @@ curl -X PUT "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/d
 # 返回 success:true 即绑定完成（自动建 DNS + 证书）
 ```
 
-### 方案 B：GitHub Pages + 纯代理 Worker（备选）
-前端托管在 GitHub Pages，API 经 `proxy/worker.js` 代理。
+### 方案 B：GitHub Pages + 纯代理 Worker（备选，国内偏慢）
+仅在你想把前端放在 GitHub Pages 时才用；API 经 `proxy/worker.js` 代理。
+> 注意：GitHub Pages 在大陆经常慢/不稳，正是之前 `oa.jk93.qzz.io` 卡顿的根因，故默认推荐**方案 A**。
 
 1. 把本仓库推到 GitHub，开启 **Settings → Pages → GitHub Actions**（已含 `.github/workflows/deploy.yml`）
 2. 另建一个 Worker，粘贴 `proxy/worker.js`，得到 `https://<代理子域>.workers.dev/?url=`
