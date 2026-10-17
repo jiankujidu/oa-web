@@ -34,11 +34,41 @@
 <script src="lib/approve_meta.js"></script>
 <script src="app.js"></script>
 <script>
-window.addEventListener('load', function(){
-  if (OA.isLoggedIn()) { document.getElementById('app-view').style.display='flex'; App.init(); }
-  else { location.replace('login.html'); }
-  document.getElementById('boot-splash').style.display='none';
-});
+/* 启动逻辑：CSS/JS 已由构建内联进本页，DOM 解析到这里即可直接执行，不等待 window.load。
+ * try/catch + 3.5s 看门狗双兜底，任何异常都不会卡死在启动屏。 */
+(function () {
+  var sp = document.getElementById('boot-splash');
+  function hideSplash() { if (sp) sp.style.display = 'none'; }
+  function boot() {
+    try {
+      if (OA.isLoggedIn()) {
+        document.getElementById('app-view').style.display = 'flex';
+        App.init();
+        hideSplash();
+      } else {
+        location.replace('login.html');
+      }
+    } catch (e) {
+      // 启动异常：清登录态回登录页，绝不留在启动屏
+      try { localStorage.removeItem('uping_user'); localStorage.removeItem('uping_me'); } catch (_e) {}
+      location.replace('login.html');
+    }
+  }
+  // 看门狗：3.5s 后若启动屏仍在（脚本异常/极端情况），强制恢复
+  setTimeout(function () {
+    if (!sp || sp.style.display === 'none') return;
+    var logged = false;
+    try { logged = localStorage.getItem('uping_user') === '1'; } catch (e) {}
+    if (!logged) { location.replace('login.html'); return; }
+    hideSplash();
+    var av = document.getElementById('app-view');
+    if (av && av.style.display === 'none') {
+      av.style.display = 'flex';
+      try { App.init(); } catch (e) {}
+    }
+  }, 3500);
+  boot();
+})();
 </script>
 </body>
 </html>

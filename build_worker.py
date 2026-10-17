@@ -56,33 +56,63 @@ CT = {
 
 INJECT = '<script>window.OA_BASE=location.origin;</script>'  # 同域：前端 API 请求发回本 Worker
 
+# HTML 内联：把 <link stylesheet> / <script src> 替换为内联内容。
+# 国内访问 CF 边缘时多资源串行加载易挂起（表现为启动屏卡死/验证码空白）；内联后每页只发一次请求。
+INL_CSS_RE = re.compile(r'<link\s+rel="stylesheet"\s+href="([^"]+)"\s*/?>')
+INL_JS_RE = re.compile(r'<script\s+src="([^"]+)"\s*>\s*</script>')
+
+
+def _inline_html(txt, files):
+    def css_sub(m):
+        key = "/" + m.group(1).lstrip("/")
+        raw = files.get(key)
+        if raw is None:
+            return m.group(0)
+        return "<style>\n" + raw.decode("utf-8", "replace") + "\n</style>"
+
+    def js_sub(m):
+        key = "/" + m.group(1).lstrip("/")
+        raw = files.get(key)
+        if raw is None:
+            return m.group(0)
+        code = raw.decode("utf-8", "replace").replace("</script", "<\\/script")
+        return "<script>\n" + code + "\n</script>"
+
+    txt = INL_CSS_RE.sub(css_sub, txt)
+    txt = INL_JS_RE.sub(js_sub, txt)
+    return txt
+
 
 def collect():
-    assets = {}
-    for dirpath, _, files in os.walk(PUB):
-        for f in files:
+    # 第一遍：读入全部文件
+    files = {}
+    for dirpath, _, names in os.walk(PUB):
+        for f in names:
             full = os.path.join(dirpath, f)
             rel = os.path.relpath(full, PUB).replace(os.sep, "/")
             if not rel.startswith("/"):
                 rel = "/" + rel
-            ext = os.path.splitext(f)[1].lower()
-            ct = CT.get(ext, "application/octet-stream")
             with open(full, "rb") as fh:
-                raw = fh.read()
-            if ext == ".html":
-                # 注入同域标记
-                txt = raw.decode("utf-8", "replace")
-                if "</head>" in txt:
-                    txt = txt.replace("</head>", INJECT + "</head>", 1)
-                else:
-                    txt = txt.replace("</html>", INJECT + "</html>", 1)
-                # 注入 git/构建信息占位符（仅 git.html 用到，其他页面无占位符则无副作用）
-                txt = (txt.replace("__COMMIT__", COMMIT)
-                          .replace("__REPO_URL__", REPO_URL)
-                          .replace("__BUILD_TIME__", BUILD_TIME))
-                raw = txt.encode("utf-8")
-            b64 = base64.b64encode(raw).decode("ascii")
-            assets[rel] = {"b": b64, "t": ct}
+                files[rel] = fh.read()
+
+    # 第二遍：处理 HTML（同域注入 + git 信息 + 内联 CSS/JS）
+    assets = {}
+    for rel, raw in files.items():
+        ext = os.path.splitext(rel)[1].lower()
+        ct = CT.get(ext, "application/octet-stream")
+        if ext == ".html":
+            txt = raw.decode("utf-8", "replace")
+            if "</head>" in txt:
+                txt = txt.replace("</head>", INJECT + "</head>", 1)
+            else:
+                txt = txt.replace("</html>", INJECT + "</html>", 1)
+            # 注入 git/构建信息占位符（仅 git.html 用到，其他页面无占位符则无副作用）
+            txt = (txt.replace("__COMMIT__", COMMIT)
+                      .replace("__REPO_URL__", REPO_URL)
+                      .replace("__BUILD_TIME__", BUILD_TIME))
+            txt = _inline_html(txt, files)
+            raw = txt.encode("utf-8")
+        assets[rel] = {"b": base64.b64encode(raw).decode("ascii"), "t": ct}
     return assets
 
 
@@ -125,7 +155,8 @@ function serveAsset(pathname) {
     status: 200,
     headers: {
       'content-type': a.t + '; charset=utf-8',
-      'cache-control': 'public, max-age=600'
+      // HTML 不缓存：保证发版后浏览器立即拿到新版（CSS/JS 已内联进 HTML，无需担心配套资源版本）
+      'cache-control': (a.t === 'text/html') ? 'no-cache' : 'public, max-age=600'
     }
   });
 }
