@@ -8,12 +8,35 @@ OA 业务接口仍反代到 oa.upingbio.cn。同源 => 浏览器不拦、登录�
 用法: python build_worker.py
 依赖: Python 3（仅标准库）
 """
-import os, base64, json
+import os, base64, json, subprocess, datetime, re
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 PUB = os.path.join(ROOT, "public")
 OUT_DIR = os.path.join(ROOT, "dist")
 OUT = os.path.join(OUT_DIR, "worker.js")
+
+
+def _git(args, default=""):
+    try:
+        return subprocess.check_output(
+            ["git"] + args, cwd=ROOT, stderr=subprocess.DEVNULL
+        ).decode("utf-8", "replace").strip()
+    except Exception:
+        return default
+
+
+def _repo_web_url():
+    # 从 remote 里稳健提取 owner/repo，无论它是 SSH/https 还是被工具改写过的畸形格式
+    url = _git(["remote", "get-url", "origin"], "")
+    m = re.search(r"github\.com[:/]([\w.-]+/[\w.-]+?)(?:\.git)?/?$", url)
+    if m:
+        return "https://github.com/" + m.group(1)
+    return "https://github.com/jiankujidu/oa-web"
+
+
+COMMIT = _git(["rev-parse", "HEAD"], "unknown")
+REPO_URL = _repo_web_url()
+BUILD_TIME = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 CT = {
     ".html": "text/html",
@@ -53,6 +76,10 @@ def collect():
                     txt = txt.replace("</head>", INJECT + "</head>", 1)
                 else:
                     txt = txt.replace("</html>", INJECT + "</html>", 1)
+                # 注入 git/构建信息占位符（仅 git.html 用到，其他页面无占位符则无副作用）
+                txt = (txt.replace("__COMMIT__", COMMIT)
+                          .replace("__REPO_URL__", REPO_URL)
+                          .replace("__BUILD_TIME__", BUILD_TIME))
                 raw = txt.encode("utf-8")
             b64 = base64.b64encode(raw).decode("ascii")
             assets[rel] = {"b": b64, "t": ct}
@@ -85,6 +112,7 @@ function b64ToBytes(b64) {
 function serveAsset(pathname) {
   let key = pathname;
   if (key === '/' || key === '') key = '/login.html';
+  if (key === '/git') key = '/git.html';   // /git -> 源码仓库/部署信息页
   let a = ASSETS[key];
   if (!a && key.endsWith('/')) a = ASSETS[key + 'index.html'];
   if (!a) {

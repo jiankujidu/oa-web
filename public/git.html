@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>优品OA · 源码仓库</title>
+<style>
+:root{--blue:#1E6FFF;--blue2:#4A9BFF;--ink:#1f2329;--sub:#8a8f99;--line:#e8ecf2;--ok:#22c55e;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:#eef4ff;color:var(--ink);min-height:100dvh;padding:18px;overflow-x:hidden}
+.backdrop{position:fixed;inset:0;z-index:0;overflow:hidden;
+  background:linear-gradient(160deg,#1E6FFF 0%,#4A9BFF 48%,#EAF2FF 100%)}
+.backdrop .blob{position:absolute;border-radius:50%;filter:blur(2px);opacity:.5}
+.backdrop .b1{width:300px;height:300px;background:rgba(255,255,255,.30);top:-70px;right:-50px}
+.backdrop .b2{width:220px;height:220px;background:rgba(74,155,255,.5);bottom:-60px;left:-40px}
+.wrap{position:relative;z-index:1;width:100%;max-width:560px;margin:0 auto}
+.card{background:#fff;border-radius:20px;padding:26px 22px 22px;box-shadow:0 14px 48px rgba(30,111,255,.24);animation:pop .35s ease}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.logo{display:flex;align-items:center;margin-bottom:2px}
+.logo .mark{font-size:22px;font-weight:800;color:#fff;background:var(--blue);width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px rgba(30,111,255,.35)}
+.logo .word{font-size:22px;font-weight:800;color:var(--blue);letter-spacing:1px;margin-left:11px}
+.sub{color:var(--sub);font-size:12.5px;margin:2px 0 18px}
+h2{font-size:14px;color:var(--sub);font-weight:600;margin:18px 0 8px;letter-spacing:.5px}
+.row{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--line);border-radius:12px;padding:12px 13px;margin-bottom:10px;background:#fafcff}
+.row .ico{flex:none;width:24px;height:24px;border-radius:7px;background:rgba(30,111,255,.10);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:13px}
+.row .body{flex:1;min-width:0}
+.row .k{font-size:12px;color:var(--sub);margin-bottom:3px}
+.row .v{font-size:14px;color:var(--ink);word-break:break-all}
+.mono{font-family:var(--mono);font-size:13px}
+a.repo{color:var(--blue);text-decoration:none;font-weight:600;word-break:break-all}
+a.repo:active{opacity:.7}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#0a7a3d;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);border-radius:999px;padding:3px 10px}
+.badge .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(34,197,94,.18)}
+.steps{list-style:none}
+.steps li{position:relative;padding:0 0 12px 26px;font-size:13.5px;line-height:1.55;color:#39404a}
+.steps li:last-child{padding-bottom:0}
+.steps li:before{content:"";position:absolute;left:6px;top:5px;width:8px;height:8px;border-radius:50%;background:var(--blue2)}
+.steps li:after{content:"";position:absolute;left:9.5px;top:15px;bottom:0;width:1px;background:#d9e6ff}
+.steps li:last-child:after{display:none}
+.steps code{font-family:var(--mono);font-size:12.5px;background:#eef4ff;border:1px solid #dbe7ff;border-radius:6px;padding:1px 6px;color:#0f4fd0}
+.btns{display:flex;gap:10px;margin-top:20px}
+.btn{flex:1;text-align:center;text-decoration:none;font-size:14.5px;font-weight:600;padding:12px;border-radius:12px;transition:.15s}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:0 8px 18px rgba(30,111,255,.32)}
+.btn-primary:active{transform:translateY(1px)}
+.btn-ghost{background:#f1f5fb;color:var(--ink);border:1px solid var(--line)}
+.foot{text-align:center;color:#5b6472;font-size:11.5px;margin-top:14px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="backdrop"><div class="blob b1"></div><div class="blob b2"></div></div>
+<div class="wrap">
+  <div class="card">
+    <div class="logo">
+      <div class="mark">OA</div>
+      <div class="word">优品OA</div>
+    </div>
+    <div class="sub">网页版 · 源码仓库 / 部署信息</div>
+
+    <h2>GIT 仓库</h2>
+    <div class="row">
+      <div class="ico">⌥</div>
+      <div class="body">
+        <div class="k">GitHub 仓库（源码 · 自动部署）</div>
+        <div class="v"><a class="repo" href="__REPO_URL__" target="_blank" rel="noopener">__REPO_URL__</a></div>
+      </div>
+    </div>
+
+    <h2>当前部署</h2>
+    <div class="row">
+      <div class="ico">●</div>
+      <div class="body">
+        <div class="k">线上 Commit</div>
+        <div class="v mono">__COMMIT__</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="ico">⏱</div>
+      <div class="body">
+        <div class="k">构建时间</div>
+        <div class="v mono">__BUILD_TIME__</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="ico">✓</div>
+      <div class="body">
+        <div class="k">部署状态</div>
+        <div class="v"><span class="badge"><span class="dot"></span>已上线 · oa.jk93.qzz.io</span></div>
+      </div>
+    </div>
+
+    <h2>怎么改 / 怎么上线</h2>
+    <ul class="steps">
+      <li>克隆仓库：<code>git clone __REPO_URL__</code></li>
+      <li>改前端：编辑 <code>public/</code> 下的页面（<code>login.html</code> / <code>index.html</code> / <code>app.js</code> / <code>style.css</code> / <code>lib/</code>）</li>
+      <li>提交并推送：<code>git push origin main</code></li>
+      <li>GitHub Actions 自动构建（前端内联进 Worker）并部署，约十几秒后本站生效——无需手动操作</li>
+    </ul>
+
+    <div class="btns">
+      <a class="btn btn-primary" href="__REPO_URL__" target="_blank" rel="noopener">打开 GitHub 仓库</a>
+      <a class="btn btn-ghost" href="/login.html">返回登录</a>
+    </div>
+    <div class="foot">接口反代至 oa.upingbio.cn · 前端由 Cloudflare Worker 边缘直出<br>本页每次部署自动更新上述 Commit 与构建时间</div>
+  </div>
+</div>
+</body>
+</html>
