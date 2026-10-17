@@ -105,9 +105,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
       <button class="btn" id="login-btn">登 录</button>
       <div class="tip" id="tip"></div>
       <div class="foot" id="foot"></div>
-      <div class="note">接口直连第三方 OA：oa.upingbio.cn · 因跨域限制，需配置代理才能登录（见下方设置）</div>
+      <div class="note">接口调用第三方 OA：oa.upingbio.cn（非自有服务器，故由代理做同域反代）。推荐用 <b>proxy/worker-all.js</b> 部署一个 Cloudflare Worker，得到一个网址、手机电脑都能直接登录；也可在此填代理地址临时使用。</div>
       <details class="proxy" id="proxy-box">
-        <summary>⚙ 跨域代理设置（第三方 OA 必须填）</summary>
+        <summary>⚙ 部署说明 / 代理设置（可选）</summary>
         <div class="proxy-row">
           <input id="proxy-input" type="text" placeholder="https://你的代理.workers.dev/?url=">
           <button id="proxy-save" type="button">保存</button>
@@ -157,7 +157,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
         refreshCaptcha(); cEl.value='';
       }
     }).catch(function(){
-      tip.textContent='网络异常：跨域被拦。请点开下方「跨域代理设置」填入你的代理地址并刷新页面';
+      tip.textContent='网络异常：请求被跨域拦截。若已用 worker-all.js 部署不应出现此提示；否则请点开下方「代理设置」填入代理地址并刷新';
       refreshCaptcha();
     }).finally(function(){ btn.disabled=false; btn.textContent='登 录'; });
   }
