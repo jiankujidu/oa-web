@@ -1,15 +1,11 @@
 // 优品OA 网页版 · 单一 Worker（静态托管 + API 全反代）
+// Service Worker 格式（addEventListener），兼容 Cloudflare 控制台粘贴与 API 上传。
 // ───────────────────────────────────────────────────────────────
 // 作用：把"网页前端"和"OA 接口"都收拢到你的 *.workers.dev 同域下。
 //   浏览器 → https://oa-web-xxx.workers.dev（前端 + 接口同源）
 //           → 本 Worker 把 /home /oa /customer /note /message /product /api /captcha.html 等
 //             请求反代到 https://oa.upingbio.cn，并透传登录会话 Cookie。
 //   浏览器认为同源，不会拦截任何请求；手机/电脑打开同一个网址即可登录使用。
-//
-// 部署（最简，无需自有域名）：
-//   1. 登录 https://dash.cloudflare.com → Workers & Pages → 创建 Worker（Hello World 模板）
-//   2. 把本文件全部内容粘贴覆盖，点 Deploy
-//   3. 得到 https://<你的子域>.workers.dev —— 直接打开就是登录页，能登录能用
 //
 // 说明：oa.upingbio.cn 是对方的第三方 OA，你无法把文件放进去，因此用本 Worker 做同域反代
 //       是唯一"不改对方服务器、又能真登录"的干净方案。账号密码只经过你自己的 Worker。
@@ -20,20 +16,7 @@ const STATIC_ORIGIN = 'https://jiankujidu.github.io/oa-web'; // 静态资源仍�
 // 哪些路径视为 OA 业务接口（需反代到源站）
 const API_RE = /^\/(home|oa|customer|note|message|product|api|file|admin|upload|attachment|public|captcha\.html|index\.php)/i;
 
-function isApi(pathname) {
-  return API_RE.test(pathname);
-}
-
-export default {
-  async fetch(request) {
-    const url = new URL(request.url);
-    let pathname = decodeURIComponent(url.pathname);
-    if (pathname === '/' || pathname === '') pathname = '/login.html';
-
-    if (isApi(pathname)) return proxyApi(request, url);
-    return proxyStatic(pathname, request);
-  }
-};
+function isApi(pathname) { return API_RE.test(pathname); }
 
 async function proxyApi(request, url) {
   const target = OA_ORIGIN + url.pathname + url.search;
@@ -91,3 +74,15 @@ async function proxyStatic(pathname, request) {
   }
   return new Response(resp.body, { status: resp.status, headers: resp.headers });
 }
+
+async function handle(request) {
+  const url = new URL(request.url);
+  let pathname = decodeURIComponent(url.pathname);
+  if (pathname === '/' || pathname === '') pathname = '/login.html';
+  if (isApi(pathname)) return proxyApi(request, url);
+  return proxyStatic(pathname, request);
+}
+
+addEventListener('fetch', function (event) {
+  event.respondWith(handle(event.request));
+});
