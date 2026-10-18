@@ -170,7 +170,8 @@ async function getBytes(key) {
 
 async function serveAsset(pathname) {
   let key = pathname;
-  if (key === '/' || key === '') key = '/login.html';
+  // / → 主界面壳：其内联启动脚本会把未登录用户自动跳 login.html（已登录直达，少一次跳转）
+  if (key === '/' || key === '') key = '/index.html';
   if (key === '/git') key = '/git.html';   // /git -> 源码仓库/部署信息页
   let a = ASSETS[key];
   if (!a && key.endsWith('/')) a = ASSETS[key + 'index.html'];

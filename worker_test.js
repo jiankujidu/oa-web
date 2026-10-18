@@ -50,9 +50,14 @@ async function get(p) {
   let txt = await r.text();
   check(r.status === 200, '/ → 200');
   check(txt.indexOf('window.OA_BASE=location.origin') >= 0, '/ 注入了 OA_BASE（同域反代收拢）');
-  check(txt.indexOf('login') >= 0, '/ 回登录页内容');
-  check(txt.indexOf('优品OA') >= 0, '登录页标题正确');
+  check(txt.indexOf('page-container') >= 0, '/ 即主界面壳（未登录由启动脚本跳 login.html）');
+  check(txt.indexOf('DT_HEAD') >= 0, '/ 含新版桌面设计系统');
   check((r.headers.get('content-type') || '').indexOf('text/html') === 0, '/ content-type=text/html');
+
+  r = await get('/login.html');
+  txt = await r.text();
+  check(txt.indexOf('login') >= 0 && txt.indexOf('captcha') >= 0, '/login.html 是登录页');
+  check(txt.indexOf('优品OA') >= 0, '登录页标题正确');
 
   r = await get('/index.html');
   txt = await r.text();
