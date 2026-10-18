@@ -9,7 +9,7 @@ function webToast(msg) {
     if (!t) {
         t = document.createElement('div');
         t.id = 'app-web-toast';
-        t.style.cssText = 'position:fixed;left:50%;top:18%;transform:translateX(-50%);background:rgba(20,24,31,.88);color:#fff;font-size:14px;padding:10px 18px;border-radius:10px;z-index:9999;max-width:78%;text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.22);opacity:0;transition:opacity .18s';
+        t.style.cssText = 'position:fixed;left:50%;top:18%;transform:translateX(-50%);background:rgba(31,35,41,.88);color:#fff;font-size:14px;padding:10px 18px;border-radius:10px;z-index:9999;max-width:78%;text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.22);opacity:0;transition:opacity .18s';
         document.body.appendChild(t);
     }
     t.textContent = msg;
@@ -1025,39 +1025,39 @@ var App = (function () {
             '<div class="dt-panel-body"><div class="dt-app-grid">';
         for (var i = 0; i < APPROVE_TYPES.length; i++) {
             var at = APPROVE_TYPES[i];
-            html += '<div class="dt-app" onclick="App.launchApprove(' + at.type + ')"><div class="dt-app-ico" style="background:#EBF1FE;color:#2456E6">' + ic(EMOJI_MAP[at.icon] || 'clipboard-check') + '</div><div class="dt-app-name">' + at.name + '</div></div>';
+            html += '<div class="dt-app" onclick="App.launchApprove(' + at.type + ')"><div class="dt-app-ico" style="background:#EEF4FF;color:#1E6FFF">' + ic(EMOJI_MAP[at.icon] || 'clipboard-check') + '</div><div class="dt-app-name">' + at.name + '</div></div>';
         }
         html += '</div></div></div>';
         html += '<div class="dt-panel"><div class="dt-panel-head"><div class="dt-panel-title"><span class="pt-ic">' + ic('layers') + '</span>应用中心</div></div><div class="dt-panel-body"><div class="dt-app-grid">';
         var entries = [
-            { name: '企业公告', icon: 'megaphone', run: "App.openMobile('note')", bg: '#FFF7ED', fg: '#C2410C' },
-            { name: '问答知识', icon: 'message-circle', run: "App.openMobile('article')", bg: '#EFF6FF', fg: '#1D4ED8' },
-            { name: 'AI问答', icon: 'bot', run: 'App.openAiChat()', bg: '#F5F3FF', fg: '#7C3AED' },
-            { name: '产品管理', icon: 'flask', run: "App.openMobile('product')", bg: '#ECFDF5', fg: '#059669' },
-            { name: '附件管理', icon: 'folder', run: "App.openMobile('files')", bg: '#FFFBEB', fg: '#B45309' },
-            { name: '消息中心', icon: 'mail', run: "App.openMobile('message-inbox')", bg: '#EEF2FF', fg: '#4F46E5' },
-            { name: '通讯录', icon: 'book', run: "App.openMobile('mail')", bg: '#F0F9FF', fg: '#0284C7' },
-            { name: '发起审批', icon: 'clipboard-check', run: 'App.openApproveType()', bg: '#EBF1FE', fg: '#2456E6' },
-            { name: '客户列表', icon: 'users', run: "App.switchTab('customer')", bg: '#ECFDF5', fg: '#059669' },
-            { name: '工作台', icon: 'layers', run: 'App.openWorkbench()', bg: '#F8FAFC', fg: '#475569' },
-            { name: '预存款', icon: 'wallet', run: "App.openMobile('finance-advance')", bg: '#FDF4FF', fg: '#A21CAF' },
-            { name: '抵扣券', icon: 'ticket', run: "App.openMobile('deduction')", bg: '#FFF1F2', fg: '#E11D48' },
-            { name: '保证金', icon: 'shield', run: "App.openMobile('margin')", bg: '#F0FDF4', fg: '#16A34A' },
-            { name: '发票申请', icon: 'receipt', run: "App.openMobile('invoice-my')", bg: '#FFFBEB', fg: '#B45309' },
-            { name: '发票处理', icon: 'archive', run: "App.openMobile('invoice-handle')", bg: '#F1F5F9', fg: '#475569' },
-            { name: '到账（发票）', icon: 'file-text', run: "App.openMobile('finance-income')", bg: '#EFF6FF', fg: '#1D4ED8' },
-            { name: '到账（订单）', icon: 'trending-up', run: "App.openMobile('finance-order')", bg: '#ECFDF5', fg: '#059669' },
-            { name: '订单到账处理', icon: 'settings', run: "App.openMobile('orderapply-handle')", bg: '#F8FAFC', fg: '#475569' },
-            { name: '客户联系人', icon: 'user-plus', run: "App.openMobile('contact-list')", bg: '#EEF2FF', fg: '#4F46E5' },
-            { name: '销售机会', icon: 'target', run: "App.openMobile('chance-list')", bg: '#FEF2F2', fg: '#DC2626' },
-            { name: '跟进记录', icon: 'clipboard', run: "App.openMobile('trace-list')", bg: '#F0F9FF', fg: '#0284C7' },
-            { name: '我的订单', icon: 'package', run: "App.openMobile('order-my')", bg: '#FFFBEB', fg: '#B45309' },
-            { name: '订单处理', icon: 'wrench', run: "App.openMobile('order-handle')", bg: '#F5F3FF', fg: '#7C3AED' },
+            { name: '企业公告', icon: 'megaphone', run: "App.openMobile('note')", bg: '#FDF6EC', fg: '#D9480F' },
+            { name: '问答知识', icon: 'message-circle', run: "App.openMobile('article')", bg: '#EEF4FF', fg: '#1E6FFF' },
+            { name: 'AI问答', icon: 'bot', run: 'App.openAiChat()', bg: '#F9F0FF', fg: '#722ED1' },
+            { name: '产品管理', icon: 'flask', run: "App.openMobile('product')", bg: '#EDF9E6', fg: '#52C41A' },
+            { name: '附件管理', icon: 'folder', run: "App.openMobile('files')", bg: '#FDF6EC', fg: '#E6A23C' },
+            { name: '消息中心', icon: 'mail', run: "App.openMobile('message-inbox')", bg: '#EEF4FF', fg: '#1E6FFF' },
+            { name: '通讯录', icon: 'book', run: "App.openMobile('mail')", bg: '#EEF4FF', fg: '#1E6FFF' },
+            { name: '发起审批', icon: 'clipboard-check', run: 'App.openApproveType()', bg: '#EEF4FF', fg: '#1E6FFF' },
+            { name: '客户列表', icon: 'users', run: "App.switchTab('customer')", bg: '#EDF9E6', fg: '#52C41A' },
+            { name: '工作台', icon: 'layers', run: 'App.openWorkbench()', bg: '#F7F8FA', fg: '#4E5969' },
+            { name: '预存款', icon: 'wallet', run: "App.openMobile('finance-advance')", bg: '#F9F0FF', fg: '#722ED1' },
+            { name: '抵扣券', icon: 'ticket', run: "App.openMobile('deduction')", bg: '#FFF1F0', fg: '#F53F3F' },
+            { name: '保证金', icon: 'shield', run: "App.openMobile('margin')", bg: '#EDF9E6', fg: '#52C41A' },
+            { name: '发票申请', icon: 'receipt', run: "App.openMobile('invoice-my')", bg: '#FDF6EC', fg: '#E6A23C' },
+            { name: '发票处理', icon: 'archive', run: "App.openMobile('invoice-handle')", bg: '#F5F6F8', fg: '#4E5969' },
+            { name: '到账（发票）', icon: 'file-text', run: "App.openMobile('finance-income')", bg: '#EEF4FF', fg: '#1E6FFF' },
+            { name: '到账（订单）', icon: 'trending-up', run: "App.openMobile('finance-order')", bg: '#EDF9E6', fg: '#52C41A' },
+            { name: '订单到账处理', icon: 'settings', run: "App.openMobile('orderapply-handle')", bg: '#F7F8FA', fg: '#4E5969' },
+            { name: '客户联系人', icon: 'user-plus', run: "App.openMobile('contact-list')", bg: '#EEF4FF', fg: '#1E6FFF' },
+            { name: '销售机会', icon: 'target', run: "App.openMobile('chance-list')", bg: '#FFF1F0', fg: '#F53F3F' },
+            { name: '跟进记录', icon: 'clipboard', run: "App.openMobile('trace-list')", bg: '#EEF4FF', fg: '#1E6FFF' },
+            { name: '我的订单', icon: 'package', run: "App.openMobile('order-my')", bg: '#FDF6EC', fg: '#E6A23C' },
+            { name: '订单处理', icon: 'wrench', run: "App.openMobile('order-handle')", bg: '#F9F0FF', fg: '#722ED1' },
             { name: '平台订单', icon: 'shopping-cart', run: "App.openMobile('platform-order')", bg: '#ECFEFF', fg: '#0891B2' },
-            { name: '样本管理', icon: 'droplets', run: "App.openMobile('sample')", bg: '#EFF6FF', fg: '#1D4ED8' },
-            { name: '校展管理', icon: 'graduation-cap', run: "App.openMobile('school')", bg: '#FDF4FF', fg: '#A21CAF' },
-            { name: '售后管理', icon: 'headphones', run: "App.openMobile('after')", bg: '#FFF7ED', fg: '#C2410C' },
-            { name: '新增客户', icon: 'user-plus', run: "App.openMobile('customer-add')", bg: '#ECFDF5', fg: '#059669' }
+            { name: '样本管理', icon: 'droplets', run: "App.openMobile('sample')", bg: '#EEF4FF', fg: '#1E6FFF' },
+            { name: '校展管理', icon: 'graduation-cap', run: "App.openMobile('school')", bg: '#F9F0FF', fg: '#722ED1' },
+            { name: '售后管理', icon: 'headphones', run: "App.openMobile('after')", bg: '#FDF6EC', fg: '#D9480F' },
+            { name: '新增客户', icon: 'user-plus', run: "App.openMobile('customer-add')", bg: '#EDF9E6', fg: '#52C41A' }
         ];
         for (var j2 = 0; j2 < entries.length; j2++) {
             var e = entries[j2];
@@ -3042,9 +3042,9 @@ var App = (function () {
             '<div class="dt-hero-sub">' + esc(r.type_title || (Number(r.c_type) === 2 ? '公海客户' : Number(r.c_type) === 3 ? '废弃客户' : '我的客户')) + ' · 负责人：' + esc(r.belong_name || '') + '</div>' +
             '</div></div>' +
             '<div class="dt-hero-fields">' +
-            '<div class="dt-hero-field"><div class="dt-hero-field-label">预存款</div><div class="dt-hero-field-value" style="color:#165DFF">' + esc(r.advance_deposit || '0.00') + '</div></div>' +
-            '<div class="dt-hero-field"><div class="dt-hero-field-label">抵扣券</div><div class="dt-hero-field-value" style="color:#00B42A">' + esc(r.deduction || '0.00') + '</div></div>' +
-            '<div class="dt-hero-field"><div class="dt-hero-field-label">保证金</div><div class="dt-hero-field-value" style="color:#FF7D00">' + esc(r.margin_deposit || '0.00') + '</div></div>' +
+            '<div class="dt-hero-field"><div class="dt-hero-field-label">预存款</div><div class="dt-hero-field-value" style="color:#1E6FFF">' + esc(r.advance_deposit || '0.00') + '</div></div>' +
+            '<div class="dt-hero-field"><div class="dt-hero-field-label">抵扣券</div><div class="dt-hero-field-value" style="color:#52C41A">' + esc(r.deduction || '0.00') + '</div></div>' +
+            '<div class="dt-hero-field"><div class="dt-hero-field-label">保证金</div><div class="dt-hero-field-value" style="color:#E6A23C">' + esc(r.margin_deposit || '0.00') + '</div></div>' +
             '<div class="dt-hero-field"><div class="dt-hero-field-label">创建时间</div><div class="dt-hero-field-value">' + fmtTime(r.create_time) + '</div></div>' +
             '</div></div>';
         html += '<div class="detail-card"><div class="dc-label">创建时间</div><div class="dc-value">' + fmtTime(r.create_time) + '</div></div>';
