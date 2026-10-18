@@ -193,6 +193,49 @@ async function serveAsset(pathname) {
   });
 }
 
+// /fileproxy → OSS 附件代理：原站后端签发的附件 URL 指向内网专用域名
+// （static.upingbio.com 公网 DNS 不存在；OSS -internal endpoint 仅阿里云内网可达），
+// 浏览器从公网打开必然 AccessDenied。OSS V1 签名只签 Bucket+Object+Expires，不含 host，
+// 服务端把 host 换成公网 endpoint 后签名依然有效，由 CF Worker 服务端取文件流式回给浏览器。
+const OSS_PUBLIC_HOST = 'upingbio.oss-cn-hangzhou.aliyuncs.com';
+function ossPublicUrl(u) {
+  return u
+    .replace(/^https?:\/\/static\.upingbio\.com(?::\d+)?/i, 'https://' + OSS_PUBLIC_HOST)
+    .replace(/^https?:\/\/upingbio\.oss-cn-hangzhou-internal\.aliyuncs\.com(?::\d+)?/i, 'https://' + OSS_PUBLIC_HOST)
+    .replace(/^http:\/\/upingbio\.oss-cn-hangzhou\.aliyuncs\.com(?::\d+)?/i, 'https://' + OSS_PUBLIC_HOST);
+}
+// API JSON 里出现的内网附件 URL → /fileproxy?u=<encodeURIComponent(原URL)>（兼容 JSON 里 \/ 转义）
+const OSS_URL_RE = /https?:(?:\\\/\\\/|\/\/)(?:static\.upingbio\.com|upingbio\.oss-cn-hang(?:zhou(-internal))?\.aliyuncs\.com)(?::\d+)?(?:\\\/|\/|[^"'\\\s<>)]|\\\.)+/gi;
+function rewriteOssUrls(text) {
+  return text.replace(OSS_URL_RE, function (m) {
+    return '/fileproxy?u=' + encodeURIComponent(m.split('\\/').join('/'));
+  });
+}
+async function proxyFile(request, url) {
+  const raw = url.searchParams.get('u');
+  if (!raw) return new Response('fileproxy: missing u', { status: 400 });
+  let target;
+  try { target = new URL(ossPublicUrl(raw)); } catch (e) { return new Response('fileproxy: bad u', { status: 400 }); }
+  if (!/(^|\.)aliyuncs\.com$/i.test(target.hostname) || target.protocol !== 'https:') {
+    return new Response('fileproxy: host not allowed', { status: 403 });
+  }
+  const hdr = new Headers();
+  const range = request.headers.get('range');
+  if (range) hdr.set('range', range);   // PDF 预览器会发 Range 请求，透传
+  let resp;
+  try { resp = await fetch(target.toString(), { method: 'GET', headers: hdr, redirect: 'follow' }); }
+  catch (e) { return new Response('文件代理失败: ' + e.message, { status: 502 }); }
+  const rh = new Headers();
+  for (const h of ['content-type', 'content-length', 'content-disposition', 'accept-ranges', 'content-range', 'etag', 'last-modified']) {
+    const v = resp.headers.get(h);
+    if (v) rh.set(h, v);
+  }
+  if (!rh.has('content-type')) rh.set('content-type', 'application/octet-stream');
+  rh.set('access-control-allow-origin', request.headers.get('origin') || '*');
+  rh.set('cache-control', 'private, max-age=300');
+  return new Response(resp.body, { status: resp.status, headers: rh });
+}
+
 async function proxyApi(request, url) {
   const target = OA_ORIGIN + url.pathname + url.search;
   const hdr = new Headers(request.headers);
@@ -220,6 +263,14 @@ async function proxyApi(request, url) {
   rh.set('Access-Control-Allow-Credentials', 'true');
   rh.set('Access-Control-Allow-Headers', 'content-type,x-requested-with,authorization');
   rh.set('Access-Control-Expose-Headers', '*');
+  // JSON 响应里的附件 URL 若指向内网 OSS 域名，重写为 /fileproxy 代理地址
+  const ct0 = rh.get('content-type') || '';
+  if (/json/i.test(ct0)) {
+    let text = await resp.text();
+    if (text.indexOf('upingbio') !== -1) text = rewriteOssUrls(text);
+    rh.delete('content-length');
+    return new Response(text, { status: resp.status, headers: rh });
+  }
   return new Response(resp.body, { status: resp.status, headers: rh });
 }
 
@@ -246,6 +297,7 @@ async function proxyVendor(request, url) {
 async function handle(request) {
   const url = new URL(request.url);
   const p = decodeURIComponent(url.pathname);
+  if (p === '/fileproxy') return proxyFile(request, url);   // 必须在 isApi 之前（/fileproxy 会被 ^/file 白名单误吃）
   if (p.startsWith('/vendor/')) return proxyVendor(request, url);
   if (isApi(p)) return proxyApi(request, url);
   return serveAsset(p);
