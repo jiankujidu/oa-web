@@ -76,6 +76,75 @@ var DT_HEAD = {
 };
 var DT_TAIL = '</tbody></table></div>';
 
+/* ===== v3 SVG 线性图标系统（ICONS 表与 index.html 同源定义于 window.ICONS） ===== */
+var EMOJI_MAP = {
+    '🏠': 'home', '✅': 'check-circle', '👥': 'users', '👤': 'user',
+    '✉': 'mail', '📁': 'folder', '🗂': 'layers', '🎫': 'ticket',
+    '🛒': 'shopping-cart', '🔧': 'wrench', '📝': 'clipboard', '⚙': 'settings',
+    '✓': 'check', '📢': 'megaphone', '📇': 'book', '💰': 'wallet',
+    '🛡': 'shield', '🧾': 'receipt', '📊': 'pie-chart', '📈': 'trending-up',
+    '🎯': 'target', '🧫': 'droplets', '🏫': 'graduation-cap', '✕': 'x',
+    '💬': 'message-circle', '🤖': 'bot', '🧪': 'flask', '🔨': 'wrench',
+    '➕': 'plus-circle', '📷': 'eye', '★': 'star', '🔒': 'lock',
+    '🚪': 'log-out', '🏖': 'calendar', '✈': 'send', '🏃': 'user',
+    '🔏': 'lock', '🚗': 'briefcase', '📚': 'book', '☆': 'star',
+    '💾': 'download', '🗑': 'trash', '✔': 'check', '✖': 'x',
+    '↩': 'corner-down-left', '🖥': 'external-link', '🔔': 'bell',
+    '📋': 'clipboard', '⇩': 'download', '↗': 'external-link', '📦': 'package'
+};
+function v3esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function ic(name, cls) {
+    var tbl = (typeof window !== 'undefined' && window.ICONS) || {};
+    var d = tbl[name];
+    if (!d) return '';
+    return '<svg class="' + (cls || '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+}
+/* 动态渲染兜底：把任意 DOM 子树文本节点中的 emoji 替换为 SVG 线性图标（按码点遍历，代理对安全） */
+function deEmoji(root) {
+    if (!root || !root.childNodes) return;
+    var texts = [];
+    (function collect(node) {
+        for (var i = 0; i < node.childNodes.length; i++) {
+            var ch = node.childNodes[i];
+            if (ch.nodeType === 3) texts.push(ch);
+            else if (ch.nodeType === 1 && ch.tagName !== 'SVG' && ch.tagName !== 'SCRIPT' && ch.tagName !== 'STYLE') collect(ch);
+        }
+    })(root);
+    for (var j = 0; j < texts.length; j++) {
+        var t = texts[j], v = t.nodeValue;
+        if (!v) continue;
+        var hit = false;
+        for (var k = 0; k < v.length; k++) {
+            var cpk = v.codePointAt(k);
+            if (cpk > 0xFFFF) k++;
+            if (EMOJI_MAP[String.fromCodePoint(cpk)]) { hit = true; break; }
+        }
+        if (!hit) continue;
+        var html = '', buf = '', made = false;
+        for (var p = 0; p < v.length; p++) {
+            var cp = v.codePointAt(p);
+            var ch2 = String.fromCodePoint(cp);
+            if (cp > 0xFFFF) p++;
+            var name = EMOJI_MAP[ch2];
+            if (name) {
+                if (buf) { html += v3esc(buf); buf = ''; }
+                html += ic(name);
+                made = true;
+            } else buf += ch2;
+        }
+        if (buf) html += v3esc(buf);
+        if (made && t.parentNode) {
+            var span = document.createElement('span');
+            span.innerHTML = html;
+            var frag = document.createDocumentFragment();
+            while (span.firstChild) frag.appendChild(span.firstChild);
+            t.parentNode.replaceChild(frag, t);
+        }
+    }
+}
+
 
 // 优品OA 移动端 主逻辑
 var App = (function () {
@@ -210,6 +279,7 @@ var App = (function () {
         currentLoadKey = key;
         currentLoadArg = (arg == null) ? null : arg;
         if (arg != null) App[fn](arg); else App[fn]();
+        setTimeout(function () { deEmoji($('page-container')); }, 60);
     }
     // 当前列表加载器（供上拉自动加载触发）
     var currentLoadKey = '';
@@ -689,6 +759,19 @@ var App = (function () {
             }
         }, false);
         // 网页版：登录态由 login.html 守卫，进入本页即已登录
+        // v3：全局图标兜底——动态渲染（异步列表/加载更多/弹层）中的 emoji 自动替换为 SVG 线性图标
+        try {
+            if (window.MutationObserver && $('page-container')) {
+                var __deT = null;
+                new MutationObserver(function () {
+                    if (__deT) return;
+                    __deT = setTimeout(function () {
+                        __deT = null;
+                        try { deEmoji($('page-container')); } catch (e) {}
+                    }, 80);
+                }).observe($('page-container'), { childList: true, subtree: true });
+            }
+        } catch (e) {}
         try { $('login-view').style.display = 'none'; } catch (e) {}
         $('app-view').style.display = 'flex';
         switchTab('home');
@@ -913,88 +996,114 @@ var App = (function () {
         var now = new Date();
         var weekNames = ['日', '一', '二', '三', '四', '五', '六'];
         var dateStr = now.getFullYear() + '年' + (now.getMonth() + 1) + '月' + now.getDate() + '日 星期' + weekNames[now.getDay()];
+        var hour = now.getHours();
+        var greet = hour < 6 ? '凌晨好' : (hour < 9 ? '早上好' : (hour < 12 ? '上午好' : (hour < 14 ? '中午好' : (hour < 18 ? '下午好' : '晚上好'))));
         var html = '';
         html += '<div class="dt-toolbar"><div>' +
-            '<div class="dt-toolbar-title">' + esc(myDisplayName()) + '，欢迎回来</div>' +
-            '<div class="dt-toolbar-sub">' + dateStr + ' · 优品OA 网页版</div>' +
+            '<div class="dt-toolbar-title">' + greet + '，' + esc(myDisplayName()) + '</div>' +
+            '<div class="dt-toolbar-sub">' + dateStr + ' · 优品OA 电脑版</div>' +
+            '</div><div class="dt-toolbar-ops">' +
+            '<span class="oa-btn primary" onclick="App.openApproveType()">' + ic('plus-circle') + '发起审批</span>' +
             '</div></div>';
-        // 四大模块入口统计
-        html += '<div class="dt-stats">' +
-            '<div class="dt-stat" onclick="App.switchTab(\'approve\')"><div class="dt-stat-ico" style="background:#E8F0FF">✅</div><div><div class="dt-stat-num" style="color:#165DFF">审批中心</div><div class="dt-stat-label">我的申请与待我处理</div></div></div>' +
-            '<div class="dt-stat" onclick="App.switchTab(\'customer\')"><div class="dt-stat-ico" style="background:#E8F7EC">👥</div><div><div class="dt-stat-num" style="color:#00B42A">客户管理</div><div class="dt-stat-label">客户 · 公海 · 联系人 · 订单</div></div></div>' +
-            '<div class="dt-stat" onclick="App.showSubPage(\'order-handle\')"><div class="dt-stat-ico" style="background:#FFF3E8">📦</div><div><div class="dt-stat-num" style="color:#FF7D00">订单处理</div><div class="dt-stat-label">审单 · 平台订单 · 售后</div></div></div>' +
-            '<div class="dt-stat" onclick="App.showSubPage(\'message-inbox\')"><div class="dt-stat-ico" style="background:#F5E8FF">✉️</div><div><div class="dt-stat-num" style="color:#722ED1">消息中心</div><div class="dt-stat-label">收件箱 · 发件箱 · 草稿</div></div></div>' +
-            '</div>';
         html += '<div class="dt-cols-wide">';
-        // 左列：应用中心（分组宫格）
-        html += '<div class="dt-panel"><div class="dt-panel-head"><div class="dt-panel-title">应用中心</div></div><div class="dt-panel-body">';
-        var entries = [
-            { mobile: 'note', icon: '📢', name: '企业公告' },
-            { mobile: 'article', icon: '💬', name: '问答知识' },
-            { ai: true, icon: '🤖', name: 'AI问答' },
-            { mobile: 'product', icon: '🧪', name: '产品管理' },
-            { mobile: 'files', icon: '📁', name: '附件管理' },
-            { mobile: 'message-inbox', icon: '✉️', name: '消息中心' },
-            { mobile: 'mail', icon: '📇', name: '通讯录' },
-            { approveType: true, icon: '📝', name: '发起审批' },
-            { tab: 'customer', icon: '👥', name: '客户列表' },
-            { workbench: true, icon: '🗂️', name: '工作台' },
-            // 财务
-            { mobile: 'finance-advance', icon: '💰', name: '预存款' },
-            { mobile: 'deduction', icon: '🎫', name: '抵扣券' },
-            { mobile: 'margin', icon: '🛡️', name: '保证金' },
-            { mobile: 'invoice-my', icon: '🧾', name: '发票申请' },
-            { mobile: 'invoice-handle', icon: '🗂️', name: '发票处理' },
-            { mobile: 'finance-income', icon: '📊', name: '到账（发票）' },
-            { mobile: 'finance-order', icon: '📈', name: '到账（订单）' },
-            { mobile: 'orderapply-handle', icon: '⚙️', name: '订单到账处理' },
-            // 客户子功能
-            { mobile: 'contact-list', icon: '👤', name: '客户联系人' },
-            { mobile: 'chance-list', icon: '🎯', name: '销售机会' },
-            { mobile: 'trace-list', icon: '📝', name: '跟进记录' },
-            { mobile: 'order-my', icon: '📦', name: '我的订单' },
-            { mobile: 'order-handle', icon: '🔧', name: '订单处理' },
-            { mobile: 'platform-order', icon: '🛒', name: '平台订单' },
-            { mobile: 'sample', icon: '🧫', name: '样本管理' },
-            { mobile: 'school', icon: '🏫', name: '校展管理' },
-            { mobile: 'after', icon: '🔨', name: '售后管理' },
-            { mobile: 'customer-add', icon: '➕', name: '新增客户' }
-        ];
-        var iconBgs = ['#E8F0FF', '#E8F7EC', '#FFF3E8', '#F5E8FF', '#FFECE8', '#E8F7EC'];
-        html += '<div class="dt-app-grid">';
-        for (var j = 0; j < entries.length; j++) {
-            var e = entries[j];
-            var bg = iconBgs[j % iconBgs.length];
-            var click = '';
-            if (e.mobile) click = 'App.openMobile(\'' + e.mobile + '\')';
-            else if (e.tab) click = 'App.switchTab(\'' + e.tab + '\')';
-            else if (e.approveType) click = 'App.openApproveType()';
-            else if (e.workbench) click = 'App.openWorkbench()';
-            else if (e.ai) click = 'App.openAiChat()';
-            else click = 'App.openEntry(\'' + (e.path || '') + '\')';
-            html += '<div class="dt-app" onclick="' + click + '"><div class="dt-app-ico" style="background:' + bg + '">' + e.icon + '</div><div class="dt-app-name">' + e.name + '</div></div>';
-        }
-        html += '</div></div></div>';
-        // 右列：快捷审批 + 我的待办
+        // 左栏：真实待办（异步加载）
         html += '<div>';
-        html += '<div class="dt-panel"><div class="dt-panel-head"><div class="dt-panel-title">快捷审批</div>' +
+        html += '<div class="dt-panel"><div class="dt-panel-head"><div class="dt-panel-title"><span class="pt-ic">' + ic('check-circle') + '</span>待审审批<span class="pt-count" id="todo-ap-count">…</span></div>' +
+            '<div class="dt-panel-ops"><span class="dt-link" onclick="App.switchTab(\'approve\')">审批中心 ›</span></div></div>' +
+            '<div id="todo-ap"><div class="loading">加载中…</div></div></div>';
+        html += '<div class="dt-panel"><div class="dt-panel-head"><div class="dt-panel-title"><span class="pt-ic">' + ic('mail') + '</span>最新消息<span class="pt-count" id="todo-msg-count">…</span></div>' +
+            '<div class="dt-panel-ops"><span class="dt-link" onclick="App.showSubPage(\'message-inbox\')">消息中心 ›</span></div></div>' +
+            '<div id="todo-msg"><div class="loading">加载中…</div></div></div>';
+        html += '<div class="dt-panel"><div class="dt-panel-head"><div class="dt-panel-title"><span class="pt-ic">' + ic('wrench') + '</span>待处理订单<span class="pt-count" id="todo-ord-count">…</span></div>' +
+            '<div class="dt-panel-ops"><span class="dt-link" onclick="App.showSubPage(\'order-handle\')">订单处理 ›</span></div></div>' +
+            '<div id="todo-ord"><div class="loading">加载中…</div></div></div>';
+        html += '</div>';
+        // 右栏：快捷审批 + 应用中心
+        html += '<div>';
+        html += '<div class="dt-panel"><div class="dt-panel-head"><div class="dt-panel-title"><span class="pt-ic">' + ic('clipboard-check') + '</span>快捷审批</div>' +
             '<div class="dt-panel-ops"><span class="dt-link" onclick="App.openApproveType()">全部类型 ›</span></div></div>' +
-            '<div class="dt-panel-body"><div class="dt-app-grid" style="grid-template-columns:repeat(3,1fr)">';
-        var quickCount = APPROVE_TYPES.length;
-        for (var i = 0; i < quickCount; i++) {
+            '<div class="dt-panel-body"><div class="dt-app-grid">';
+        for (var i = 0; i < APPROVE_TYPES.length; i++) {
             var at = APPROVE_TYPES[i];
-            html += '<div class="dt-app" onclick="App.launchApprove(' + at.type + ')"><div class="dt-app-ico" style="background:#E8F0FF">' + at.icon + '</div><div class="dt-app-name">' + at.name + '</div></div>';
+            html += '<div class="dt-app" onclick="App.launchApprove(' + at.type + ')"><div class="dt-app-ico" style="background:#EBF1FE;color:#2456E6">' + ic(EMOJI_MAP[at.icon] || 'clipboard-check') + '</div><div class="dt-app-name">' + at.name + '</div></div>';
         }
         html += '</div></div></div>';
-        html += '<div class="dt-panel"><div class="dt-panel-head"><div class="dt-panel-title">我的待办</div></div><div class="dt-panel-body" style="padding:6px 12px">';
-        html += '<div class="menu-item" onclick="App.switchTab(\'approve\')"><span class="mi-left">✅ 待审审批</span><span class="mi-right">查看 ›</span></div>';
-        html += '<div class="menu-item" onclick="App.showSubPage(\'order-handle\')"><span class="mi-left">📦 待处理订单</span><span class="mi-right">查看 ›</span></div>';
-        html += '<div class="menu-item" onclick="App.showSubPage(\'message-inbox\')"><span class="mi-left">✉️ 未读消息</span><span class="mi-right">查看 ›</span></div>';
-        html += '<div class="menu-item" onclick="App.switchTab(\'customer\')"><span class="mi-left">👥 客户跟进</span><span class="mi-right">查看 ›</span></div>';
+        html += '<div class="dt-panel"><div class="dt-panel-head"><div class="dt-panel-title"><span class="pt-ic">' + ic('layers') + '</span>应用中心</div></div><div class="dt-panel-body"><div class="dt-app-grid">';
+        var entries = [
+            { name: '企业公告', icon: 'megaphone', run: "App.openMobile('note')", bg: '#FFF7ED', fg: '#C2410C' },
+            { name: '问答知识', icon: 'message-circle', run: "App.openMobile('article')", bg: '#EFF6FF', fg: '#1D4ED8' },
+            { name: 'AI问答', icon: 'bot', run: 'App.openAiChat()', bg: '#F5F3FF', fg: '#7C3AED' },
+            { name: '产品管理', icon: 'flask', run: "App.openMobile('product')", bg: '#ECFDF5', fg: '#059669' },
+            { name: '附件管理', icon: 'folder', run: "App.openMobile('files')", bg: '#FFFBEB', fg: '#B45309' },
+            { name: '消息中心', icon: 'mail', run: "App.openMobile('message-inbox')", bg: '#EEF2FF', fg: '#4F46E5' },
+            { name: '通讯录', icon: 'book', run: "App.openMobile('mail')", bg: '#F0F9FF', fg: '#0284C7' },
+            { name: '发起审批', icon: 'clipboard-check', run: 'App.openApproveType()', bg: '#EBF1FE', fg: '#2456E6' },
+            { name: '客户列表', icon: 'users', run: "App.switchTab('customer')", bg: '#ECFDF5', fg: '#059669' },
+            { name: '工作台', icon: 'layers', run: 'App.openWorkbench()', bg: '#F8FAFC', fg: '#475569' },
+            { name: '预存款', icon: 'wallet', run: "App.openMobile('finance-advance')", bg: '#FDF4FF', fg: '#A21CAF' },
+            { name: '抵扣券', icon: 'ticket', run: "App.openMobile('deduction')", bg: '#FFF1F2', fg: '#E11D48' },
+            { name: '保证金', icon: 'shield', run: "App.openMobile('margin')", bg: '#F0FDF4', fg: '#16A34A' },
+            { name: '发票申请', icon: 'receipt', run: "App.openMobile('invoice-my')", bg: '#FFFBEB', fg: '#B45309' },
+            { name: '发票处理', icon: 'archive', run: "App.openMobile('invoice-handle')", bg: '#F1F5F9', fg: '#475569' },
+            { name: '到账（发票）', icon: 'file-text', run: "App.openMobile('finance-income')", bg: '#EFF6FF', fg: '#1D4ED8' },
+            { name: '到账（订单）', icon: 'trending-up', run: "App.openMobile('finance-order')", bg: '#ECFDF5', fg: '#059669' },
+            { name: '订单到账处理', icon: 'settings', run: "App.openMobile('orderapply-handle')", bg: '#F8FAFC', fg: '#475569' },
+            { name: '客户联系人', icon: 'user-plus', run: "App.openMobile('contact-list')", bg: '#EEF2FF', fg: '#4F46E5' },
+            { name: '销售机会', icon: 'target', run: "App.openMobile('chance-list')", bg: '#FEF2F2', fg: '#DC2626' },
+            { name: '跟进记录', icon: 'clipboard', run: "App.openMobile('trace-list')", bg: '#F0F9FF', fg: '#0284C7' },
+            { name: '我的订单', icon: 'package', run: "App.openMobile('order-my')", bg: '#FFFBEB', fg: '#B45309' },
+            { name: '订单处理', icon: 'wrench', run: "App.openMobile('order-handle')", bg: '#F5F3FF', fg: '#7C3AED' },
+            { name: '平台订单', icon: 'shopping-cart', run: "App.openMobile('platform-order')", bg: '#ECFEFF', fg: '#0891B2' },
+            { name: '样本管理', icon: 'droplets', run: "App.openMobile('sample')", bg: '#EFF6FF', fg: '#1D4ED8' },
+            { name: '校展管理', icon: 'graduation-cap', run: "App.openMobile('school')", bg: '#FDF4FF', fg: '#A21CAF' },
+            { name: '售后管理', icon: 'headphones', run: "App.openMobile('after')", bg: '#FFF7ED', fg: '#C2410C' },
+            { name: '新增客户', icon: 'user-plus', run: "App.openMobile('customer-add')", bg: '#ECFDF5', fg: '#059669' }
+        ];
+        for (var j2 = 0; j2 < entries.length; j2++) {
+            var e = entries[j2];
+            html += '<div class="dt-app" onclick="' + e.run + '"><div class="dt-app-ico" style="background:' + e.bg + ';color:' + e.fg + '">' + ic(e.icon) + '</div><div class="dt-app-name">' + e.name + '</div></div>';
+        }
+        html += '</div></div></div>';
         html += '</div></div>';
-        html += '</div>';
-        html += '</div>';
         c.innerHTML = html;
+        loadHomeTodos();
+    }
+
+    // v3 首页待办：真实数据（待审审批/最新消息/待处理订单各取前 5 条）
+    function loadHomeTodos() {
+        function row(iconName, title, sub, click) {
+            return '<div class="menu-item" onclick="' + click + '">' +
+                '<span class="mi-left"><span class="mli-ic">' + ic(iconName) + '</span>' +
+                '<span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(title) + '</span></span>' +
+                '<span class="mi-right">' + esc(sub || '') + '</span></div>';
+        }
+        function panel(boxId, countId, rows, mkRow, emptyText) {
+            var box = $(boxId), cnt = $(countId);
+            if (!box) return;
+            if (cnt) cnt.textContent = rows.length ? (rows.length >= 5 ? '5+' : String(rows.length)) : '0';
+            if (!rows.length) { box.innerHTML = '<div class="empty">' + emptyText + '</div>'; return; }
+            var h = '<div class="menu-list">';
+            for (var i = 0; i < rows.length; i++) h += mkRow(rows[i]);
+            box.innerHTML = h + '</div>';
+        }
+        API.approveList(1, 5, 1).then(function (res) {
+            var rows = (res && res.code === 0 && res.data) || [];
+            panel('todo-ap', 'todo-ap-count', rows, function (r) {
+                return row('clock', r.name || r.content || '审批', fmtTime(r.create_time || r.detail_time || r.start_time), 'App.openApproveDetail(' + r.id + ')');
+            }, '暂无待审审批');
+        }).catch(function () { var b = $('todo-ap'); if (b) b.innerHTML = '<div class="empty">加载失败</div>'; });
+        API.messageList('inbox', 1, 5).then(function (res) {
+            var rows = (res && res.code === 0 && res.data) || [];
+            panel('todo-msg', 'todo-msg-count', rows, function (r) {
+                return row('mail', r.title || '（无主题）', fmtTime(r.send_time || r.create_time), 'App.openMsgDetail(' + r.id + ')');
+            }, '暂无新消息');
+        }).catch(function () { var b = $('todo-msg'); if (b) b.innerHTML = '<div class="empty">加载失败</div>'; });
+        API.orderHandleList(1, 5, '').then(function (res) {
+            var rows = (res && res.code === 0 && res.data) || [];
+            panel('todo-ord', 'todo-ord-count', rows, function (r) {
+                return row('package', r.title || r.code || r.order_code || '订单', fmtTime(r.create_time || r.deal_time || r.time), 'App.openOrderDetail(' + r.id + ',\'handle\')');
+            }, '暂无待处理订单');
+        }).catch(function () { var b = $('todo-ord'); if (b) b.innerHTML = '<div class="empty">加载失败</div>'; });
     }
 
     function launchApprove(type, from) { approveFrom = (from === 'type') ? 'type' : 'home'; openApproveForm(type); }
@@ -1064,6 +1173,7 @@ var App = (function () {
         else if (type === 'school') renderSchoolPage();
         else if (type === 'after') renderAfterPage();
         else if (type === 'customer-add') renderCustomerAddPage();
+        deEmoji(c);
     }
 
     function openMobile(type) { showSubPage(type); }
@@ -1095,6 +1205,7 @@ var App = (function () {
         backBtn.id = 'topbar-back-el';
         $('topbar-title').parentElement.insertBefore(backBtn, $('topbar-title'));
         $('page-container').innerHTML = '';
+        setTimeout(function () { deEmoji($('page-container')); }, 0);
     }
 
     // v1.1.56：详情/表单壳层统一返回（弹栈逐级回退），返回按钮与物理返回键共用同一逻辑
@@ -1132,6 +1243,7 @@ var App = (function () {
         }
         html += '</div>';
         c.innerHTML = html;
+        deEmoji(c);
     }
     function filterApproveType() {
         var kw = ($('approve-kw') || {}).value || '';
@@ -2666,7 +2778,7 @@ var App = (function () {
             '<div class="dt-toolbar-title">审批中心</div>' +
             '<div class="dt-toolbar-sub">我发起的与待我处理的审批</div>' +
             '</div><div class="dt-toolbar-ops">' +
-            '<span class="dt-btn primary" onclick="App.openApproveType()">＋ 发起审批</span>' +
+            '<span class="oa-btn primary" onclick="App.openApproveType()">＋ 发起审批</span>' +
             '</div></div>' +
             '<div class="seg">' +
             '<div class="seg-item active" data-s="0" onclick="App.loadApprove(0)">全部</div>' +
@@ -2676,6 +2788,7 @@ var App = (function () {
             '</div>' +
             '<div id="approve-list"></div>';
         listState.approve = { page: 1, status: 0, loading: false, done: false, rows: {} };
+        deEmoji(c);
         loadApprove(0);
     }
 
@@ -2842,7 +2955,7 @@ var App = (function () {
             '<div class="dt-toolbar-sub">我的客户 · 公海 · 废弃</div>' +
             '</div><div class="dt-toolbar-ops">' +
             '<div class="dt-search"><input id="cust-kw" type="text" placeholder="搜索客户名称"><button class="dt-search-btn" onclick="App.loadCustomer(' + (listState.customer ? listState.customer.type : 1) + ')">搜索</button></div>' +
-            '<span class="dt-btn primary" onclick="App.showSubPage(\'customer-add\')">＋ 新增客户</span>' +
+            '<span class="oa-btn primary" onclick="App.showSubPage(\'customer-add\')">＋ 新增客户</span>' +
             '</div></div>' +
             '<div class="seg">' +
             '<div class="seg-item active" data-t="1" onclick="App.loadCustomer(1)">我的客户</div>' +
@@ -2864,6 +2977,7 @@ var App = (function () {
             '</div>';
         listState.customer = { page: 1, type: 1, loading: false, done: false, rows: {} };
         loadCustomer(1);
+        deEmoji(c);
     }
 
     function loadCustomer(type) {
@@ -3087,7 +3201,7 @@ var App = (function () {
             '<div class="dt-toolbar-title">消息中心</div>' +
             '<div class="dt-toolbar-sub">收件箱 · 发件箱 · 草稿箱 · 回收站</div>' +
             '</div><div class="dt-toolbar-ops">' +
-            '<span class="dt-btn primary" onclick="App.openMsgCompose()">＋ 新建消息</span>' +
+            '<span class="oa-btn primary" onclick="App.openMsgCompose()">＋ 新建消息</span>' +
             '</div></div>' +
             '<div class="seg">' +
             '<div class="seg-item' + (tab === 'inbox' ? ' active' : '') + '" onclick="App.openMsgTab(\'inbox\')">收件箱</div>' +
@@ -5194,8 +5308,8 @@ var App = (function () {
             '<div><div class="dt-hero-title">' + esc(myName) + '</div>' +
             '<div class="dt-hero-sub">' + esc(myUid || '优品OA 网页版') + '</div></div></div>' +
             '<div class="dt-hero-ops">' +
-            '<span class="dt-btn" onclick="App.showSubPage(\'profile\')">基本资料</span>' +
-            '<span class="dt-btn" onclick="App.showSubPage(\'password\')">修改密码</span>' +
+            '<span class="oa-btn" onclick="App.showSubPage(\'profile\')">基本资料</span>' +
+            '<span class="oa-btn" onclick="App.showSubPage(\'password\')">修改密码</span>' +
             '</div></div></div>';
         html += '<div class="dt-cols-wide">';
         // 左列：财务管理 + 常用功能
@@ -5235,6 +5349,7 @@ var App = (function () {
         html += '</div>';
         html += '</div>';
         c.innerHTML = html;
+        deEmoji(c);
         // v1.1.62：还没有中文名缓存时拉一次桌面首页解析；拿到后若仍在"我的"页则重渲染
         var hasName = false;
         try { hasName = !!localStorage.getItem('uping_me_name'); } catch (e) {}

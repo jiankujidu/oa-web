@@ -8,54 +8,54 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="boot-splash"><div class="boot-logo">优品OA</div><div class="boot-tip">加载中…</div></div>
+<div id="boot-splash"><div class="boot-logo">优品OA</div><div class="boot-tip">正在加载工作台…</div></div>
 
 <!-- 登录视图占位（网页版登录在 login.html；app.js init 会隐藏本节点） -->
 <div id="login-view" class="login-view" style="display:none"></div>
 
 <div id="app-view" class="app-view" style="display:none">
-  <!-- 左侧导航（桌面端全模块分组） -->
+  <!-- 左侧导航（桌面端全模块分组，SVG 线性图标） -->
   <aside class="sidebar">
-    <div class="sb-brand"><span class="sb-logo">优</span><span class="sb-name">优品OA</span></div>
+    <div class="sb-brand"><span class="sb-logo">优</span><span class="sb-name">优品OA<small>YOUPIN OA</small></span></div>
     <nav class="sb-nav" id="sb-nav">
       <div class="sb-group">主菜单</div>
-      <div class="sb-item tab-item" data-tab="home" onclick="App.switchTab('home')"><span class="sbi-icon">🏠</span>首页</div>
-      <div class="sb-item tab-item" data-tab="approve" onclick="App.switchTab('approve')"><span class="sbi-icon">✅</span>审批</div>
-      <div class="sb-item tab-item" data-tab="customer" onclick="App.switchTab('customer')"><span class="sbi-icon">👥</span>客户</div>
-      <div class="sb-item tab-item" data-tab="mine" onclick="App.switchTab('mine')"><span class="sbi-icon">👤</span>我的</div>
+      <div class="sb-item tab-item" data-tab="home" onclick="App.switchTab('home')"><span class="sbi-icon" data-icon="home"></span>首页</div>
+      <div class="sb-item tab-item" data-tab="approve" onclick="App.switchTab('approve')"><span class="sbi-icon" data-icon="check-circle"></span>审批</div>
+      <div class="sb-item tab-item" data-tab="customer" onclick="App.switchTab('customer')"><span class="sbi-icon" data-icon="users"></span>客户</div>
+      <div class="sb-item tab-item" data-tab="mine" onclick="App.switchTab('mine')"><span class="sbi-icon" data-icon="user"></span>我的</div>
 
       <div class="sb-group">办公</div>
-      <div class="sb-item" data-page="message-inbox" onclick="App.showSubPage('message-inbox')"><span class="sbi-icon">✉️</span>消息中心</div>
-      <div class="sb-item" data-page="mail" onclick="App.showSubPage('mail')"><span class="sbi-icon">📇</span>通讯录</div>
-      <div class="sb-item" data-page="note" onclick="App.showSubPage('note')"><span class="sbi-icon">📢</span>企业公告</div>
-      <div class="sb-item" data-page="article" onclick="App.showSubPage('article')"><span class="sbi-icon">💬</span>问答知识</div>
-      <div class="sb-item" data-page="product" onclick="App.showSubPage('product')"><span class="sbi-icon">🧪</span>产品管理</div>
-      <div class="sb-item" data-page="files" onclick="App.showSubPage('files')"><span class="sbi-icon">📁</span>附件管理</div>
-      <div class="sb-item" data-page="workbench" onclick="App.openWorkbench()"><span class="sbi-icon">🗂️</span>工作台</div>
-      <div class="sb-item" data-page="ai" onclick="App.openAiChat()"><span class="sbi-icon">🤖</span>AI 问答</div>
+      <div class="sb-item" data-page="message-inbox" onclick="App.showSubPage('message-inbox')"><span class="sbi-icon" data-icon="mail"></span>消息中心</div>
+      <div class="sb-item" data-page="mail" onclick="App.showSubPage('mail')"><span class="sbi-icon" data-icon="book"></span>通讯录</div>
+      <div class="sb-item" data-page="note" onclick="App.showSubPage('note')"><span class="sbi-icon" data-icon="megaphone"></span>企业公告</div>
+      <div class="sb-item" data-page="article" onclick="App.showSubPage('article')"><span class="sbi-icon" data-icon="message-circle"></span>问答知识</div>
+      <div class="sb-item" data-page="product" onclick="App.showSubPage('product')"><span class="sbi-icon" data-icon="flask"></span>产品管理</div>
+      <div class="sb-item" data-page="files" onclick="App.showSubPage('files')"><span class="sbi-icon" data-icon="folder"></span>附件管理</div>
+      <div class="sb-item" data-page="workbench" onclick="App.openWorkbench()"><span class="sbi-icon" data-icon="layers"></span>工作台</div>
+      <div class="sb-item" data-page="ai" onclick="App.openAiChat()"><span class="sbi-icon" data-icon="bot"></span>AI 问答</div>
 
       <div class="sb-group">财务</div>
-      <div class="sb-item" data-page="finance-advance" onclick="App.showSubPage('finance-advance')"><span class="sbi-icon">💰</span>预存款</div>
-      <div class="sb-item" data-page="deduction" onclick="App.showSubPage('deduction')"><span class="sbi-icon">🎫</span>抵扣券（我申请的）</div>
-      <div class="sb-item" data-page="deduction-checked" onclick="App.showSubPage('deduction-checked')"><span class="sbi-icon">🎫</span>抵扣券（管理专用）</div>
-      <div class="sb-item" data-page="margin" onclick="App.showSubPage('margin')"><span class="sbi-icon">🛡️</span>保证金</div>
-      <div class="sb-item" data-page="invoice-my" onclick="App.showSubPage('invoice-my')"><span class="sbi-icon">🧾</span>发票（我申请的）</div>
-      <div class="sb-item" data-page="invoice-handle" onclick="App.showSubPage('invoice-handle')"><span class="sbi-icon">🗂️</span>发票（我处理的）</div>
-      <div class="sb-item" data-page="finance-income" onclick="App.showSubPage('finance-income')"><span class="sbi-icon">📊</span>到账（发票）</div>
-      <div class="sb-item" data-page="finance-order" onclick="App.showSubPage('finance-order')"><span class="sbi-icon">📈</span>到账（订单）</div>
-      <div class="sb-item" data-page="orderapply-handle" onclick="App.showSubPage('orderapply-handle')"><span class="sbi-icon">⚙️</span>订单到账处理</div>
+      <div class="sb-item" data-page="finance-advance" onclick="App.showSubPage('finance-advance')"><span class="sbi-icon" data-icon="wallet"></span>预存款</div>
+      <div class="sb-item" data-page="deduction" onclick="App.showSubPage('deduction')"><span class="sbi-icon" data-icon="ticket"></span>抵扣券（我申请的）</div>
+      <div class="sb-item" data-page="deduction-checked" onclick="App.showSubPage('deduction-checked')"><span class="sbi-icon" data-icon="ticket"></span>抵扣券（管理专用）</div>
+      <div class="sb-item" data-page="margin" onclick="App.showSubPage('margin')"><span class="sbi-icon" data-icon="shield"></span>保证金</div>
+      <div class="sb-item" data-page="invoice-my" onclick="App.showSubPage('invoice-my')"><span class="sbi-icon" data-icon="receipt"></span>发票（我申请的）</div>
+      <div class="sb-item" data-page="invoice-handle" onclick="App.showSubPage('invoice-handle')"><span class="sbi-icon" data-icon="archive"></span>发票（我处理的）</div>
+      <div class="sb-item" data-page="finance-income" onclick="App.showSubPage('finance-income')"><span class="sbi-icon" data-icon="file-text"></span>到账（发票）</div>
+      <div class="sb-item" data-page="finance-order" onclick="App.showSubPage('finance-order')"><span class="sbi-icon" data-icon="trending-up"></span>到账（订单）</div>
+      <div class="sb-item" data-page="orderapply-handle" onclick="App.showSubPage('orderapply-handle')"><span class="sbi-icon" data-icon="settings"></span>订单到账处理</div>
 
       <div class="sb-group">客户与业务</div>
-      <div class="sb-item" data-page="contact-list" onclick="App.showSubPage('contact-list')"><span class="sbi-icon">👤</span>客户联系人</div>
-      <div class="sb-item" data-page="chance-list" onclick="App.showSubPage('chance-list')"><span class="sbi-icon">🎯</span>销售机会</div>
-      <div class="sb-item" data-page="trace-list" onclick="App.showSubPage('trace-list')"><span class="sbi-icon">📝</span>跟进记录</div>
-      <div class="sb-item" data-page="order-my" onclick="App.showSubPage('order-my')"><span class="sbi-icon">📦</span>订单（我申请的）</div>
-      <div class="sb-item" data-page="order-handle" onclick="App.showSubPage('order-handle')"><span class="sbi-icon">🔧</span>订单（我处理的）</div>
-      <div class="sb-item" data-page="platform-order" onclick="App.showSubPage('platform-order')"><span class="sbi-icon">🛒</span>平台订单</div>
-      <div class="sb-item" data-page="sample" onclick="App.showSubPage('sample')"><span class="sbi-icon">🧫</span>样本管理</div>
-      <div class="sb-item" data-page="school" onclick="App.showSubPage('school')"><span class="sbi-icon">🏫</span>校展管理</div>
-      <div class="sb-item" data-page="after" onclick="App.showSubPage('after')"><span class="sbi-icon">🔨</span>售后管理</div>
-      <div class="sb-item" data-page="customer-add" onclick="App.showSubPage('customer-add')"><span class="sbi-icon">➕</span>新增客户</div>
+      <div class="sb-item" data-page="contact-list" onclick="App.showSubPage('contact-list')"><span class="sbi-icon" data-icon="user-plus"></span>客户联系人</div>
+      <div class="sb-item" data-page="chance-list" onclick="App.showSubPage('chance-list')"><span class="sbi-icon" data-icon="target"></span>销售机会</div>
+      <div class="sb-item" data-page="trace-list" onclick="App.showSubPage('trace-list')"><span class="sbi-icon" data-icon="clipboard"></span>跟进记录</div>
+      <div class="sb-item" data-page="order-my" onclick="App.showSubPage('order-my')"><span class="sbi-icon" data-icon="package"></span>订单（我申请的）</div>
+      <div class="sb-item" data-page="order-handle" onclick="App.showSubPage('order-handle')"><span class="sbi-icon" data-icon="wrench"></span>订单（我处理的）</div>
+      <div class="sb-item" data-page="platform-order" onclick="App.showSubPage('platform-order')"><span class="sbi-icon" data-icon="shopping-cart"></span>平台订单</div>
+      <div class="sb-item" data-page="sample" onclick="App.showSubPage('sample')"><span class="sbi-icon" data-icon="droplets"></span>样本管理</div>
+      <div class="sb-item" data-page="school" onclick="App.showSubPage('school')"><span class="sbi-icon" data-icon="graduation-cap"></span>校展管理</div>
+      <div class="sb-item" data-page="after" onclick="App.showSubPage('after')"><span class="sbi-icon" data-icon="headphones"></span>售后管理</div>
+      <div class="sb-item" data-page="customer-add" onclick="App.showSubPage('customer-add')"><span class="sbi-icon" data-icon="user-plus"></span>新增客户</div>
     </nav>
     <div class="sb-foot">
       <div class="sb-user" id="sb-user" title="进入个人中心" onclick="App.switchTab('mine')">
@@ -70,33 +70,55 @@
   <!-- 主列：顶栏 + 内容 + 移动端底部 tab -->
   <div class="main-col">
     <div class="topbar">
-      <div class="topbar-left" id="topbar-left"><div class="topbar-title" id="topbar-title">优品OA</div></div>
+      <div class="topbar-left" id="topbar-left">
+        <div class="topbar-crumb" id="topbar-crumb" style="display:none">
+          <span class="crumb-link" id="crumb-1">工作台</span>
+          <span class="crumb-sep" data-icon="chevron-right"></span>
+        </div>
+        <div class="topbar-title" id="topbar-title">优品OA</div>
+      </div>
       <div class="topbar-right">
-        <input class="topbar-search" id="global-search" type="text" placeholder="全局搜索产品（货号/基因名/标题）">
-        <div class="bell-btn" id="bell" title="消息中心" onclick="App.showSubPage('message-inbox')">🔔<span class="bell-badge" id="bell-badge" style="display:none">0</span></div>
+        <div class="search-trigger" id="search-trigger" title="搜索模块与功能（Ctrl+K）">
+          <span data-icon="search"></span>
+          <span class="st-text">搜索模块、功能…</span>
+          <kbd>Ctrl K</kbd>
+        </div>
+        <div class="bell-btn" id="bell" title="消息中心" onclick="App.showSubPage('message-inbox')"><span data-icon="bell"></span><span class="bell-badge" id="bell-badge" style="display:none">0</span></div>
         <div class="topbar-user" id="topbar-user">
           <div class="topbar-user-ava" id="topbar-user-ava">U</div>
           <span class="topbar-user-name" id="topbar-user-name">用户</span>
-          <span class="topbar-caret">▾</span>
+          <span class="topbar-caret" data-icon="chevron-down"></span>
         </div>
       </div>
     </div>
     <!-- 用户下拉菜单 -->
     <div class="user-menu" id="user-menu">
-      <div class="user-menu-item" onclick="App.showSubPage('profile')">👤 基本资料</div>
-      <div class="user-menu-item" onclick="App.showSubPage('password')">🔒 修改密码</div>
-      <div class="user-menu-item" onclick="App.switchTab('mine')">📋 个人中心</div>
+      <div class="user-menu-item" onclick="App.showSubPage('profile')"><span class="umi-ic" data-icon="user-circle"></span>基本资料</div>
+      <div class="user-menu-item" onclick="App.showSubPage('password')"><span class="umi-ic" data-icon="lock"></span>修改密码</div>
+      <div class="user-menu-item" onclick="App.switchTab('mine')"><span class="umi-ic" data-icon="layout"></span>个人中心</div>
       <div class="user-menu-sep"></div>
-      <div class="user-menu-item danger" onclick="App.logout()">🚪 退出登录</div>
+      <div class="user-menu-item danger" onclick="App.logout()"><span class="umi-ic" data-icon="log-out"></span>退出登录</div>
+    </div>
+    <!-- 命令面板（Ctrl+K） -->
+    <div class="cmdk-mask" id="cmdk-mask">
+      <div class="cmdk" role="dialog" aria-label="命令面板">
+        <div class="cmdk-input-row">
+          <span data-icon="search"></span>
+          <input id="cmdk-input" type="text" placeholder="搜索模块、功能、页面…" autocomplete="off">
+          <kbd>ESC</kbd>
+        </div>
+        <div class="cmdk-list" id="cmdk-list"></div>
+        <div class="cmdk-foot"><span><kbd>↑</kbd><kbd>↓</kbd> 选择</span><span><kbd>Enter</kbd> 打开</span><span><kbd>Esc</kbd> 关闭</span></div>
+      </div>
     </div>
     <!-- 内容 -->
     <div class="page-container" id="page-container"><div class="loading">加载中…</div></div>
     <!-- 底部 tabbar（仅移动端显示） -->
     <div class="tabbar" id="tabbar">
-      <div class="tab-item active" data-tab="home" onclick="App.switchTab('home')"><div class="tab-icon">🏠</div><div>首页</div></div>
-      <div class="tab-item" data-tab="approve" onclick="App.switchTab('approve')"><div class="tab-icon">✅</div><div>审批</div></div>
-      <div class="tab-item" data-tab="customer" onclick="App.switchTab('customer')"><div class="tab-icon">👥</div><div>客户</div></div>
-      <div class="tab-item" data-tab="mine" onclick="App.switchTab('mine')"><div class="tab-icon">👤</div><div>我的</div></div>
+      <div class="tab-item active" data-tab="home" onclick="App.switchTab('home')"><div class="tab-icon" data-icon="home"></div><div>首页</div></div>
+      <div class="tab-item" data-tab="approve" onclick="App.switchTab('approve')"><div class="tab-icon" data-icon="check-circle"></div><div>审批</div></div>
+      <div class="tab-item" data-tab="customer" onclick="App.switchTab('customer')"><div class="tab-icon" data-icon="users"></div><div>客户</div></div>
+      <div class="tab-item" data-tab="mine" onclick="App.switchTab('mine')"><div class="tab-icon" data-icon="user"></div><div>我的</div></div>
     </div>
   </div>
 </div>
@@ -106,10 +128,102 @@
 <script src="app.js"></script>
 <script src="doc.js"></script>
 <script>
-/* 启动逻辑：CSS/JS 已由构建内联进本页，DOM 解析到这里即可直接执行，不等待 window.load。
- * try/catch + 3.5s 看门狗双兜底，任何异常都不会卡死在启动屏。
- * 任何"退回登录页"的路径都会先把原因写入 localStorage（uping_boot_err），登录页 90 秒内回显。 */
+/* ============================================================
+   优品OA 网页版 · 桌面外壳 v3 启动逻辑
+   - SVG 图标系统：data-icon 属性 → ICONS 表渲染
+   - 命令面板（Ctrl+K）：全模块模糊直达
+   - 面包屑：一级模块 / 当前页
+   启动脚本由构建内联进本页，DOM 解析即可执行，不等待 window.load。
+   try/catch + 3.5s 看门狗双兜底，任何异常都不会卡死在启动屏。
+   ============================================================ */
 (function () {
+  /* ===== SVG 线性图标（lucide 风格，stroke 1.8） ===== */
+  var P = function (d) { return d; };
+  var ICONS = {
+    'home': '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+    'check-circle': '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+    'users': '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    'user': '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    'user-circle': '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/>',
+    'user-plus': '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/>',
+    'mail': '<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+    'inbox': '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+    'send': '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+    'book': '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>',
+    'megaphone': '<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+    'message-circle': '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/>',
+    'flask': '<path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/><path d="M6.5 2h12"/><path d="M8.5 15h7"/>',
+    'folder': '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+    'folder-open': '<path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/>',
+    'file': '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
+    'file-text': '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+    'layers': '<path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
+    'bot': '<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
+    'wallet': '<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+    'ticket': '<path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/>',
+    'shield': '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+    'receipt': '<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 7h8"/><path d="M8 11h8"/><path d="M8 15h4"/>',
+    'archive': '<rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
+    'trending-up': '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+    'settings': '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+    'target': '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+    'clipboard': '<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
+    'clipboard-check': '<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
+    'package': '<path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+    'wrench': '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+    'shopping-cart': '<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
+    'droplets': '<path d="m7 16.5-4.2 4.2a2.4 2.4 0 0 0 3.4 3.4l4.2-4.2a2.4 2.4 0 0 0 0-3.4l-.3-.3a2.4 2.4 0 0 0-3.4 0z"/><path d="m12 12.5-4.2 4.2a2.4 2.4 0 0 0 3.4 3.4l4.2-4.2a2.4 2.4 0 0 0 0-3.4l-.3-.3a2.4 2.4 0 0 0-3.4 0z"/><path d="M17 8.5 12.8 12.7a2.4 2.4 0 0 0 3.4 3.4l4.2-4.2a2.4 2.4 0 0 0 0-3.4l-.3-.3a2.4 2.4 0 0 0-3.4 0z"/>',
+    'graduation-cap': '<path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12v5c0 1 2 3 6 3s6-2 6-3v-5"/><path d="M22 10v6"/>',
+    'headphones': '<path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>',
+    'bell': '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+    'search': '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    'chevron-down': '<path d="m6 9 6 6 6-6"/>',
+    'chevron-right': '<path d="m9 18 6-6-6-6"/>',
+    'chevron-left': '<path d="m15 18-6-6 6-6"/>',
+    'clock': '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+    'calendar': '<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>',
+    'eye': '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+    'download': '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+    'trash': '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+    'edit': '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/>',
+    'star': '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+    'x': '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+    'check': '<polyline points="20 6 9 17 4 12"/>',
+    'alert-circle': '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>',
+    'info': '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+    'lock': '<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    'log-out': '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="9"/>',
+    'pie-chart': '<path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>',
+    'share-2': '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>',
+    'map-pin': '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+    'briefcase': '<rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+    'key': '<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>',
+    'filter': '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>',
+    'refresh': '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/>',
+    'external-link': '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+    'plus-circle': '<circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/>',
+    'corner-down-left': '<polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>'
+  };
+  window.ICONS = ICONS;
+  function svg(name, cls) {
+    var d = ICONS[name];
+    if (!d) return '';
+    return '<svg class="' + (cls || '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+  }
+  window.OA_ICON = svg;
+  function paintIcons(root) {
+    root = root || document;
+    var els = root.querySelectorAll('[data-icon]');
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      var name = el.getAttribute('data-icon');
+      if (el.getAttribute('data-painted') === '1') continue;
+      var s = svg(name);
+      if (s) { el.innerHTML = s; el.setAttribute('data-painted', '1'); }
+    }
+  }
+  window.OA_PAINT = paintIcons;
+
   var sp = document.getElementById('boot-splash');
   function hideSplash() { if (sp) sp.style.display = 'none'; }
   function recordErr(tag, e) {
@@ -121,11 +235,116 @@
       }));
     } catch (_e) {}
   }
-  // 全局错误兜底：运行期任何未捕获异常都记录（便于定位"莫名弹回"）
   window.addEventListener('error', function (ev) { recordErr('运行时错误', ev.error || ev.message); });
   window.addEventListener('unhandledrejection', function (ev) { recordErr('异步异常', ev.reason); });
 
-  /* ===== 侧栏高亮同步：包装 App 的导航入口 ===== */
+  /* ===== 模块清单（命令面板数据源，与侧栏一致） ===== */
+  var TABS = { home: '工作台', approve: '审批中心', customer: '客户管理', mine: '个人中心' };
+  var MODULES = [
+    { g: '主菜单', n: '工作台', i: 'home', run: function () { App.switchTab('home'); } },
+    { g: '主菜单', n: '审批中心', i: 'check-circle', run: function () { App.switchTab('approve'); } },
+    { g: '主菜单', n: '客户管理', i: 'users', run: function () { App.switchTab('customer'); } },
+    { g: '主菜单', n: '个人中心', i: 'user', run: function () { App.switchTab('mine'); } },
+    { g: '办公', n: '消息中心', i: 'mail', run: function () { App.showSubPage('message-inbox'); } },
+    { g: '办公', n: '通讯录', i: 'book', run: function () { App.showSubPage('mail'); } },
+    { g: '办公', n: '企业公告', i: 'megaphone', run: function () { App.showSubPage('note'); } },
+    { g: '办公', n: '问答知识', i: 'message-circle', run: function () { App.showSubPage('article'); } },
+    { g: '办公', n: '产品管理', i: 'flask', run: function () { App.showSubPage('product'); } },
+    { g: '办公', n: '附件管理', i: 'folder', run: function () { App.showSubPage('files'); } },
+    { g: '办公', n: '工作台', i: 'layers', run: function () { App.openWorkbench(); } },
+    { g: '办公', n: 'AI 问答', i: 'bot', run: function () { App.openAiChat(); } },
+    { g: '财务', n: '预存款', i: 'wallet', run: function () { App.showSubPage('finance-advance'); } },
+    { g: '财务', n: '抵扣券（我申请的）', i: 'ticket', run: function () { App.showSubPage('deduction'); } },
+    { g: '财务', n: '抵扣券（管理专用）', i: 'ticket', run: function () { App.showSubPage('deduction-checked'); } },
+    { g: '财务', n: '保证金', i: 'shield', run: function () { App.showSubPage('margin'); } },
+    { g: '财务', n: '发票（我申请的）', i: 'receipt', run: function () { App.showSubPage('invoice-my'); } },
+    { g: '财务', n: '发票（我处理的）', i: 'archive', run: function () { App.showSubPage('invoice-handle'); } },
+    { g: '财务', n: '到账（发票）', i: 'file-text', run: function () { App.showSubPage('finance-income'); } },
+    { g: '财务', n: '到账（订单）', i: 'trending-up', run: function () { App.showSubPage('finance-order'); } },
+    { g: '财务', n: '订单到账处理', i: 'settings', run: function () { App.showSubPage('orderapply-handle'); } },
+    { g: '客户与业务', n: '客户联系人', i: 'user-plus', run: function () { App.showSubPage('contact-list'); } },
+    { g: '客户与业务', n: '销售机会', i: 'target', run: function () { App.showSubPage('chance-list'); } },
+    { g: '客户与业务', n: '跟进记录', i: 'clipboard', run: function () { App.showSubPage('trace-list'); } },
+    { g: '客户与业务', n: '订单（我申请的）', i: 'package', run: function () { App.showSubPage('order-my'); } },
+    { g: '客户与业务', n: '订单（我处理的）', i: 'wrench', run: function () { App.showSubPage('order-handle'); } },
+    { g: '客户与业务', n: '平台订单', i: 'shopping-cart', run: function () { App.showSubPage('platform-order'); } },
+    { g: '客户与业务', n: '样本管理', i: 'droplets', run: function () { App.showSubPage('sample'); } },
+    { g: '客户与业务', n: '校展管理', i: 'graduation-cap', run: function () { App.showSubPage('school'); } },
+    { g: '客户与业务', n: '售后管理', i: 'headphones', run: function () { App.showSubPage('after'); } },
+    { g: '客户与业务', n: '新增客户', i: 'user-plus', run: function () { App.showSubPage('customer-add'); } },
+    { g: '客户与业务', n: '发起审批', i: 'clipboard-check', run: function () { App.openApproveType(); } }
+  ];
+
+  /* ===== 命令面板 ===== */
+  var cmdkMask = document.getElementById('cmdk-mask');
+  var cmdkInput = document.getElementById('cmdk-input');
+  var cmdkList = document.getElementById('cmdk-list');
+  var cmdkSel = 0;
+  var cmdkHits = [];
+  function cmdkRender(kw) {
+    cmdkHits = [];
+    cmdkList.innerHTML = '';
+    kw = (kw || '').replace(/^\s+|\s+$/g, '').toLowerCase();
+    var html = '', lastG = '', idx = 0;
+    for (var i = 0; i < MODULES.length; i++) {
+      var m = MODULES[i];
+      if (kw && m.n.toLowerCase().indexOf(kw) < 0 && m.g.indexOf(kw) < 0) continue;
+      if (m.g !== lastG) { html += '<div class="cmdk-group">' + m.g + '</div>'; lastG = m.g; }
+      cmdkHits.push(m);
+      html += '<div class="cmdk-item' + (idx === 0 ? ' sel' : '') + '" data-k="' + idx + '">' +
+        '<div class="ci-ic">' + svg(m.i) + '</div>' +
+        '<div class="ci-name">' + m.n + '</div>' +
+        '<div class="ci-hint">打开</div></div>';
+      idx++;
+    }
+    if (!idx) html = '<div class="cmdk-empty">没有匹配的模块，试试其他关键词</div>';
+    cmdkList.innerHTML = html;
+    cmdkSel = 0;
+    var items = cmdkList.querySelectorAll('.cmdk-item');
+    for (var j = 0; j < items.length; j++) {
+      items[j].addEventListener('click', function () { cmdkGo(parseInt(this.getAttribute('data-k'), 10)); });
+      items[j].addEventListener('mousemove', function () {
+        var k = parseInt(this.getAttribute('data-k'), 10);
+        if (k !== cmdkSel) { cmdkSel = k; cmdkSyncSel(); }
+      });
+    }
+  }
+  function cmdkSyncSel() {
+    var items = cmdkList.querySelectorAll('.cmdk-item');
+    for (var i = 0; i < items.length; i++) items[i].classList.toggle('sel', i === cmdkSel);
+    var sel = items[cmdkSel];
+    if (sel) sel.scrollIntoView({ block: 'nearest' });
+  }
+  function cmdkGo(k) {
+    var m = cmdkHits[k];
+    cmdkClose();
+    if (m && m.run) m.run();
+  }
+  function cmdkOpen() {
+    cmdkMask.classList.add('open');
+    cmdkInput.value = '';
+    cmdkRender('');
+    setTimeout(function () { cmdkInput.focus(); }, 60);
+  }
+  function cmdkClose() { cmdkMask.classList.remove('open'); }
+  if (cmdkInput) {
+    cmdkInput.addEventListener('input', function () { cmdkRender(cmdkInput.value); });
+    cmdkInput.addEventListener('keydown', function (ev) {
+      if (ev.key === 'ArrowDown') { ev.preventDefault(); if (cmdkHits.length) { cmdkSel = (cmdkSel + 1) % cmdkHits.length; cmdkSyncSel(); } }
+      else if (ev.key === 'ArrowUp') { ev.preventDefault(); if (cmdkHits.length) { cmdkSel = (cmdkSel - 1 + cmdkHits.length) % cmdkHits.length; cmdkSyncSel(); } }
+      else if (ev.key === 'Enter') { ev.preventDefault(); cmdkGo(cmdkSel); }
+      else if (ev.key === 'Escape') { cmdkClose(); }
+    });
+  }
+  if (cmdkMask) cmdkMask.addEventListener('click', function (ev) { if (ev.target === cmdkMask) cmdkClose(); });
+  document.addEventListener('keydown', function (ev) {
+    if ((ev.ctrlKey || ev.metaKey) && (ev.key === 'k' || ev.key === 'K')) {
+      ev.preventDefault();
+      if (cmdkMask.classList.contains('open')) cmdkClose(); else cmdkOpen();
+    } else if (ev.key === 'Escape' && cmdkMask.classList.contains('open')) cmdkClose();
+  });
+
+  /* ===== 侧栏高亮 + 面包屑同步 ===== */
   function syncSidebarPage(key) {
     var items = document.querySelectorAll('.sb-item[data-page]');
     for (var i = 0; i < items.length; i++) {
@@ -133,22 +352,35 @@
     }
     var tabs = document.querySelectorAll('.tab-item[data-tab]');
     for (var j = 0; j < tabs.length; j++) tabs[j].classList.remove('active');
+    setCrumb(TABS[currentTabName()] || '', '');
   }
   function clearSidebarPages() {
     var items = document.querySelectorAll('.sb-item[data-page]');
     for (var i = 0; i < items.length; i++) items[i].classList.remove('active');
   }
+  function currentTabName() {
+    try { if (window.App && App.currentTab) return App.currentTab; } catch (e) {}
+    return 'home';
+  }
+  function setCrumb(c1, c2) {
+    var crumb = document.getElementById('topbar-crumb');
+    var c1el = document.getElementById('crumb-1');
+    if (!crumb || !c1el) return;
+    if (c1) { c1el.textContent = c1; crumb.style.display = 'flex'; }
+    else crumb.style.display = 'none';
+  }
   function wrapNav() {
     if (!window.App) return;
-    var _sub = App.showSubPage, _mobile = App.openMobile, _tab = App.switchTab, _wb = App.openWorkbench, _ai = App.openAiChat;
+    var _sub = App.showSubPage, _mobile = App.openMobile, _tab = App.switchTab, _wb = App.openWorkbench, _ai = App.openAiChat, _shell = App.showDetailShell;
     App.showSubPage = function (type) { _sub(type); syncSidebarPage(type); };
     App.openMobile = function (type) { _mobile(type); syncSidebarPage(type); };
-    App.switchTab = function (tab) { _tab(tab); clearSidebarPages(); };
+    App.switchTab = function (tab) { _tab(tab); clearSidebarPages(); setCrumb(TABS[tab] || '', ''); };
     App.openWorkbench = function () { _wb(); syncSidebarPage('workbench'); };
-    App.openAiChat = function () { _ai(); clearSidebarPages(); };
+    App.openAiChat = function () { _ai(); clearSidebarPages(); setCrumb('', ''); };
+    App.showDetailShell = function (title, backFn) { _shell(title, backFn); setCrumb(TABS[currentTabName()] || '工作台', title); };
   }
 
-  /* ===== 顶栏用户信息 / 下拉菜单 / 全局搜索 ===== */
+  /* ===== 顶栏用户信息 / 下拉菜单 ===== */
   function currentUserName() {
     try {
       if (window.App && typeof App.myDisplayName === 'function') {
@@ -184,36 +416,21 @@
     document.addEventListener('click', function () { menu.classList.remove('open'); });
     menu.addEventListener('click', function (ev) { ev.stopPropagation(); menu.classList.remove('open'); });
   }
-  function bindGlobalSearch() {
-    var box = document.getElementById('global-search');
-    if (!box) return;
-    box.addEventListener('keydown', function (ev) {
-      if (ev.key !== 'Enter') return;
-      var kw = box.value.replace(/^\s+|\s+$/g, '');
-      if (!kw) { box.blur(); return; }
-      App.showSubPage('product');
-      setTimeout(function () {
-        var input = document.getElementById('prod-kw');
-        if (input) { input.value = kw; App.loadProduct(); }
-      }, 60);
-    });
-  }
 
   function boot() {
     try {
+      paintIcons(document);
       if (OA.isLoggedIn()) {
         document.getElementById('app-view').style.display = 'flex';
         App.init();
         wrapNav();
         fillUser();
         bindUserMenu();
-        bindGlobalSearch();
         hideSplash();
       } else {
         location.replace('login.html');
       }
     } catch (e) {
-      // 启动异常：记录原因 → 清登录态回登录页，绝不留在启动屏
       recordErr('主界面启动异常', e);
       try { localStorage.removeItem('uping_user'); localStorage.removeItem('uping_me'); } catch (_e) {}
       location.replace('login.html');
@@ -229,7 +446,7 @@
     var av = document.getElementById('app-view');
     if (av && av.style.display === 'none') {
       av.style.display = 'flex';
-      try { App.init(); wrapNav(); fillUser(); bindUserMenu(); bindGlobalSearch(); } catch (e) { recordErr('看门狗重试', e); }
+      try { App.init(); wrapNav(); fillUser(); bindUserMenu(); } catch (e) { recordErr('看门狗重试', e); }
     }
   }, 3500);
   boot();
