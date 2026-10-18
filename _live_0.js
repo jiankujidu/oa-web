@@ -1,1 +1,0 @@
-window.OA_BASE=location.origin;

@@ -5,10 +5,15 @@
 生成 dist/worker.js：前端由 CF 边缘节点直接返回（不再依赖 GitHub Pages），
 OA 业务接口仍反代到 oa.upingbio.cn。同源 => 浏览器不拦、登录可用、且更快。
 
+体积控制（CF 免费版脚本上限 1MB）：
+1) HTML 内联 <script src>/<link> 后，被内联的源文件不再单独存入 ASSETS（消除双份）；
+2) 全部资产 gzip 后 base64 存储，Worker 端 DecompressionStream 解压（每隔离解压一次并缓存）。
+3) 大体积文档库（docx 预览/转换 ~1.4MB）不内联，/vendor/* 由 Worker 代理到 GitHub Pages。
+
 用法: python build_worker.py
 依赖: Python 3（仅标准库）
 """
-import os, base64, json, subprocess, datetime, re
+import os, base64, json, gzip, subprocess, datetime, re
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 PUB = os.path.join(ROOT, "public")
@@ -62,12 +67,13 @@ INL_CSS_RE = re.compile(r'<link\s+rel="stylesheet"\s+href="([^"]+)"\s*/?>')
 INL_JS_RE = re.compile(r'<script\s+src="([^"]+)"\s*>\s*</script>')
 
 
-def _inline_html(txt, files):
+def _inline_html(txt, files, inlined):
     def css_sub(m):
         key = "/" + m.group(1).lstrip("/")
         raw = files.get(key)
         if raw is None:
             return m.group(0)
+        inlined.add(key)
         return "<style>\n" + raw.decode("utf-8", "replace") + "\n</style>"
 
     def js_sub(m):
@@ -75,6 +81,7 @@ def _inline_html(txt, files):
         raw = files.get(key)
         if raw is None:
             return m.group(0)
+        inlined.add(key)
         code = raw.decode("utf-8", "replace").replace("</script", "<\\/script")
         return "<script>\n" + code + "\n</script>"
 
@@ -97,6 +104,7 @@ def collect():
 
     # 第二遍：处理 HTML（同域注入 + git 信息 + 内联 CSS/JS）
     assets = {}
+    inlined = set()  # 已被内联进某个 HTML 的源文件（不再单独存储，消除双份）
     for rel, raw in files.items():
         ext = os.path.splitext(rel)[1].lower()
         ct = CT.get(ext, "application/octet-stream")
@@ -110,9 +118,13 @@ def collect():
             txt = (txt.replace("__COMMIT__", COMMIT)
                       .replace("__REPO_URL__", REPO_URL)
                       .replace("__BUILD_TIME__", BUILD_TIME))
-            txt = _inline_html(txt, files)
+            txt = _inline_html(txt, files, inlined)
             raw = txt.encode("utf-8")
-        assets[rel] = {"b": base64.b64encode(raw).decode("ascii"), "t": ct}
+        assets[rel] = {"b": base64.b64encode(gzip.compress(raw, 9)).decode("ascii"), "t": ct}
+
+    # 剔除被内联的源文件（HTML 里已无引用，浏览器不会再单独请求）
+    for key in inlined:
+        assets.pop(key, None)
     return assets
 
 
@@ -122,11 +134,17 @@ def build():
 
     worker = r"""
 // 优品OA 网页版 · 单一 Worker（自带前端资源 + API 全反代）
-// 由 build_worker.py 自动生成：前端资源内联在 ASSETS 中，CF 边缘就近返回，不再依赖 GitHub Pages。
+// 由 build_worker.py 自动生成：前端资源 gzip 后内联在 ASSETS 中（CF 免费版 1MB 脚本上限），
+// 请求时 DecompressionStream 解压（每隔离解压一次并缓存），CF 边缘就近返回，不再依赖 GitHub Pages。
 const OA_ORIGIN = 'https://oa.upingbio.cn';
+// 大体积文档库（docx 预览/转换，~1.4MB）不内联 Worker，
+// 由 Worker 代理到 GitHub Pages（jiankujidu.github.io/oa-web/pages/vendor/*），CF→GitHub 服务端取数；
+// 前端 ensureLib 失败还会回退 jsdelivr CDN。
+const VENDOR_ORIGIN = 'https://jiankujidu.github.io';
 
-// 前端资源表（path -> {b: base64, t: content-type}），构建时内联
+// 前端资源表（path -> {b: base64(gzip), t: content-type}），构建时内联
 const ASSETS = __ASSETS__;
+const DECOMP_CACHE = new Map();
 
 const API_RE = /^\/(home|oa|customer|note|message|product|api|file|admin|upload|attachment|public|captcha\.html|index\.php)/i;
 function isApi(p) { return API_RE.test(p); }
@@ -139,7 +157,18 @@ function b64ToBytes(b64) {
   return bytes;
 }
 
-function serveAsset(pathname) {
+// gzip 解压（每隔离首次解压后缓存）
+async function getBytes(key) {
+  if (DECOMP_CACHE.has(key)) return DECOMP_CACHE.get(key);
+  const a = ASSETS[key];
+  const gz = b64ToBytes(a.b);
+  const rs = new Response(gz).body.pipeThrough(new DecompressionStream('gzip'));
+  const buf = await new Response(rs).arrayBuffer();
+  DECOMP_CACHE.set(key, buf);
+  return buf;
+}
+
+async function serveAsset(pathname) {
   let key = pathname;
   if (key === '/' || key === '') key = '/login.html';
   if (key === '/git') key = '/git.html';   // /git -> 源码仓库/部署信息页
@@ -150,7 +179,7 @@ function serveAsset(pathname) {
     a = ASSETS['/login.html'];
     key = '/login.html';
   }
-  const bytes = b64ToBytes(a.b);
+  const bytes = await getBytes(key);
   return new Response(bytes, {
     status: 200,
     headers: {
@@ -191,9 +220,30 @@ async function proxyApi(request, url) {
   return new Response(resp.body, { status: resp.status, headers: rh });
 }
 
+// /vendor/* → GitHub Pages（pages/vendor/）：服务端转发，浏览器无跨域、无额外 DNS
+async function proxyVendor(request, url) {
+  const target = VENDOR_ORIGIN + '/oa-web/pages' + url.pathname + url.search;
+  const hdr = new Headers(request.headers);
+  hdr.delete('host');
+  hdr.delete('origin');
+  hdr.delete('referer');
+  let resp;
+  try {
+    resp = await fetch(target, { method: 'GET', headers: hdr });
+  } catch (e) {
+    return new Response('vendor 代理失败: ' + e.message, { status: 502 });
+  }
+  const rh = new Headers(resp.headers);
+  rh.set('Access-Control-Allow-Origin', '*');
+  // 文档库内容稳定：长缓存（文件名不变即内容不变）
+  rh.set('cache-control', 'public, max-age=86400');
+  return new Response(resp.body, { status: resp.status, headers: rh });
+}
+
 async function handle(request) {
   const url = new URL(request.url);
   const p = decodeURIComponent(url.pathname);
+  if (p.startsWith('/vendor/')) return proxyVendor(request, url);
   if (isApi(p)) return proxyApi(request, url);
   return serveAsset(p);
 }
