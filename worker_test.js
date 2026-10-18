@@ -86,6 +86,15 @@ async function get(p) {
   txt = await r.text();
   check(txt.indexOf('code') >= 0, 'API 路径反代到 OA 源站');
 
+  // v5 防回归：App api.js 的全部一级路径必须都在反代白名单（漏一个 → 整个模块被 SPA 兜底成登录页）
+  const apiPrefixes = ['/home/', '/oa/', '/customer/', '/note/', '/message/', '/product/', '/api/',
+    '/finance/', '/article/', '/contract/'];
+  for (const p of apiPrefixes) {
+    r = await get(p + 'probe');
+    txt = await r.text();
+    check(txt.indexOf('code') >= 0, '反代白名单覆盖 ' + p + '（防财务/问答/合同模块被兜底）');
+  }
+
   console.log('\n结果: ' + (failures ? failures + ' 项失败' : '全部通过'));
   process.exit(failures ? 1 : 0);
 })().catch(e => { console.error('worker 测试异常:', e); process.exit(1); });

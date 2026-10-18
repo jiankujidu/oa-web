@@ -146,7 +146,9 @@ const VENDOR_ORIGIN = 'https://jiankujidu.github.io';
 const ASSETS = __ASSETS__;
 const DECOMP_CACHE = new Map();
 
-const API_RE = /^\/(home|oa|customer|note|message|product|api|file|admin|upload|attachment|public|captcha\.html|index\.php)/i;
+// API 路径白名单（与 App api.js 的一级路径 1:1 对齐：home/oa/customer/note/message/product/api
+// + finance（财务9页）/article（问答知识）/contract（合同）；漏一个整个模块就被 SPA 兜底成登录页）
+const API_RE = /^\/(home|oa|customer|note|message|product|api|file|admin|upload|attachment|public|finance|article|contract|captcha\.html|index\.php)/i;
 function isApi(p) { return API_RE.test(p); }
 
 function b64ToBytes(b64) {
