@@ -321,6 +321,15 @@ var App = (function () {
         'invoice-my': 'loadFinanceInvoiceMy', 'invoice-handle': 'loadFinanceInvoiceHandle',
         'orderapply-handle': 'loadFinanceOrderApplyHandle'
     };
+    var pgPageSize = {
+        'note': 15, 'article': 15, 'product': 15, 'files': 15,
+        'finance-order': 20, 'finance-advance': 20, 'finance-income': 20,
+        'approve': 20, 'customer': 20, 'msg': 20, 'mail': 20,
+        'contact': 20, 'chance': 20, 'trace': 20, 'order-my': 20,
+        'order-handle': 20, 'school': 20, 'after': 20, 'platform-order': 20,
+        'sample': 20, 'invoice-my': 20, 'invoice-handle': 20, 'orderapply-handle': 20
+    }; // key -> API limit for that list loader
+
     function moreBtn(key, arg) {
         // 生成"加载更多"即记录当前列表加载器，供上拉自动加载触发
         currentLoadKey = key;
@@ -331,14 +340,15 @@ var App = (function () {
         if (isPhone()) {
             return '<div class="load-more" data-load="' + key + '"' + a + ' onclick="this.__lmBound=1;App.lm(' + q + ')">加载更多（点击加载）</div>';
         }
-        // 桌面：浏览器后台标配——"上一页/下一页 + 页码信息 + 每页条数 + 总数"，而非无限滚动
+        // 桌面：浏览器后台标配——真页码数字 + 每页条数 + 总数 + 行选择
         var aq = "'" + key + "'";
         if (arg != null) aq += ",'" + String(arg).replace(/'/g, "\'") + "'";
+        var pg = pgState[key] || (pgState[key] = { page: 1, size: 20, total: 0, pages: 1, current: 1 });
+        var sz = pgPageSize[key] || pg.size;
         return '<div class="dt-pager" data-pg-key="' + key + '" data-pg-arg="' + (arg == null ? '' : arg) + '">' +
-            '<span class="pg-info" data-pg-info>第 1 页</span>' +
-            '<span class="pg-btn" onclick="App.pg(' + aq + ',-1)" data-pg-prev>‹ 上一页</span>' +
-            '<span class="pg-btn" onclick="App.pg(' + aq + ',1)" data-pg-next>下一页 ›</span>' +
-            '<span class="pg-size" onclick="App.pgSize(' + aq + ')" data-pg-size>20 条/页</span>' +
+            '<span class="pg-total" data-pg-total>共 0 条</span>' +
+            '<span class="pg-pages" data-pg-pages></span>' +
+            '<span class="pg-size-wrap" onclick="App.pgSize(event,\'' + key + '\')" data-pg-size><span class="pg-size-cur">' + sz + '</span> 条/页<span class="pg-size-pop" data-pg-pop><button class="pg-size-opt' + (sz === 20 ? ' active' : '') + '" data-sz="20">20</button><button class="pg-size-opt' + (sz === 50 ? ' active' : '') + '" data-sz="50">50</button><button class="pg-size-opt' + (sz === 100 ? ' active' : '') + '" data-sz="100">100</button></span></span>' +
             '</div>';
     }
     function lm(key, arg) {
@@ -350,30 +360,156 @@ var App = (function () {
         setTimeout(function () { deEmoji($('page-container')); }, 60);
     }
     // 桌面分页器翻页（无侵入：复用现有累加式 loader；上一页回到列表顶部）
-    function pg(key, dir) {
+    /* 桌面分页器：严格页码跳转（1 2 3…N）+ 每页条数 20/50/100 可切 + 总数显示 */
+    var pgState = {}; // key -> { page, size, total, pages, current }
+
+    function pg(key, target) {
         var fn = LM[key];
         if (!fn || !App[fn]) return;
-        if (dir === 1) { App[fn](); setTimeout(function () { deEmoji($('page-container')); }, 60); }
-        else if (dir === -1) {
-            // 上一页：重新载入当前列表（重置累加）
-            if (App.reloadList) App.reloadList(key); else App[fn]();
-        }
-        // 更新页码信息
-        setTimeout(function () {
-            var pager = document.querySelector('.dt-pager[data-pg-key="' + key + '"]');
-            if (!pager) return;
-            var info = pager.querySelector('[data-pg-info]');
-            if (info) {
-                var table = pager.previousElementSibling;
-                var n = 0;
-                if (table && table.querySelectorAll) n = table.querySelectorAll('tbody tr').length;
-                else if (table && table.id && table.querySelector) { /* 列表容器 */ }
-                var pages = Math.max(1, Math.ceil(n / 20));
-                info.textContent = '第 ' + pages + ' 页 · 已载 ' + n + ' 条';
-            }
-        }, 120);
+        // target: 'prev' | 'next' | 具体页码数字
+        var st = pgState[key] || (pgState[key] = { page: 1, size: 20, total: 0, pages: 1, current: 1 });
+        if (target === 'prev') st.page = Math.max(1, st.current - 1);
+        else if (target === 'next') st.page = Math.min(st.pages, st.current + 1);
+        else st.page = Math.max(1, Math.min(st.pages, Number(target) || 1));
+        st.current = st.page;
+        // 重置累加并拉某页（等效严格页码跳转：清空 rows + 重新请求第 N 页）
+        App.pgJump(key, st.page, st.size);
+        setTimeout(function () { deEmoji($('page-container')); updatePagerDom(key); }, 80);
     }
-    function pgSize(key) { toast('每页条数功能（暂固定 20 条）'); }
+    function pgJump(key, page, size) {
+        // 清空当前列表容器 + 累加器，强制拉第 page 页（不复用"加载更多"累加逻辑）
+        var fn = LM[key];
+        if (!fn || !App[fn]) return;
+        // 各 loader 的 state 是闭包无法直接重置，用"切走再切回"等效手段
+        // 这里通过调用对应 renderXxx 重置 + 调用 loader 实现
+        App.pgReload(key, page, size);
+    }
+    function pgReload(key, page, size) {
+        var arg = (key === 'customer') ? 1 : (key === 'msg' ? 'inbox' : null);
+        var st = pgState[key] || (pgState[key] = { page: 1, size: 20, total: 0, pages: 1, current: 1 });
+        st.page = page; st.size = size; st.current = page;
+        // 1. 重置该 key 的累加器（按各 loader 的重置语义）
+        try {
+            var stObj = window.listState && window.listState[key];
+            if (stObj) { stObj.page = page; stObj.rows = {}; stObj.done = false; stObj.loading = false; }
+            if (window.finState && window.finState[key]) {
+                window.finState[key].page = page;
+                window.finState[key].rows = {};
+                window.finState[key].done = false;
+                window.finState[key].loading = false;
+            }
+            if (window.orderState && (window.orderState['my'] || window.orderState['handle'])) {
+                var ordKey = (key === 'order-my') ? 'my' : (key === 'order-handle' ? 'handle' : null);
+                if (ordKey && window.orderState[ordKey]) {
+                    window.orderState[ordKey].page = page;
+                    window.orderState[ordKey].rows = {};
+                    window.orderState[ordKey].done = false;
+                    window.orderState[ordKey].loading = false;
+                }
+            }
+            if (key === 'msg' && window.msgState) {
+                window.msgState.page = page;
+                window.msgState.rows = {};
+                window.msgState.done = false;
+                window.msgState.loading = false;
+            }
+            if (key === 'customer' && window.listState && window.listState.customer) {
+                window.listState.customer.page = page;
+                window.listState.customer.rows = {};
+                window.listState.customer.done = false;
+                window.listState.customer.loading = false;
+            }
+        } catch (e) {}
+        // 2. 清空列表容器（让 loader 重新渲染第 page 页，而非追加）
+        var boxSel = '.dt-table-wrap';
+        try {
+            var listBox = document.querySelector('#' + key.replace(/-/g, '-list')) || document.querySelector('#' + key + '-list');
+            if (!listBox) {
+                var keyNoDash = key.replace(/-/g, '');
+                listBox = document.querySelector('#' + keyNoDash + '-list') ||
+                          document.querySelector('#fin-list-' + key) ||
+                          document.querySelector('#ord-list') ||
+                          document.querySelector('#ordh-list') ||
+                          document.querySelector('#msg-list-' + (key === 'msg' ? 'inbox' : key)) ||
+                          document.querySelector('#' + key + '-list');
+            }
+            if (listBox) listBox.innerHTML = '';
+        } catch (e) {}
+        // 3. 调对应 loader（多数 loader 第一次调用时若 st 已重置，会拉第 page 页）
+        var fn = LM[key];
+        if (fn && App[fn]) {
+            if (arg != null) App[fn](arg); else App[fn]();
+        }
+    }
+    function pgSize(ev, key) {
+        ev.stopPropagation();
+        var pager = ev.target.closest('.dt-pager');
+        if (!pager) return;
+        var pop = pager.querySelector('[data-pg-pop]');
+        if (!pop) return;
+        var cur = pop.querySelector('.pg-size-opt.active');
+        var opt = ev.target.closest('.pg-size-opt');
+        if (!opt) { pop.classList.toggle('open'); return; }
+        var newSz = Number(opt.getAttribute('data-sz')) || 20;
+        // 切换每页条数 → 记录该 key 当前页大小（供 updatePagerDom 计算总页数），再重新拉第 1 页
+        pgPageSize[key] = newSz;
+        var st = pgState[key] || (pgState[key] = { page: 1, size: 20, total: 0, pages: 1, current: 1 });
+        st.size = newSz;
+        st.page = 1; st.current = 1;
+        App.pgReload(key, 1, newSz);
+        setTimeout(function () { deEmoji($('page-container')); updatePagerDom(key); }, 80);
+        // 更新 UI
+        if (cur) cur.classList.remove('active');
+        opt.classList.add('active');
+        var curEl = pager.querySelector('.pg-size-cur');
+        if (curEl) curEl.textContent = String(newSz);
+        pop.classList.remove('open');
+    }
+    // 更新分页器 DOM（页码数字 + 总数）——在 loader 返回数据后由调用方触发
+    function updatePagerDom(key, total) {
+        var pager = document.querySelector('.dt-pager[data-pg-key="' + key + '"]');
+        if (!pager) return;
+        var st = pgState[key] || (pgState[key] = { page: 1, size: 20, total: 0, pages: 1, current: 1 });
+        // 总数：优先使用调用方传入的 total；否则按当前表格行数更新
+        if (typeof total === 'number' && !isNaN(total)) {
+            st.total = Math.max(st.total, total);
+        } else {
+            var n = 0;
+            var table = document.querySelector('.dt-table');
+            if (table && table.querySelectorAll) n = table.querySelectorAll('tbody tr').length;
+            st.total = Math.max(st.total, n);
+        }
+        // 页大小取每页实际拉取条数（不同 loader 不一致时以 key 映射为准，缺省 20）
+        var sz = pgPageSize[key] || st.size;
+        st.pages = Math.max(1, Math.ceil(st.total / sz));
+        // 总数显示
+        var totalEl = pager.querySelector('[data-pg-total]');
+        if (totalEl) totalEl.textContent = '共 ' + st.total + ' 条';
+        // 页码数字（1 2 3 … N，带省略号）
+        var pagesBox = pager.querySelector('[data-pg-pages]');
+        if (pagesBox) {
+            var html = '';
+            // 上一页
+            html += '<span class="pg-btn' + (st.current <= 1 ? ' disabled' : '') + '" onclick="App.pg(\'' + key + '\',\'prev\')">‹</span>';
+            // 页码数字
+            var start = Math.max(1, st.current - 2);
+            var end = Math.min(st.pages, st.current + 2);
+            if (start > 1) {
+                html += '<span class="pg-num" onclick="App.pg(\'' + key + '\',1)">1</span>';
+                if (start > 2) html += '<span class="pg-ellipsis">…</span>';
+            }
+            for (var i = start; i <= end; i++) {
+                html += '<span class="pg-num' + (i === st.current ? ' active' : '') + '" onclick="App.pg(\'' + key + '\',' + i + ')">' + i + '</span>';
+            }
+            if (end < st.pages) {
+                if (end < st.pages - 1) html += '<span class="pg-ellipsis">…</span>';
+                html += '<span class="pg-num" onclick="App.pg(\'' + key + '\',' + st.pages + ')">' + st.pages + '</span>';
+            }
+            // 下一页
+            html += '<span class="pg-btn' + (st.current >= st.pages ? ' disabled' : '') + '" onclick="App.pg(\'' + key + '\',\'next\')">›</span>';
+            pagesBox.innerHTML = html;
+        }
+    }
     // 刷新当前列表（桌面后台标配"刷新"）
     function refreshList(key) {
         var fn = LM[key];
@@ -388,6 +524,9 @@ var App = (function () {
             // 因此先切走再切回更稳；这里直接重拉并去重由 st.rows 累积键保证）
             App[fn]();
         } catch (e) {}
+        // 重置分页器状态（回到第 1 页、清除 total），让后续 loader 完成后 updatePagerDom 刷新
+        var st = pgState[key] || (pgState[key] = { page: 1, size: 20, total: 0, pages: 1, current: 1 });
+        st.page = 1; st.current = 1; st.total = 0; st.pages = 1;
         toast('已刷新');
     }
     function reloadList(key) {
@@ -2074,6 +2213,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 15;
             if (!st.done) el2.insertAdjacentHTML('beforeend', App.moreBtn('note'));
+            if (!isPhone()) App.updatePagerDom('note', (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () {
             $('note-list').innerHTML = '<div class="empty retry">网络异常，点击重试</div>';
             st.loading = false;
@@ -2142,6 +2282,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 15;
             if (!st.done) el2.insertAdjacentHTML('beforeend', App.moreBtn('article'));
+            if (!isPhone()) App.updatePagerDom('article', (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () {
             $('article-list').innerHTML = '<div class="empty retry">网络异常，点击重试</div>';
             st.loading = false;
@@ -2891,6 +3032,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 15;
             if (!st.done) el2.insertAdjacentHTML('beforeend', App.moreBtn('files'));
+            if (!isPhone()) App.updatePagerDom('files', (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () {
             $('file-list').innerHTML = '<div class="empty retry">网络异常，点击重试</div>';
             st.loading = false;
@@ -3006,6 +3148,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 15;
             if (!st.done) el2.insertAdjacentHTML('beforeend', App.moreBtn('finance-order'));
+            if (!isPhone()) App.updatePagerDom('finance-order', (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () {
             $('finance-order-list').innerHTML = '<div class="empty retry">网络异常，点击重试</div>';
             st.loading = false;
@@ -3054,6 +3197,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 15;
             if (!st.done) el2.insertAdjacentHTML('beforeend', App.moreBtn('finance-advance'));
+            if (!isPhone()) App.updatePagerDom('finance-advance', (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () {
             $('finance-advance-list').innerHTML = '<div class="empty retry">网络异常，点击重试</div>';
             st.loading = false;
@@ -3095,6 +3239,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 15;
             if (!st.done) el2.insertAdjacentHTML('beforeend', App.moreBtn('finance-income'));
+            if (!isPhone()) App.updatePagerDom('finance-income', (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () {
             $('finance-income-list').innerHTML = '<div class="empty retry">网络异常，点击重试</div>';
             st.loading = false;
@@ -3174,6 +3319,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 20;
             if (!st.done) $('approve-list').insertAdjacentHTML('beforeend', App.moreBtn('approve', st.status));
+            if (!isPhone()) App.updatePagerDom('approve', (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () {
             var el = $('approve-loading');
             if (!el) return;
@@ -3401,6 +3547,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 20;
             if (!st.done) $('customer-list').insertAdjacentHTML('beforeend', App.moreBtn('customer', st.type));
+            if (!isPhone()) App.updatePagerDom('customer', (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () {
             $('customer-list').innerHTML = '<div class="empty retry">网络异常，点击重试</div>';
             st.loading = false;
@@ -3626,6 +3773,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 20;
             if (!st.done) box.insertAdjacentHTML('beforeend', App.moreBtn('msg', tab));
+            if (!isPhone()) App.updatePagerDom('msg', (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () {
             if (box) { box.innerHTML = '<div class="empty retry">网络异常，点击重试</div>'; st.loading = false; }
         });
@@ -3850,6 +3998,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 20;
             if (!st.done) box.insertAdjacentHTML('beforeend', App.moreBtn('mail'));
+            if (!isPhone()) App.updatePagerDom('mail', (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () { if (box) { box.innerHTML = '<div class="empty retry">网络异常，点击重试</div>'; st.loading = false; } });
     }
 
@@ -3961,6 +4110,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 20;
             if (!st.done) box.insertAdjacentHTML('beforeend', App.moreBtn('contact'));
+            if (!isPhone()) App.updatePagerDom('contact', (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () { if (box) { box.innerHTML = '<div class="empty retry">网络异常，点击重试</div>'; st.loading = false; } });
     }
     function openContactAdd() {
@@ -4060,6 +4210,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 20;
             if (!st.done) box.insertAdjacentHTML('beforeend', App.moreBtn('chance'));
+            if (!isPhone()) App.updatePagerDom('chance', (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () { if (box) { box.innerHTML = '<div class="empty retry">网络异常，点击重试</div>'; st.loading = false; } });
     }
     function openChanceAdd() {
@@ -4169,6 +4320,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 20;
             if (!st.done) box.insertAdjacentHTML('beforeend', App.moreBtn('trace'));
+            if (!isPhone()) App.updatePagerDom('trace', (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () { if (box) { box.innerHTML = '<div class="empty retry">网络异常，点击重试</div>'; st.loading = false; } });
     }
     function openTraceAdd() {
@@ -4252,6 +4404,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 20;
             if (!st.done) box.insertAdjacentHTML('beforeend', App.moreBtn('order-my'));
+            if (!isPhone()) App.updatePagerDom('order-my', (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () { if (box) { box.innerHTML = '<div class="empty retry">网络异常，点击重试</div>'; st.loading = false; } });
     }
     function renderOrderHandlePage() {
@@ -4293,6 +4446,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 20;
             if (!st.done) box.insertAdjacentHTML('beforeend', App.moreBtn('order-handle'));
+            if (!isPhone()) App.updatePagerDom('order-handle', (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () { if (box) { box.innerHTML = '<div class="empty retry">网络异常，点击重试</div>'; st.loading = false; } });
     }
     var curOrderKind = 'handle';
@@ -5162,6 +5316,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 20;
             if (!st.done) box.insertAdjacentHTML('beforeend', App.moreBtn('platform-order'));
+            if (!isPhone()) App.updatePagerDom('platform-order', (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () { if (box) { box.innerHTML = '<div class="empty retry">网络异常，点击重试</div>'; st.loading = false; } });
     }
     // v1.1.56：列表行字段兜底渲染（详情接口不可用时使用）
@@ -5274,6 +5429,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 20;
             if (!st.done) box.insertAdjacentHTML('beforeend', App.moreBtn('sample'));
+            if (!isPhone()) App.updatePagerDom('sample', (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () { if (box) { box.innerHTML = '<div class="empty retry">网络异常，点击重试</div>'; st.loading = false; } });
     }
     var schoolTabCur = 0; // v1.1.72：0=校展预名单（我申请的） 1=我处理的，对齐电脑端两个菜单
@@ -5350,6 +5506,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 20;
             if (!st.done) box.insertAdjacentHTML('beforeend', App.moreBtn('school'));
+            if (!isPhone()) App.updatePagerDom('school', (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () { if (box) { box.innerHTML = '<div class="empty retry">网络异常，点击重试</div>'; st.loading = false; } });
     }
     function openSchoolDetail(id) {
@@ -5475,6 +5632,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 20;
             if (!st.done) box.insertAdjacentHTML('beforeend', App.moreBtn('after'));
+            if (!isPhone()) App.updatePagerDom('after', (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () { if (box) { box.innerHTML = '<div class="empty retry">网络异常，点击重试</div>'; st.loading = false; } });
     }
     function openAfterDetail(id) {
@@ -6039,6 +6197,9 @@ var App = (function () {
         reloadList: reloadList,
         exportList: exportList,
         injectToolbarOps: injectToolbarOps,
+        updatePagerDom: updatePagerDom,
+        pgJump: pgJump,
+        pgReload: pgReload,
         onApproveFiles: onApproveFiles,
         pickApproveFile: pickApproveFile,
         removeApproveFile: removeApproveFile,
