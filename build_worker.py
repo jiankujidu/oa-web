@@ -240,8 +240,14 @@ async function proxyApi(request, url) {
   const target = OA_ORIGIN + url.pathname + url.search;
   const hdr = new Headers(request.headers);
   hdr.delete('host');
-  hdr.delete('origin');
-  hdr.delete('referer');
+  // 后端/WAF 校验 Referer：验证码接口实测无 Referer 403、带原站 Referer 200。
+  // 伪装成原站同源请求（网页端从本域发起，直接删 referer 会被 403 拒掉）
+  hdr.set('referer', OA_ORIGIN + '/home/login/index.html');
+  if (request.method === 'GET' || request.method === 'HEAD') {
+    hdr.delete('origin');
+  } else {
+    hdr.set('origin', OA_ORIGIN);
+  }
   const init = { method: request.method, headers: hdr };
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     init.body = request.body;
