@@ -577,17 +577,16 @@ var App = (function () {
     }
 
     /* 桌面后台标配工具栏按钮：给列表页的 dt-toolbar-ops 自动补"刷新 + 导出 + 列宽"（手机隐藏）
-       触发条件：页面有 .dt-table（含客户页）或有 .dt-pager */
+       触发条件：页面有 .dt-toolbar-ops 容器（列表页/详情页通用；空数据页也有） */
     function injectToolbarOps() {
         if (isPhone()) return;
         var root = document.getElementById('page-container');
         if (!root) return;
-        // 有表格或分页器才注入（详情/表单页不注入）
-        if (!root.querySelector('.dt-table') && !root.querySelector('.dt-pager[data-pg-key]')) return;
-        // 取当前分页 key（若存在），否则用表格所在 key 的兜底（如 customer）
+        // 取当前分页 key（若存在），否则从 URL hash / 当前 tab 兜底
         var pager = root.querySelector('.dt-pager[data-pg-key]');
-        var key = pager ? pager.getAttribute('data-pg-key') : 'current';
+        var key = pager ? pager.getAttribute('data-pg-key') : (currentPageType || currentTab);
         var ops = root.querySelectorAll('.dt-toolbar-ops');
+        if (!ops.length) return; // 无工具栏操作区的页面（如纯表单）不注入
         for (var i = 0; i < ops.length; i++) {
             var o = ops[i];
             if (o.querySelector('.oa-btn.ghost[data-desktop-only]')) continue; // 已注入
