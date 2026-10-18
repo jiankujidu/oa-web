@@ -319,15 +319,18 @@ var App = (function () {
         'school': 'loadSchool', 'after': 'loadAfter',
         'platform-order': 'loadPlatformOrder', 'sample': 'loadSample',
         'invoice-my': 'loadFinanceInvoiceMy', 'invoice-handle': 'loadFinanceInvoiceHandle',
-        'orderapply-handle': 'loadFinanceOrderApplyHandle'
+        'orderapply-handle': 'loadFinanceOrderApplyHandle',
+        'deduction': 'loadFinanceDeduction', 'deduction-checked': 'loadFinanceDeductionChecked',
+        'margin': 'loadFinanceMargin'
     };
     var pgPageSize = {
         'note': 15, 'article': 15, 'product': 15, 'files': 15,
-        'finance-order': 20, 'finance-advance': 20, 'finance-income': 20,
+        'finance-order': 15, 'finance-advance': 15, 'finance-income': 15,
         'approve': 20, 'customer': 20, 'msg': 20, 'mail': 20,
         'contact': 20, 'chance': 20, 'trace': 20, 'order-my': 20,
         'order-handle': 20, 'school': 20, 'after': 20, 'platform-order': 20,
-        'sample': 20, 'invoice-my': 20, 'invoice-handle': 20, 'orderapply-handle': 20
+        'sample': 20, 'invoice-my': 20, 'invoice-handle': 20, 'orderapply-handle': 20,
+        'deduction': 20, 'deduction-checked': 20, 'margin': 20
     }; // key -> API limit for that list loader
 
     function moreBtn(key, arg) {
@@ -388,51 +391,57 @@ var App = (function () {
         var arg = (key === 'customer') ? 1 : (key === 'msg' ? 'inbox' : null);
         var st = pgState[key] || (pgState[key] = { page: 1, size: 20, total: 0, pages: 1, current: 1 });
         st.page = page; st.size = size; st.current = page;
+        // 各 key 对应的 DOM 容器 id 与状态对象
+        var pgBoxId = {
+            'note': 'note-list', 'article': 'article-list', 'product': 'product-list',
+            'files': 'files-list', 'finance-order': 'finance-order-list',
+            'finance-advance': 'finance-advance-list', 'finance-income': 'finance-income-list',
+            'approve': 'approve-list', 'customer': 'customer-list', 'msg': 'msg-list',
+            'mail': 'mail-list', 'contact': 'contact-list', 'chance': 'chance-list',
+            'trace': 'trace-list', 'order-my': 'ord-list', 'order-handle': 'ordh-list',
+            'platform-order': 'po-list', 'sample': 'sample-list', 'school': 'school-list',
+            'after': 'after-list'
+        };
+        var pgStateMap = {
+            'note': function () { return window.listState && window.listState.note; },
+            'article': function () { return window.listState && window.listState.article; },
+            'product': function () { return window.listState && window.listState.product; },
+            'files': function () { return window.listState && window.listState.files; },
+            'finance-order': function () { return window.listState && window.listState.financeOrder; },
+            'finance-advance': function () { return window.listState && window.listState.financeAdv; },
+            'finance-income': function () { return window.listState && window.listState.financeInc; },
+            'approve': function () { return window.listState && window.listState.approve; },
+            'customer': function () { return window.listState && window.listState.customer; },
+            'msg': function () { return window.msgState; },
+            'mail': function () { return window.mailState; },
+            'contact': function () { return window.custSubState && window.custSubState['contact']; },
+            'chance': function () { return window.custSubState && window.custSubState['chance']; },
+            'trace': function () { return window.custSubState && window.custSubState['trace']; },
+            'order-my': function () { return window.orderState && window.orderState['my']; },
+            'order-handle': function () { return window.orderState && window.orderState['handle']; },
+            'platform-order': function () { return window.platOrderState; },
+            'sample': function () { return window.orderState && window.orderState['sample']; },
+            'school': function () { return window.orderState && window.orderState['school']; },
+            'after': function () { return window.orderState && window.orderState['after']; }
+        };
         // 1. 重置该 key 的累加器（按各 loader 的重置语义）
         try {
-            var stObj = window.listState && window.listState[key];
-            if (stObj) { stObj.page = page; stObj.rows = {}; stObj.done = false; stObj.loading = false; }
+            var stateGetter = pgStateMap[key];
+            if (stateGetter) {
+                var stObj = stateGetter();
+                if (stObj) { stObj.page = page; stObj.rows = {}; stObj.done = false; stObj.loading = false; }
+            }
             if (window.finState && window.finState[key]) {
                 window.finState[key].page = page;
                 window.finState[key].rows = {};
                 window.finState[key].done = false;
                 window.finState[key].loading = false;
             }
-            if (window.orderState && (window.orderState['my'] || window.orderState['handle'])) {
-                var ordKey = (key === 'order-my') ? 'my' : (key === 'order-handle' ? 'handle' : null);
-                if (ordKey && window.orderState[ordKey]) {
-                    window.orderState[ordKey].page = page;
-                    window.orderState[ordKey].rows = {};
-                    window.orderState[ordKey].done = false;
-                    window.orderState[ordKey].loading = false;
-                }
-            }
-            if (key === 'msg' && window.msgState) {
-                window.msgState.page = page;
-                window.msgState.rows = {};
-                window.msgState.done = false;
-                window.msgState.loading = false;
-            }
-            if (key === 'customer' && window.listState && window.listState.customer) {
-                window.listState.customer.page = page;
-                window.listState.customer.rows = {};
-                window.listState.customer.done = false;
-                window.listState.customer.loading = false;
-            }
         } catch (e) {}
         // 2. 清空列表容器（让 loader 重新渲染第 page 页，而非追加）
-        var boxSel = '.dt-table-wrap';
         try {
-            var listBox = document.querySelector('#' + key.replace(/-/g, '-list')) || document.querySelector('#' + key + '-list');
-            if (!listBox) {
-                var keyNoDash = key.replace(/-/g, '');
-                listBox = document.querySelector('#' + keyNoDash + '-list') ||
-                          document.querySelector('#fin-list-' + key) ||
-                          document.querySelector('#ord-list') ||
-                          document.querySelector('#ordh-list') ||
-                          document.querySelector('#msg-list-' + (key === 'msg' ? 'inbox' : key)) ||
-                          document.querySelector('#' + key + '-list');
-            }
+            var boxId = pgBoxId[key] || ('fin-list-' + key);
+            var listBox = document.getElementById(boxId);
             if (listBox) listBox.innerHTML = '';
         } catch (e) {}
         // 3. 调对应 loader（多数 loader 第一次调用时若 st 已重置，会拉第 page 页）
@@ -3110,7 +3119,12 @@ var App = (function () {
     function renderFinanceOrderPage() {
         markListPage('finance-order');
         var c = $('page-container');
-        c.innerHTML = '<div id="finance-order-list"></div>';
+        var shell = isPhone() ? '' :
+            '<div class="dt-toolbar"><div>' +
+            '<div class="dt-toolbar-title">财务 · 到账（订单）</div>' +
+            '<div class="dt-toolbar-sub">订单到账流水与统计</div>' +
+            '</div></div>';
+        c.innerHTML = shell + '<div id="finance-order-list"></div>';
         listState.financeOrder = { page: 1, loading: false, done: false, rows: {} };
         loadFinanceOrder();
     }
@@ -3157,7 +3171,12 @@ var App = (function () {
     function renderFinanceAdvancePage() {
         markListPage('finance-advance');
         var c = $('page-container');
-        c.innerHTML = '<div id="finance-advance-list"></div>';
+        var shell = isPhone() ? '' :
+            '<div class="dt-toolbar"><div>' +
+            '<div class="dt-toolbar-title">财务 · 预存款</div>' +
+            '<div class="dt-toolbar-sub">客户预存款存入/支出流水与统计</div>' +
+            '</div></div>';
+        c.innerHTML = shell + '<div id="finance-advance-list"></div>';
         listState.financeAdv = { page: 1, loading: false, done: false, rows: {} };
         loadFinanceAdvance();
     }
@@ -3206,7 +3225,12 @@ var App = (function () {
     function renderFinanceIncomePage() {
         markListPage('finance-income');
         var c = $('page-container');
-        c.innerHTML = '<div id="finance-income-list"></div>';
+        var shell = isPhone() ? '' :
+            '<div class="dt-toolbar"><div>' +
+            '<div class="dt-toolbar-title">财务 · 开票收入</div>' +
+            '<div class="dt-toolbar-sub">开票流水与收入统计</div>' +
+            '</div></div>';
+        c.innerHTML = shell + '<div id="finance-income-list"></div>';
         listState.financeInc = { page: 1, loading: false, done: false, rows: {} };
         loadFinanceIncome();
     }
@@ -3692,6 +3716,7 @@ var App = (function () {
             st.loading = false;
             st.done = rows.length < 20;
             if (!st.done) box.insertAdjacentHTML('beforeend', App.moreBtn(key));
+            if (!isPhone()) App.updatePagerDom(key, (res && res.count) || Object.keys(st.rows).length);
         }).catch(function () {
             if (box) { box.innerHTML = '<div class="empty retry">网络异常，点击重试</div>'; st.loading = false; }
         });
