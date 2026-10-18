@@ -576,14 +576,17 @@ var App = (function () {
         toast('已导出 CSV（' + tbody.length + ' 条）');
     }
 
-    /* 桌面后台标配工具栏按钮：给列表页的 dt-toolbar-ops 自动补"刷新 + 导出"（手机隐藏） */
+    /* 桌面后台标配工具栏按钮：给列表页的 dt-toolbar-ops 自动补"刷新 + 导出 + 列宽"（手机隐藏）
+       触发条件：页面有 .dt-table（含客户页）或有 .dt-pager */
     function injectToolbarOps() {
         if (isPhone()) return;
         var root = document.getElementById('page-container');
         if (!root) return;
+        // 有表格或分页器才注入（详情/表单页不注入）
+        if (!root.querySelector('.dt-table') && !root.querySelector('.dt-pager[data-pg-key]')) return;
+        // 取当前分页 key（若存在），否则用表格所在 key 的兜底（如 customer）
         var pager = root.querySelector('.dt-pager[data-pg-key]');
-        if (!pager) return; // 无分页器的页面（详情/表单）不注入
-        var key = pager.getAttribute('data-pg-key');
+        var key = pager ? pager.getAttribute('data-pg-key') : 'current';
         var ops = root.querySelectorAll('.dt-toolbar-ops');
         for (var i = 0; i < ops.length; i++) {
             var o = ops[i];
