@@ -207,6 +207,9 @@ function deEmoji(root) {
 var App = (function () {
     var currentTab = 'home';
     var listState = {}; // 各列表分页状态
+    // ===== 桌面多标签并存条（tab-strip）状态 =====
+    var dtTabs = [{ id: 'home', name: '工作台', icon: 'home', run: "App.switchTab('home')" }];
+    var dtActiveTab = 'home';
 
     // ===== 工具 =====
     function $(id) { return document.getElementById(id); }
@@ -586,9 +589,106 @@ var App = (function () {
             var o = ops[i];
             if (o.querySelector('.oa-btn.ghost[data-desktop-only]')) continue; // 已注入
             o.insertAdjacentHTML('beforeend',
-                '<span class="oa-btn ghost" data-desktop-only="1" onclick="App.refreshList(\'' + key + '\')">' + ic('check-circle') + '刷新</span>' +
-                '<span class="oa-btn ghost" data-desktop-only="1" onclick="App.exportList(\'' + key + '\')">' + ic('layers') + '导出</span>');
+                '<span class="oa-btn ghost" data-desktop-only="1" onclick="App.refreshList(\'' + key + '\')">' + ic('refresh') + '刷新</span>' +
+                '<span class="oa-btn ghost" data-desktop-only="1" onclick="App.exportList(\'' + key + '\')">' + ic('download') + '导出</span>' +
+                '<span class="oa-btn ghost" data-desktop-only="1" onclick="App.toggleTableDensity()">' + ic('grid') + '列宽</span>');
         }
+    }
+
+    /* ===== 桌面多标签并存条（tab-strip）：打开模块即加 tab，点 tab 切换，点 × 关闭 ===== */
+    function tabEnsure(id, name, icon, run) {
+        for (var i = 0; i < dtTabs.length; i++) if (dtTabs[i].id === id) return dtTabs[i];
+        dtTabs.push({ id: id, name: name, icon: icon, run: run });
+        return dtTabs[dtTabs.length - 1];
+    }
+    var TYPE_META = {
+        'message-inbox': ['消息中心', 'mail'], 'mail': ['通讯录', 'book'], 'note': ['企业公告', 'megaphone'],
+        'article': ['问答知识', 'message-circle'], 'product': ['产品管理', 'flask'], 'files': ['附件管理', 'folder'],
+        'finance-order': ['财务·到账（订单）', 'file-text'], 'finance-advance': ['财务·预存款', 'briefcase'],
+        'finance-income': ['财务·开票收入', 'file-text'], 'deduction': ['抵扣券', 'file-text'],
+        'deduction-checked': ['抵扣券（管理）', 'file-text'], 'margin': ['保证金', 'file-text'],
+        'invoice-my': ['发票·我申请', 'file-text'], 'invoice-handle': ['发票·我处理', 'file-text'],
+        'orderapply-handle': ['订单到账处理', 'file-text'],
+        'contact-list': ['客户联系人', 'users'], 'chance-list': ['销售机会', 'target'], 'trace-list': ['跟进记录', 'clipboard-check'],
+        'order-my': ['订单·我申请', 'package'], 'order-handle': ['订单·我处理', 'wrench'],
+        'platform-order': ['平台订单', 'shopping-cart'], 'sample': ['样本管理', 'flask'],
+        'school': ['校展管理', 'book'], 'after': ['售后管理', 'tool']
+    };
+    var TAB_NAME = {
+        home: ['工作台', 'home'], approve: ['审批中心', 'check-circle'],
+        customer: ['客户管理', 'users'], mine: ['个人中心', 'user']
+    };
+    function renderTabStrip() {
+        if (isPhone()) return;
+        var strip = document.getElementById('dt-tabstrip');
+        if (!strip) return;
+        // 基于当前 currentTab + currentPageType 推导
+        var activeId = currentTab;
+        var activeName = null, activeIcon = null;
+        if (currentPageType && TYPE_META[currentPageType]) {
+            activeId = currentPageType;
+            activeName = TYPE_META[currentPageType][0];
+            activeIcon = TYPE_META[currentPageType][1];
+        } else if (TAB_NAME[currentTab]) {
+            activeId = currentTab;
+            activeName = TAB_NAME[currentTab][0];
+            activeIcon = TAB_NAME[currentTab][1];
+        }
+        // 自动把当前活跃 tab 加入
+        if (activeName) {
+            tabEnsure(activeId, activeName, activeIcon,
+                currentPageType ? "App.showSubPage('" + currentPageType + "')" : "App.switchTab('" + currentTab + "')");
+            dtActiveTab = activeId;
+        }
+        var addBtn = document.getElementById('dts-add');
+        var tabsHtml = '';
+        for (var i = 0; i < dtTabs.length; i++) {
+            var t = dtTabs[i];
+            var closable = t.id !== 'home';
+            tabsHtml += '<div class="dts-tab' + (dtActiveTab === t.id ? ' active' : '') + '" data-tabid="' + t.id + '" onclick="App.tabActivate(\'' + t.id + '\')">' +
+                '<span class="dts-tab-ic">' + (window.OA_ICON ? window.OA_ICON(t.icon) : '') + '</span>' +
+                '<span class="dts-tab-name">' + t.name + '</span>' +
+                (closable ? '<span class="dts-tab-close" data-close="' + t.id + '" onclick="event.stopPropagation();App.tabClose(\'' + t.id + '\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span>' : '') +
+                '</div>';
+        }
+        Array.prototype.slice.call(strip.querySelectorAll('.dts-tab')).forEach(function (n) { n.remove(); });
+        if (addBtn) addBtn.insertAdjacentHTML('beforebegin', tabsHtml);
+    }
+    function tabActivate(id) {
+        var t = null;
+        for (var i = 0; i < dtTabs.length; i++) if (dtTabs[i].id === id) { t = dtTabs[i]; break; }
+        if (!t) return;
+        dtActiveTab = id;
+        try { eval(t.run); } catch (e) {}
+        // 同步侧栏高亮（主菜单 Tab）
+        var items = document.querySelectorAll('.sb-item[data-page]');
+        var targetName = null;
+        for (var k in TAB_NAME) if (TAB_NAME[k] && TAB_NAME[k][0] && id === k) targetName = TAB_NAME[k][0];
+        for (var j = 0; j < items.length; j++) {
+            items[j].classList.toggle('active', items[j].getAttribute('data-page') === targetName);
+        }
+        renderTabStrip();
+    }
+    function tabClose(id) {
+        for (var i = 0; i < dtTabs.length; i++) {
+            if (dtTabs[i].id === id) { dtTabs.splice(i, 1); break; }
+        }
+        if (dtActiveTab === id) {
+            dtActiveTab = 'home';
+            try { App.switchTab('home'); } catch (e) {}
+        }
+        renderTabStrip();
+    }
+
+    /* ===== 桌面表格密度切换（悬浮工具组"列宽设置"用）===== */
+    var tableDensity = 'comfortable'; // 'comfortable' | 'compact'
+    function toggleTableDensity() {
+        if (isPhone()) return;
+        tableDensity = (tableDensity === 'comfortable') ? 'compact' : 'comfortable';
+        var root = document.getElementById('page-container');
+        if (root) root.classList.toggle('table-compact', tableDensity === 'compact');
+        toast(tableDensity === 'compact' ? '已切换为紧凑列宽' : '已切换为舒适列宽');
+        setTimeout(function () { injectRowSelection(root); }, 50);
     }
 
     /* 桌面行选择：给 .dt-table 表格注入 checkbox 列（移动端 CSS 已隐藏 .pg-col） */
@@ -1385,6 +1485,8 @@ var App = (function () {
         else if (tab === 'approve') renderApprove();
         else if (tab === 'customer') renderCustomer();
         else if (tab === 'mine') renderMine();
+        // 同步桌面多标签并存条（手机壳下 renderTabStrip 内部 isPhone() 直接 return）
+        try { renderTabStrip(); } catch (e) {}
     }
 
     // ===== 首页 =====
@@ -1635,6 +1737,8 @@ var App = (function () {
         else if (type === 'after') renderAfterPage();
         else if (type === 'customer-add') renderCustomerAddPage();
         deEmoji(c);
+        // 同步桌面多标签并存条
+        try { renderTabStrip(); } catch (e) {}
     }
 
     function openMobile(type) { showSubPage(type); }
@@ -6268,6 +6372,10 @@ var App = (function () {
         updatePagerDom: updatePagerDom,
         pgJump: pgJump,
         pgReload: pgReload,
+        tabActivate: tabActivate,
+        tabClose: tabClose,
+        toggleTableDensity: toggleTableDensity,
+        renderTabStrip: renderTabStrip,
         onApproveFiles: onApproveFiles,
         pickApproveFile: pickApproveFile,
         removeApproveFile: removeApproveFile,

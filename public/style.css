@@ -44,6 +44,20 @@
   --bd-strong: #C9CDD4;
   --bd-sidebar: #E8ECF2;
 
+  /* ---- 桌面壳深色（原站后台标配：深灰蓝顶栏/侧栏，白底内容区）---- */
+  --bg-topbar: #0F172A;
+  --bg-topbar-2: #1E293B;
+  --tx-topbar: #F1F5F9;
+  --tx-topbar-2: rgba(241, 245, 249, .68);
+  --bd-topbar: rgba(255, 255, 255, .08);
+  --bg-sidebar-deep: #0B1220;
+  --bg-sidebar-deep-2: #111C30;
+  --tx-sidebar-deep: #E2E8F0;
+  --tx-sidebar-deep-2: rgba(226, 232, 240, .55);
+  --bd-sidebar-deep: rgba(255, 255, 255, .06);
+  --bg-sidebar-deep-hover: rgba(255, 255, 255, .05);
+  --bg-sidebar-deep-active: rgba(30, 111, 255, .28);
+
   /* ---- 阴影（低饱和多层） ---- */
   --sh-1: 0 1px 2px rgba(31, 35, 41, .05);
   --sh-2: 0 1px 3px rgba(31, 35, 41, .07), 0 1px 2px rgba(31, 35, 41, .04);
@@ -917,7 +931,129 @@ html[data-device="desktop"] .main-col > .page-container { width: 100%; }
 /* 焦点可达性 */
 :focus-visible { outline: 2px solid var(--c-primary); outline-offset: 1px; border-radius: 4px; }
 
-/* ============ 移动端回退（<992px） ============ */
+/* ============================================================
+   桌面壳深色化（原站后台标配）
+   顶栏/侧栏改深灰蓝（#0F172A→#0B1220），文字反白；
+   手机壳（.m-appbar/.m-tabbar）保持原品牌蓝，零影响。
+   ============================================================ */
+html[data-device="desktop"] .topbar {
+  background: linear-gradient(180deg, var(--bg-topbar) 0%, var(--bg-topbar-2) 100%);
+  border-bottom: 1px solid var(--bd-topbar);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+}
+html[data-device="desktop"] .topbar-crumb,
+html[data-device="desktop"] .topbar-title {
+  color: var(--tx-topbar);
+}
+html[data-device="desktop"] .topbar-crumb .crumb-link { color: var(--tx-topbar-2); }
+html[data-device="desktop"] .topbar-crumb .crumb-link:hover { color: #fff; }
+html[data-device="desktop"] .search-trigger {
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid rgba(255, 255, 255, .08);
+  color: var(--tx-topbar-2);
+}
+html[data-device="desktop"] .search-trigger:hover { background: rgba(255, 255, 255, .10); color: var(--tx-topbar); }
+html[data-device="desktop"] .search-trigger .st-text,
+html[data-device="desktop"] .search-trigger kbd { color: var(--tx-topbar-2); }
+html[data-device="desktop"] .bell-btn { color: var(--tx-topbar); }
+html[data-device="desktop"] .topbar-user { color: var(--tx-topbar); }
+html[data-device="desktop"] .topbar-user-name { color: var(--tx-topbar); }
+html[data-device="desktop"] .topbar-user-ava { background: linear-gradient(135deg, #1E6FFF, #4A9BFF); }
+
+/* 桌面侧栏深色 */
+html[data-device="desktop"] .sidebar {
+  background: linear-gradient(180deg, var(--bg-sidebar-deep) 0%, var(--bg-sidebar-deep-2) 100%);
+  border-right: 1px solid var(--bd-sidebar-deep);
+  color: var(--tx-sidebar-deep);
+}
+html[data-device="desktop"] .sb-brand { border-bottom: 1px solid var(--bd-sidebar-deep); }
+html[data-device="desktop"] .sb-name { color: var(--tx-sidebar-deep); }
+html[data-device="desktop"] .sb-name small { color: var(--tx-sidebar-deep-2); }
+html[data-device="desktop"] .sb-group { color: var(--tx-sidebar-deep-2); }
+html[data-device="desktop"] .sb-group::after { background: var(--bd-sidebar-deep); }
+html[data-device="desktop"] .sb-item { color: var(--tx-sidebar-deep); }
+html[data-device="desktop"] .sb-item:hover { background: var(--bg-sidebar-deep-hover); color: var(--tx-sidebar-deep); }
+html[data-device="desktop"] .sb-item.active { background: var(--bg-sidebar-deep-active); color: #fff; }
+html[data-device="desktop"] .sb-item.active .sbi-icon { color: #fff; }
+html[data-device="desktop"] .sbi-icon { color: var(--tx-sidebar-deep-2); }
+html[data-device="desktop"] .sb-item:hover .sbi-icon { color: var(--tx-sidebar-deep); }
+html[data-device="desktop"] .sb-foot { border-top: 1px solid var(--bd-sidebar-deep); }
+html[data-device="desktop"] .sb-user:hover { background: var(--bg-sidebar-deep-hover); }
+html[data-device="desktop"] .sb-user-name { color: var(--tx-sidebar-deep); }
+html[data-device="desktop"] .sb-user-sub { color: var(--tx-sidebar-deep-2); }
+html[data-device="desktop"] .sb-user-ava { background: linear-gradient(135deg, #1E6FFF, #4A9BFF); }
+
+/* 桌面多标签并存条（原站后台标配） */
+.dt-tabstrip {
+  display: flex; align-items: center; gap: 6px;
+  height: 40px; padding: 0 16px; flex: none;
+  background: var(--bg-topbar-2);
+  border-bottom: 1px solid var(--bd-topbar);
+  overflow-x: auto; overflow-y: hidden;
+  scrollbar-width: none;
+}
+.dt-tabstrip::-webkit-scrollbar { display: none; }
+.dts-tab {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 30px; padding: 0 12px; flex: none;
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid rgba(255, 255, 255, .06);
+  border-radius: 6px; cursor: pointer;
+  font-size: 12.5px; color: var(--tx-topbar-2);
+  transition: background .13s, color .13s, border-color .13s;
+  white-space: nowrap;
+}
+.dts-tab:hover { background: rgba(255, 255, 255, .08); color: var(--tx-topbar); }
+.dts-tab.active {
+  background: rgba(30, 111, 255, .28);
+  border-color: rgba(30, 111, 255, .4);
+  color: #fff; font-weight: 500;
+}
+.dts-tab-ic { display: inline-flex; align-items: center; justify-content: center; }
+.dts-tab-ic svg { width: 14px; height: 14px; }
+.dts-tab-name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+.dts-tab-close {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; margin-left: 2px; border-radius: 4px;
+  cursor: pointer; color: var(--tx-topbar-2);
+}
+.dts-tab-close:hover { background: rgba(255, 255, 255, .12); color: #fff; }
+.dts-tab-close svg { width: 12px; height: 12px; }
+.dts-tab-add {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; flex: none;
+  border: 1px dashed rgba(255, 255, 255, .18); border-radius: 6px;
+  background: transparent; color: var(--tx-topbar-2); cursor: pointer;
+  transition: background .13s, color .13s;
+}
+.dts-tab-add:hover { background: rgba(255, 255, 255, .08); color: var(--tx-topbar); }
+.dts-tab-add svg { width: 14px; height: 14px; }
+/* 移动端隐藏标签条与悬浮组 */
+html[data-device="mobile"] .dt-tabstrip,
+html[data-device="mobile"] .dt-float-tools { display: none !important; }
+
+/* 桌面悬浮工具组（回顶/客服/列宽设置） */
+.dt-float-tools {
+  position: fixed; right: 24px; bottom: 32px; z-index: 60;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.ft-btn {
+  width: 40px; height: 40px; border: none; cursor: pointer;
+  background: var(--bg-panel); color: var(--tx-2);
+  border-radius: 10px; box-shadow: 0 2px 8px rgba(31, 35, 41, .12), 0 0 0 1px var(--bd);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .13s, background .13s, color .13s;
+}
+.ft-btn:hover { background: var(--c-primary-light); color: var(--c-primary); transform: translateY(-1px); }
+.ft-btn svg { width: 18px; height: 18px; }
+
+/* 表格密度切换（悬浮工具组"列宽设置"触发） */
+.page-container.table-compact .dt-table thead th { padding: 6px 12px; font-size: 11.5px; }
+.page-container.table-compact .dt-table tbody td { padding: 7px 12px; font-size: 12.5px; }
+.page-container.table-compact .dt-table tbody tr { transition: background .12s; }
+
+/* ============================================================
+   移动端回退（<992px）
 @media (max-width: 991px) {
   .sidebar { display: none; }
   /* v5.1 移动端蓝色顶栏：与 App 头部 1:1（品牌蓝渐变 + 白字 + 刘海安全区） */

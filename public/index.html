@@ -53,6 +53,11 @@
         </div>
       </div>
     </div>
+    <!-- 桌面顶标签条（多模块并存，原站后台标配） -->
+    <div class="dt-tabstrip" id="dt-tabstrip" data-desktop-only>
+      <div class="dts-tab active" data-tabid="home" onclick="App.tabActivate('home')"><span class="dts-tab-ic" data-icon="home"></span><span class="dts-tab-name">工作台</span></div>
+      <button class="dts-tab-add" id="dts-add" title="打开模块（Ctrl+K）" onclick="cmdkOpen()"><span data-icon="plus"></span></button>
+    </div>
     <div class="user-menu" id="user-menu">
       <div class="user-menu-item" onclick="App.showSubPage('profile')"><span class="umi-ic" data-icon="user-circle"></span>基本资料</div>
       <div class="user-menu-item" onclick="App.showSubPage('password')"><span class="umi-ic" data-icon="lock"></span>修改密码</div>
@@ -72,6 +77,12 @@
       </div>
     </div>
     <div class="page-container" id="page-container"><div class="loading">加载中…</div></div>
+    <!-- 桌面悬浮工具组（回顶/客服/列宽设置，原站后台标配） -->
+    <div class="dt-float-tools" id="dt-float-tools" data-desktop-only>
+      <button class="ft-btn" id="ft-scroll-top" title="返回顶部" onclick="document.getElementById('page-container').scrollTo({top:0,behavior:'smooth'})"><span data-icon="arrow-up"></span></button>
+      <button class="ft-btn" id="ft-contact" title="在线客服" onclick="window.open('https://oa.upingbio.com/home/login/index.html','_blank','noopener')"><span data-icon="message-circle"></span></button>
+      <button class="ft-btn" id="ft-settings" title="表格列宽切换" onclick="App.toggleTableDensity()"><span data-icon="settings"></span></button>
+    </div>
   </div>
 
   <!-- ============ 手机壳 ============ -->
@@ -191,7 +202,8 @@
     'plus-circle': '<circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/>',
     'corner-down-left': '<polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>',
     'grid': '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
-    'more-horizontal': '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>'
+    'more-horizontal': '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+    'arrow-up': '<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>'
   };
   window.ICONS = ICONS;
   function svg(name, cls) {
