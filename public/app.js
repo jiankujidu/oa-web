@@ -590,6 +590,47 @@ var App = (function () {
                 '<span class="oa-btn ghost" data-desktop-only="1" onclick="App.exportList(\'' + key + '\')">' + ic('layers') + '导出</span>');
         }
     }
+
+    /* 桌面行选择：给 .dt-table 表格注入 checkbox 列（移动端 CSS 已隐藏 .pg-col） */
+    function injectRowSelection(root) {
+        if (isPhone()) return;
+        root = root || document.getElementById('page-container');
+        if (!root) return;
+        var tables = root.querySelectorAll('.dt-table');
+        for (var t = 0; t < tables.length; t++) {
+            var table = tables[t];
+            var thead = table.querySelector('thead');
+            if (!thead) continue;
+            // 若已有 .pg-col 则跳过（防重复）
+            if (thead.querySelector('th.pg-col')) continue;
+            var headRow = thead.querySelector('tr');
+            if (!headRow) continue;
+            // 插入表头 checkbox 列
+            var th = document.createElement('th');
+            th.className = 'pg-col';
+            th.innerHTML = '<input type="checkbox" data-pg-head data-table="' + t + '">';
+            headRow.insertBefore(th, headRow.firstChild);
+            // 给所有数据行插入 checkbox 单元格
+            var rows = table.querySelectorAll('tbody tr');
+            for (var r = 0; r < rows.length; r++) {
+                if (rows[r].querySelector('td.pg-col')) continue;
+                var td = document.createElement('td');
+                td.className = 'pg-col';
+                var cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.className = 'pg-row-cb';
+                cb.addEventListener('change', (function (idx) {
+                    return function () {
+                        var row = table.querySelectorAll('tbody tr')[idx];
+                        row.classList.toggle('pg-selected', cb.checked);
+                    };
+                })(r));
+                td.appendChild(cb);
+                rows[r].insertBefore(td, rows[r].firstChild);
+                rows[r].classList.add('pg-selectable');
+            }
+        }
+    }
     // 当前列表加载器（供上拉自动加载触发）
     var currentLoadKey = '';
     var currentLoadArg = null;
@@ -1102,6 +1143,7 @@ var App = (function () {
                         try { deEmoji($('page-container')); } catch (e) {}
                         try { injectTableLabels($('page-container')); } catch (e) {}
                         try { injectToolbarOps(); } catch (e) {}
+                        try { injectRowSelection($('page-container')); } catch (e) {}
                     }, 80);
                 }).observe($('page-container'), { childList: true, subtree: true });
             }
@@ -6222,6 +6264,7 @@ var App = (function () {
         reloadList: reloadList,
         exportList: exportList,
         injectToolbarOps: injectToolbarOps,
+        injectRowSelection: injectRowSelection,
         updatePagerDom: updatePagerDom,
         pgJump: pgJump,
         pgReload: pgReload,
