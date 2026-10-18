@@ -432,15 +432,52 @@ a { color: var(--c-primary); }
 }
 .dt-app:hover .dt-app-name { color: var(--ink); }
 
-/* ---- 桌面表格 ---- */
-.dt-table-wrap {
-  background: var(--bg-panel); border: 1px solid var(--bd);
-  border-radius: var(--radius); box-shadow: var(--sh-1); overflow: hidden;
+/* ============================================================
+   宽屏 / 1080p 适配（浏览器后台标准）
+   电脑版应按浏览器真实习惯：内容区居中 + 最大宽 + 信息密度收紧，
+   而不是把 13.5px 小字横向拉到 4K。仅作用于桌面壳，手机端不动。
+   ============================================================ */
+html[data-device="desktop"] .main-col { position: relative; }
+html[data-device="desktop"] .page-container { position: relative; }
+/* 内容区在滚动容器内居中并限制最大宽（滚动条留在右侧，体验同主流后台） */
+html[data-device="desktop"] .page-container::before {
+  content: ''; display: block; height: 0; max-width: 1400px; margin: 0 auto;
 }
-/* v5：窄屏表格横滚兜底（桌面表格在手机端保持列完整，左右滑动查看） */
-@media (max-width: 991px) {
-  .dt-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .dt-table { min-width: 560px; }
+html[data-device="desktop"] .dt-toolbar,
+html[data-device="desktop"] .dt-kpi,
+html[data-device="desktop"] .dt-cols-wide,
+html[data-device="desktop"] .dt-cols,
+html[data-device="desktop"] .dt-stats { max-width: 1400px; margin-left: auto; margin-right: auto; }
+/* 主内容区统一包裹：用 width 约束 + 居中，而非拉满 */
+html[data-device="desktop"] .main-col > .page-container { width: 100%; }
+
+/* 宽屏（≥1280）信息密度提升：字号/行高/间距收紧，更接近 1080p 浏览器观感 */
+@media (min-width: 1280px) {
+  html[data-device="desktop"] .topbar { height: 56px; }
+  html[data-device="desktop"] .sb-brand { height: 56px; }
+  html[data-device="desktop"] .sb-item { height: 38px; font-size: 13.5px; }
+  html[data-device="desktop"] .sb-item.active::before { top: 7px; bottom: 7px; }
+  html[data-device="desktop"] .dt-toolbar-title { font-size: 20px; }
+  html[data-device="desktop"] .dt-toolbar-sub { font-size: 13px; }
+  html[data-device="desktop"] .dt-kpi-card { padding: 16px 18px; }
+  html[data-device="desktop"] .dt-kpi-num { font-size: 26px; }
+  html[data-device="desktop"] .dt-panel-head { padding: 14px 18px; }
+  html[data-device="desktop"] .dt-panel-body { padding: 16px 18px; }
+  html[data-device="desktop"] .dt-table thead th { font-size: 12.5px; padding: 10px 16px; }
+  html[data-device="desktop"] .dt-table tbody td { font-size: 13.5px; padding: 12px 16px; }
+  html[data-device="desktop"] .dt-table-wrap { margin-bottom: 14px; }
+  html[data-device="desktop"] .dt-panel { margin-bottom: 14px; }
+  html[data-device="desktop"] .dt-toolbar { margin-bottom: 18px; }
+  html[data-device="desktop"] .dt-kpi { margin-bottom: 16px; }
+}
+/* 4K（≥1920）进一步：内容区加宽但保持居中，字号不再继续放大（避免过稀） */
+@media (min-width: 1920px) {
+  html[data-device="desktop"] .dt-toolbar,
+  html[data-device="desktop"] .dt-kpi,
+  html[data-device="desktop"] .dt-cols-wide,
+  html[data-device="desktop"] .dt-cols,
+  html[data-device="desktop"] .dt-stats { max-width: 1600px; }
+  html[data-device="desktop"] .page-container::before { max-width: 1600px; }
 }
 .dt-table { width: 100%; border-collapse: collapse; table-layout: auto; }
 .dt-table thead th {

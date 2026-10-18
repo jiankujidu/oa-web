@@ -3175,6 +3175,59 @@ var App = (function () {
     // ===== 客户 =====
     function renderCustomer() {
         var c = $('page-container');
+        if (isPhone()) { renderCustomerMobile(); return; }
+        // 桌面端：标准后台布局——工具栏 + 筛选分段 + 列表(表格) + 侧边快捷链接
+        var entries = [
+            { name: '联系人', icon: 'users', run: "App.showSubPage('contact-list')" },
+            { name: '销售机会', icon: 'target', run: "App.showSubPage('chance-list')" },
+            { name: '跟进记录', icon: 'clipboard-check', run: "App.showSubPage('trace-list')" },
+            { name: '我的订单', icon: 'package', run: "App.showSubPage('order-my')" },
+            { name: '订单处理', icon: 'wrench', run: "App.showSubPage('order-handle')" },
+            { name: '平台订单', icon: 'shopping-cart', run: "App.showSubPage('platform-order')" },
+            { name: '样本管理', icon: 'flask', run: "App.showSubPage('sample')" },
+            { name: '校展管理', icon: 'book', run: "App.showSubPage('school')" },
+            { name: '售后管理', icon: 'tool', run: "App.showSubPage('after')" }
+        ];
+        c.innerHTML =
+            '<div class="dt-toolbar"><div>' +
+            '<div class="dt-toolbar-title">客户管理</div>' +
+            '<div class="dt-toolbar-sub">我的客户 · 公海 · 废弃</div>' +
+            '</div><div class="dt-toolbar-ops">' +
+            '<div class="dt-search"><input id="cust-kw" type="text" placeholder="搜索客户名称"><button class="dt-search-btn" onclick="App.loadCustomer(' + (listState.customer ? listState.customer.type : 1) + ')">搜索</button></div>' +
+            '<span class="oa-btn primary" onclick="App.showSubPage(\'customer-add\')">＋ 新增客户</span>' +
+            '</div></div>' +
+            '<div class="seg">' +
+            '<div class="seg-item active" data-t="1" onclick="App.loadCustomer(1)">我的客户</div>' +
+            '<div class="seg-item" data-t="2" onclick="App.loadCustomer(2)">公海</div>' +
+            '<div class="seg-item" data-t="3" onclick="App.loadCustomer(3)">废弃</div>' +
+            '</div>' +
+            '<div class="dt-cols">' +
+            '<div id="customer-list"></div>' +
+            '<div class="dt-panel"><div class="dt-panel-head"><div class="dt-panel-title"><span class="pt-ic">' + ic('layers') + '</span>客户功能</div></div>' +
+            '<div class="dt-panel-body"><div class="dt-quick">' +
+            entries.map(function (e) {
+                return '<div class="dt-quick-btn" onclick="' + e.run + '">' + ic(e.icon) + e.name + '</div>';
+            }).join('') +
+            '</div></div></div>' +
+            '</div></div>';
+        listState.customer = { page: 1, type: 1, loading: false, done: false, rows: {} };
+        loadCustomer(1);
+        deEmoji(c);
+    }
+
+    function renderCustomerMobile() {
+        var c = $('page-container');
+        var entries = [
+            { name: '联系人', icon: 'users', run: "App.showSubPage('contact-list')" },
+            { name: '销售机会', icon: 'target', run: "App.showSubPage('chance-list')" },
+            { name: '跟进记录', icon: 'clipboard-check', run: "App.showSubPage('trace-list')" },
+            { name: '我的订单', icon: 'package', run: "App.showSubPage('order-my')" },
+            { name: '订单处理', icon: 'wrench', run: "App.showSubPage('order-handle')" },
+            { name: '平台订单', icon: 'shopping-cart', run: "App.showSubPage('platform-order')" },
+            { name: '样本管理', icon: 'flask', run: "App.showSubPage('sample')" },
+            { name: '校展管理', icon: 'book', run: "App.showSubPage('school')" },
+            { name: '售后管理', icon: 'tool', run: "App.showSubPage('after')" }
+        ];
         c.innerHTML =
             '<div class="dt-toolbar"><div>' +
             '<div class="dt-toolbar-title">客户管理</div>' +
@@ -3190,16 +3243,10 @@ var App = (function () {
             '</div>' +
             '<div id="customer-list"></div>' +
             '<div class="section-title">客户功能</div>' +
-            '<div class="grid">' +
-            '<div class="grid-item" onclick="App.showSubPage(\'contact-list\')"><span class="gi-icon">👤</span><span class="gi-text">联系人</span></div>' +
-            '<div class="grid-item" onclick="App.showSubPage(\'chance-list\')"><span class="gi-icon">🎯</span><span class="gi-text">销售机会</span></div>' +
-            '<div class="grid-item" onclick="App.showSubPage(\'trace-list\')"><span class="gi-icon">📝</span><span class="gi-text">跟进记录</span></div>' +
-            '<div class="grid-item" onclick="App.showSubPage(\'order-my\')"><span class="gi-icon">📦</span><span class="gi-text">我的订单</span></div>' +
-            '<div class="grid-item" onclick="App.showSubPage(\'order-handle\')"><span class="gi-icon">⚙️</span><span class="gi-text">订单处理</span></div>' +
-            '<div class="grid-item" onclick="App.showSubPage(\'platform-order\')"><span class="gi-icon">🛒</span><span class="gi-text">平台订单</span></div>' +
-            '<div class="grid-item" onclick="App.showSubPage(\'sample\')"><span class="gi-icon">🧫</span><span class="gi-text">样本管理</span></div>' +
-            '<div class="grid-item" onclick="App.showSubPage(\'school\')"><span class="gi-icon">🏫</span><span class="gi-text">校展管理</span></div>' +
-            '<div class="grid-item" onclick="App.showSubPage(\'after\')"><span class="gi-icon">🔧</span><span class="gi-text">售后管理</span></div>' +
+            '<div class="m-grid">' +
+            entries.map(function (e) {
+                return '<div class="m-grid-item" onclick="' + e.run + '"><div class="m-grid-ic">' + ic(e.icon) + '</div>' + e.name + '</div>';
+            }).join('') +
             '</div>';
         listState.customer = { page: 1, type: 1, loading: false, done: false, rows: {} };
         loadCustomer(1);
