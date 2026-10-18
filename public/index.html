@@ -1,62 +1,25 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-device="desktop">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <meta name="format-detection" content="telephone=no">
-<title>优品OA · 网页版</title>
+<meta name="theme-color" content="#1E6FFF">
+<title>优品OA</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="boot-splash"><div class="boot-logo">优品OA</div><div class="boot-tip">正在加载工作台…</div></div>
+<div id="boot-splash"><div class="boot-logo">优品OA</div><div class="boot-tip">正在加载…</div></div>
 
-<!-- 登录视图占位（网页版登录在 login.html；app.js init 会隐藏本节点） -->
 <div id="login-view" class="login-view" style="display:none"></div>
 
+<!-- 应用根：桌面壳与手机壳静态共存，由 html[data-device] 在 CSS 中严格分作用域，视觉上绝不混合 -->
 <div id="app-view" class="app-view" style="display:none">
-  <!-- 左侧导航（桌面端全模块分组，SVG 线性图标） -->
+
+  <!-- ============ 桌面壳 ============ -->
   <aside class="sidebar">
     <div class="sb-brand"><span class="sb-logo">优</span><span class="sb-name">优品OA<small>YOUPIN OA</small></span></div>
-    <nav class="sb-nav" id="sb-nav">
-      <div class="sb-group">主菜单</div>
-      <div class="sb-item tab-item" data-tab="home" onclick="App.switchTab('home')"><span class="sbi-icon" data-icon="home"></span>首页</div>
-      <div class="sb-item tab-item" data-tab="approve" onclick="App.switchTab('approve')"><span class="sbi-icon" data-icon="check-circle"></span>审批</div>
-      <div class="sb-item tab-item" data-tab="customer" onclick="App.switchTab('customer')"><span class="sbi-icon" data-icon="users"></span>客户</div>
-      <div class="sb-item tab-item" data-tab="mine" onclick="App.switchTab('mine')"><span class="sbi-icon" data-icon="user"></span>我的</div>
-
-      <div class="sb-group">办公</div>
-      <div class="sb-item" data-page="message-inbox" onclick="App.showSubPage('message-inbox')"><span class="sbi-icon" data-icon="mail"></span>消息中心</div>
-      <div class="sb-item" data-page="mail" onclick="App.showSubPage('mail')"><span class="sbi-icon" data-icon="book"></span>通讯录</div>
-      <div class="sb-item" data-page="note" onclick="App.showSubPage('note')"><span class="sbi-icon" data-icon="megaphone"></span>企业公告</div>
-      <div class="sb-item" data-page="article" onclick="App.showSubPage('article')"><span class="sbi-icon" data-icon="message-circle"></span>问答知识</div>
-      <div class="sb-item" data-page="product" onclick="App.showSubPage('product')"><span class="sbi-icon" data-icon="flask"></span>产品管理</div>
-      <div class="sb-item" data-page="files" onclick="App.showSubPage('files')"><span class="sbi-icon" data-icon="folder"></span>附件管理</div>
-      <div class="sb-item" data-page="workbench" onclick="App.openWorkbench()"><span class="sbi-icon" data-icon="layers"></span>工作台</div>
-      <div class="sb-item" data-page="ai" onclick="App.openAiChat()"><span class="sbi-icon" data-icon="bot"></span>AI 问答</div>
-
-      <div class="sb-group">财务</div>
-      <div class="sb-item" data-page="finance-advance" onclick="App.showSubPage('finance-advance')"><span class="sbi-icon" data-icon="wallet"></span>预存款</div>
-      <div class="sb-item" data-page="deduction" onclick="App.showSubPage('deduction')"><span class="sbi-icon" data-icon="ticket"></span>抵扣券（我申请的）</div>
-      <div class="sb-item" data-page="deduction-checked" onclick="App.showSubPage('deduction-checked')"><span class="sbi-icon" data-icon="ticket"></span>抵扣券（管理专用）</div>
-      <div class="sb-item" data-page="margin" onclick="App.showSubPage('margin')"><span class="sbi-icon" data-icon="shield"></span>保证金</div>
-      <div class="sb-item" data-page="invoice-my" onclick="App.showSubPage('invoice-my')"><span class="sbi-icon" data-icon="receipt"></span>发票（我申请的）</div>
-      <div class="sb-item" data-page="invoice-handle" onclick="App.showSubPage('invoice-handle')"><span class="sbi-icon" data-icon="archive"></span>发票（我处理的）</div>
-      <div class="sb-item" data-page="finance-income" onclick="App.showSubPage('finance-income')"><span class="sbi-icon" data-icon="file-text"></span>到账（发票）</div>
-      <div class="sb-item" data-page="finance-order" onclick="App.showSubPage('finance-order')"><span class="sbi-icon" data-icon="trending-up"></span>到账（订单）</div>
-      <div class="sb-item" data-page="orderapply-handle" onclick="App.showSubPage('orderapply-handle')"><span class="sbi-icon" data-icon="settings"></span>订单到账处理</div>
-
-      <div class="sb-group">客户与业务</div>
-      <div class="sb-item" data-page="contact-list" onclick="App.showSubPage('contact-list')"><span class="sbi-icon" data-icon="user-plus"></span>客户联系人</div>
-      <div class="sb-item" data-page="chance-list" onclick="App.showSubPage('chance-list')"><span class="sbi-icon" data-icon="target"></span>销售机会</div>
-      <div class="sb-item" data-page="trace-list" onclick="App.showSubPage('trace-list')"><span class="sbi-icon" data-icon="clipboard"></span>跟进记录</div>
-      <div class="sb-item" data-page="order-my" onclick="App.showSubPage('order-my')"><span class="sbi-icon" data-icon="package"></span>订单（我申请的）</div>
-      <div class="sb-item" data-page="order-handle" onclick="App.showSubPage('order-handle')"><span class="sbi-icon" data-icon="wrench"></span>订单（我处理的）</div>
-      <div class="sb-item" data-page="platform-order" onclick="App.showSubPage('platform-order')"><span class="sbi-icon" data-icon="shopping-cart"></span>平台订单</div>
-      <div class="sb-item" data-page="sample" onclick="App.showSubPage('sample')"><span class="sbi-icon" data-icon="droplets"></span>样本管理</div>
-      <div class="sb-item" data-page="school" onclick="App.showSubPage('school')"><span class="sbi-icon" data-icon="graduation-cap"></span>校展管理</div>
-      <div class="sb-item" data-page="after" onclick="App.showSubPage('after')"><span class="sbi-icon" data-icon="headphones"></span>售后管理</div>
-      <div class="sb-item" data-page="customer-add" onclick="App.showSubPage('customer-add')"><span class="sbi-icon" data-icon="user-plus"></span>新增客户</div>
-    </nav>
+    <nav class="sb-nav" id="sb-nav"></nav>
     <div class="sb-foot">
       <div class="sb-user" id="sb-user" title="进入个人中心" onclick="App.switchTab('mine')">
         <div class="sb-user-ava" id="sb-user-ava">U</div>
@@ -67,7 +30,6 @@
       </div>
     </div>
   </aside>
-  <!-- 主列：顶栏 + 内容 + 移动端底部 tab -->
   <div class="main-col">
     <div class="topbar">
       <div class="topbar-left" id="topbar-left">
@@ -91,7 +53,6 @@
         </div>
       </div>
     </div>
-    <!-- 用户下拉菜单 -->
     <div class="user-menu" id="user-menu">
       <div class="user-menu-item" onclick="App.showSubPage('profile')"><span class="umi-ic" data-icon="user-circle"></span>基本资料</div>
       <div class="user-menu-item" onclick="App.showSubPage('password')"><span class="umi-ic" data-icon="lock"></span>修改密码</div>
@@ -99,7 +60,6 @@
       <div class="user-menu-sep"></div>
       <div class="user-menu-item danger" onclick="App.logout()"><span class="umi-ic" data-icon="log-out"></span>退出登录</div>
     </div>
-    <!-- 命令面板（Ctrl+K） -->
     <div class="cmdk-mask" id="cmdk-mask">
       <div class="cmdk" role="dialog" aria-label="命令面板">
         <div class="cmdk-input-row">
@@ -111,16 +71,32 @@
         <div class="cmdk-foot"><span><kbd>↑</kbd><kbd>↓</kbd> 选择</span><span><kbd>Enter</kbd> 打开</span><span><kbd>Esc</kbd> 关闭</span></div>
       </div>
     </div>
-    <!-- 内容 -->
     <div class="page-container" id="page-container"><div class="loading">加载中…</div></div>
-    <!-- 底部 tabbar（仅移动端显示） -->
-    <div class="tabbar" id="tabbar">
-      <div class="tab-item active" data-tab="home" onclick="App.switchTab('home')"><div class="tab-icon" data-icon="home"></div><div>首页</div></div>
-      <div class="tab-item" data-tab="approve" onclick="App.switchTab('approve')"><div class="tab-icon" data-icon="check-circle"></div><div>审批</div></div>
-      <div class="tab-item" data-tab="customer" onclick="App.switchTab('customer')"><div class="tab-icon" data-icon="users"></div><div>客户</div></div>
-      <div class="tab-item" data-tab="mine" onclick="App.switchTab('mine')"><div class="tab-icon" data-icon="user"></div><div>我的</div></div>
-    </div>
   </div>
+
+  <!-- ============ 手机壳 ============ -->
+  <header class="m-appbar">
+    <button class="m-back" id="m-back" hidden data-icon="chevron-left"></button>
+    <div class="topbar-title m-title" id="m-title">优品OA</div>
+    <div class="m-appbar-actions">
+      <button class="m-icon-btn" id="m-search" title="搜索" data-icon="search"></button>
+      <button class="m-icon-btn" id="m-bell" title="消息" data-icon="bell"><span class="m-bell-badge" id="m-bell-badge" style="display:none">0</span></button>
+    </div>
+  </header>
+  <div class="m-search-sheet" id="m-search-sheet">
+    <div class="m-ss-head">
+      <input class="m-ss-input" id="m-ss-input" type="text" placeholder="搜索模块、功能…" autocomplete="off">
+      <button class="m-ss-cancel" id="m-ss-cancel">取消</button>
+    </div>
+    <div class="m-ss-list" id="m-ss-list"></div>
+  </div>
+  <nav class="m-tabbar" id="m-tabbar">
+    <button class="m-tab active" data-tab="home"><span class="m-tab-ico" data-icon="home"></span>首页</button>
+    <button class="m-tab" data-tab="approve"><span class="m-tab-ico" data-icon="check-circle"></span>审批</button>
+    <button class="m-tab" data-tab="customer"><span class="m-tab-ico" data-icon="users"></span>客户</button>
+    <button class="m-tab" data-tab="message-inbox"><span class="m-tab-ico" data-icon="mail"></span>消息</button>
+    <button class="m-tab" data-tab="mine"><span class="m-tab-ico" data-icon="user"></span>我的</button>
+  </nav>
 </div>
 
 <script src="lib/oa.js"></script>
@@ -129,16 +105,27 @@
 <script src="doc.js"></script>
 <script>
 /* ============================================================
-   优品OA 网页版 · 桌面外壳 v3 启动逻辑
-   - SVG 图标系统：data-icon 属性 → ICONS 表渲染
-   - 命令面板（Ctrl+K）：全模块模糊直达
-   - 面包屑：一级模块 / 当前页
-   启动脚本由构建内联进本页，DOM 解析即可执行，不等待 window.load。
-   try/catch + 3.5s 看门狗双兜底，任何异常都不会卡死在启动屏。
+   优品OA · 双体验外壳启动（v6 设备锁定）
+   - 启动即按 innerWidth/UA 锁定 html[data-device]，桌面/手机两套设计
+     在 CSS 中完全分作用域，窗口跨断点 resize 时整体重渲染，不存在混合态。
+   - 桌面壳：侧栏 + 顶栏 + ⌘K 命令面板（逻辑在本文件内）。
+   - 手机壳：品牌 App Bar（复用 #topbar-title）+ 底部 5 Tab + 搜索抽屉。
+   - 手机 App Bar 标题元素复用 id="topbar-title"，所有页面的标题/返回逻辑零改动复用。
    ============================================================ */
 (function () {
-  /* ===== SVG 线性图标（lucide 风格，stroke 1.8） ===== */
-  var P = function (d) { return d; };
+  /* ===== 设备锁定 ===== */
+  function detectDevice() {
+    var w = window.innerWidth || document.documentElement.clientWidth || 1280;
+    var ua = navigator.userAgent || '';
+    var isMobileUA = /Android|iPhone|iPod|Mobile|Windows Phone|webOS|BlackBerry/i.test(ua);
+    var isTablet = /iPad|Tablet/i.test(ua);
+    if (isMobileUA && !isTablet) return 'mobile';
+    return w < 820 ? 'mobile' : 'desktop';
+  }
+  window.DEVICE = detectDevice();
+  document.documentElement.setAttribute('data-device', window.DEVICE);
+
+  /* ===== SVG 线性图标（lucide 风格） ===== */
   var ICONS = {
     'home': '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
     'check-circle': '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
@@ -202,7 +189,9 @@
     'refresh': '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/>',
     'external-link': '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
     'plus-circle': '<circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/>',
-    'corner-down-left': '<polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>'
+    'corner-down-left': '<polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/>',
+    'grid': '<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>',
+    'more-horizontal': '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>'
   };
   window.ICONS = ICONS;
   function svg(name, cls) {
@@ -224,22 +213,7 @@
   }
   window.OA_PAINT = paintIcons;
 
-  var sp = document.getElementById('boot-splash');
-  function hideSplash() { if (sp) sp.style.display = 'none'; }
-  function recordErr(tag, e) {
-    try {
-      localStorage.setItem('uping_boot_err', JSON.stringify({
-        t: Date.now(), tag: tag,
-        m: String((e && e.message) || e || 'unknown'),
-        s: String((e && e.stack) || '').slice(0, 260)
-      }));
-    } catch (_e) {}
-  }
-  window.addEventListener('error', function (ev) { recordErr('运行时错误', ev.error || ev.message); });
-  window.addEventListener('unhandledrejection', function (ev) { recordErr('异步异常', ev.reason); });
-
-  /* ===== 模块清单（命令面板数据源，与侧栏一致） ===== */
-  var TABS = { home: '工作台', approve: '审批中心', customer: '客户管理', mine: '个人中心' };
+  /* ===== 模块清单（命令面板 / 手机搜索抽屉 / 侧栏，三处同源） ===== */
   var MODULES = [
     { g: '主菜单', n: '工作台', i: 'home', run: function () { App.switchTab('home'); } },
     { g: '主菜单', n: '审批中心', i: 'check-circle', run: function () { App.switchTab('approve'); } },
@@ -274,58 +248,65 @@
     { g: '客户与业务', n: '新增客户', i: 'user-plus', run: function () { App.showSubPage('customer-add'); } },
     { g: '客户与业务', n: '发起审批', i: 'clipboard-check', run: function () { App.openApproveType(); } }
   ];
+  window.OA_MODULES = MODULES;
 
-  /* ===== 命令面板 ===== */
+  var sp = document.getElementById('boot-splash');
+  function hideSplash() { if (sp) sp.style.display = 'none'; }
+  function recordErr(tag, e) {
+    try { localStorage.setItem('uping_boot_err', JSON.stringify({ t: Date.now(), tag: tag, m: String((e && e.message) || e || 'unknown'), s: String((e && e.stack) || '').slice(0, 260) })); } catch (_e) {}
+  }
+  window.addEventListener('error', function (ev) { recordErr('运行时错误', ev.error || ev.message); });
+  window.addEventListener('unhandledrejection', function (ev) { recordErr('异步异常', ev.reason); });
+
+  /* ===== 桌面侧栏（由模块清单生成，分组） ===== */
+  function buildSidebar() {
+    var nav = document.getElementById('sb-nav');
+    if (!nav) return;
+    var html = '', lastG = '';
+    for (var i = 0; i < MODULES.length; i++) {
+      var m = MODULES[i];
+      if (m.g !== lastG) { html += '<div class="sb-group">' + m.g + '</div>'; lastG = m.g; }
+      var handler = (m.run ? 'App.__run(' + i + ')' : '');
+      html += '<div class="sb-item" data-page="' + escAttr(m.n) + '" onclick="' + handler + '"><span class="sbi-icon" data-icon="' + m.i + '"></span>' + m.n + '</div>';
+    }
+    nav.innerHTML = html;
+  }
+  function escAttr(s) { return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;'); }
+  App.__run = function (i) { if (MODULES[i] && MODULES[i].run) MODULES[i].run(); };
+
+  /* ===== 桌面命令面板（Ctrl+K） ===== */
   var cmdkMask = document.getElementById('cmdk-mask');
   var cmdkInput = document.getElementById('cmdk-input');
   var cmdkList = document.getElementById('cmdk-list');
-  var cmdkSel = 0;
-  var cmdkHits = [];
+  var cmdkSel = 0, cmdkHits = [];
   function cmdkRender(kw) {
-    cmdkHits = [];
-    cmdkList.innerHTML = '';
+    cmdkHits = []; cmdkList.innerHTML = '';
     kw = (kw || '').replace(/^\s+|\s+$/g, '').toLowerCase();
     var html = '', lastG = '', idx = 0;
     for (var i = 0; i < MODULES.length; i++) {
       var m = MODULES[i];
-      if (kw && m.n.toLowerCase().indexOf(kw) < 0 && m.g.indexOf(kw) < 0) continue;
+      if (kw && m.n.toLowerCase().indexOf(kw) < 0 && m.g.toLowerCase().indexOf(kw) < 0) continue;
       if (m.g !== lastG) { html += '<div class="cmdk-group">' + m.g + '</div>'; lastG = m.g; }
       cmdkHits.push(m);
       html += '<div class="cmdk-item' + (idx === 0 ? ' sel' : '') + '" data-k="' + idx + '">' +
-        '<div class="ci-ic">' + svg(m.i) + '</div>' +
-        '<div class="ci-name">' + m.n + '</div>' +
-        '<div class="ci-hint">打开</div></div>';
+        '<div class="ci-ic">' + svg(m.i) + '</div><div class="ci-name">' + m.n + '</div><div class="ci-hint">打开</div></div>';
       idx++;
     }
-    if (!idx) html = '<div class="cmdk-empty">没有匹配的模块，试试其他关键词</div>';
-    cmdkList.innerHTML = html;
-    cmdkSel = 0;
+    if (!idx) html = '<div class="cmdk-empty">没有匹配的模块</div>';
+    cmdkList.innerHTML = html; cmdkSel = 0;
     var items = cmdkList.querySelectorAll('.cmdk-item');
     for (var j = 0; j < items.length; j++) {
       items[j].addEventListener('click', function () { cmdkGo(parseInt(this.getAttribute('data-k'), 10)); });
-      items[j].addEventListener('mousemove', function () {
-        var k = parseInt(this.getAttribute('data-k'), 10);
-        if (k !== cmdkSel) { cmdkSel = k; cmdkSyncSel(); }
-      });
+      items[j].addEventListener('mousemove', function () { var k = parseInt(this.getAttribute('data-k'), 10); if (k !== cmdkSel) { cmdkSel = k; cmdkSyncSel(); } });
     }
   }
   function cmdkSyncSel() {
     var items = cmdkList.querySelectorAll('.cmdk-item');
     for (var i = 0; i < items.length; i++) items[i].classList.toggle('sel', i === cmdkSel);
-    var sel = items[cmdkSel];
-    if (sel) sel.scrollIntoView({ block: 'nearest' });
+    var sel = items[cmdkSel]; if (sel) sel.scrollIntoView({ block: 'nearest' });
   }
-  function cmdkGo(k) {
-    var m = cmdkHits[k];
-    cmdkClose();
-    if (m && m.run) m.run();
-  }
-  function cmdkOpen() {
-    cmdkMask.classList.add('open');
-    cmdkInput.value = '';
-    cmdkRender('');
-    setTimeout(function () { cmdkInput.focus(); }, 60);
-  }
+  function cmdkGo(k) { var m = cmdkHits[k]; cmdkClose(); if (m && m.run) m.run(); }
+  function cmdkOpen() { cmdkMask.classList.add('open'); cmdkInput.value = ''; cmdkRender(''); setTimeout(function () { cmdkInput.focus(); }, 60); }
   function cmdkClose() { cmdkMask.classList.remove('open'); }
   if (cmdkInput) {
     cmdkInput.addEventListener('input', function () { cmdkRender(cmdkInput.value); });
@@ -338,105 +319,156 @@
   }
   if (cmdkMask) cmdkMask.addEventListener('click', function (ev) { if (ev.target === cmdkMask) cmdkClose(); });
   document.addEventListener('keydown', function (ev) {
-    if ((ev.ctrlKey || ev.metaKey) && (ev.key === 'k' || ev.key === 'K')) {
-      ev.preventDefault();
-      if (cmdkMask.classList.contains('open')) cmdkClose(); else cmdkOpen();
-    } else if (ev.key === 'Escape' && cmdkMask.classList.contains('open')) cmdkClose();
+    if ((ev.ctrlKey || ev.metaKey) && (ev.key === 'k' || ev.key === 'K')) { ev.preventDefault(); if (cmdkMask.classList.contains('open')) cmdkClose(); else cmdkOpen(); }
+    else if (ev.key === 'Escape' && cmdkMask.classList.contains('open')) cmdkClose();
   });
+  var sTrigger = document.getElementById('search-trigger');
+  if (sTrigger) sTrigger.addEventListener('click', cmdkOpen);
 
-  /* ===== 侧栏高亮 + 面包屑同步 ===== */
+  /* ===== 桌面侧栏高亮 + 面包屑 + 用户菜单 ===== */
+  var TABS = { home: '工作台', approve: '审批中心', customer: '客户管理', mine: '个人中心' };
   function syncSidebarPage(key) {
     var items = document.querySelectorAll('.sb-item[data-page]');
-    for (var i = 0; i < items.length; i++) {
-      items[i].classList.toggle('active', items[i].getAttribute('data-page') === key);
-    }
-    var tabs = document.querySelectorAll('.tab-item[data-tab]');
-    for (var j = 0; j < tabs.length; j++) tabs[j].classList.remove('active');
-    setCrumb(TABS[currentTabName()] || '', '');
+    for (var i = 0; i < items.length; i++) items[i].classList.toggle('active', items[i].getAttribute('data-page') === key);
   }
-  function clearSidebarPages() {
-    var items = document.querySelectorAll('.sb-item[data-page]');
-    for (var i = 0; i < items.length; i++) items[i].classList.remove('active');
-  }
-  function currentTabName() {
-    try { if (window.App && App.currentTab) return App.currentTab; } catch (e) {}
-    return 'home';
-  }
-  function setCrumb(c1, c2) {
-    var crumb = document.getElementById('topbar-crumb');
-    var c1el = document.getElementById('crumb-1');
+  function setCrumb(c1) {
+    var crumb = document.getElementById('topbar-crumb'), c1el = document.getElementById('crumb-1');
     if (!crumb || !c1el) return;
-    if (c1) { c1el.textContent = c1; crumb.style.display = 'flex'; }
-    else crumb.style.display = 'none';
+    if (c1) { c1el.textContent = c1; crumb.style.display = 'flex'; } else crumb.style.display = 'none';
   }
   function wrapNav() {
     if (!window.App) return;
-    var _sub = App.showSubPage, _mobile = App.openMobile, _tab = App.switchTab, _wb = App.openWorkbench, _ai = App.openAiChat, _shell = App.showDetailShell;
-    App.showSubPage = function (type) { _sub(type); syncSidebarPage(type); };
-    App.openMobile = function (type) { _mobile(type); syncSidebarPage(type); };
-    App.switchTab = function (tab) { _tab(tab); clearSidebarPages(); setCrumb(TABS[tab] || '', ''); };
-    App.openWorkbench = function () { _wb(); syncSidebarPage('workbench'); };
-    App.openAiChat = function () { _ai(); clearSidebarPages(); setCrumb('', ''); };
-    App.showDetailShell = function (title, backFn) { _shell(title, backFn); setCrumb(TABS[currentTabName()] || '工作台', title); };
+    var _sub = App.showSubPage, _tab = App.switchTab;
+    App.showSubPage = function (type) { _sub(type); syncSidebarPage(type); setCrumb(TABS[currentTabName()] || ''); };
+    App.switchTab = function (tab) { _tab(tab); syncSidebarPage(''); setCrumb(''); };
   }
-
-  /* ===== 顶栏用户信息 / 下拉菜单 ===== */
-  function currentUserName() {
-    try {
-      if (window.App && typeof App.myDisplayName === 'function') {
-        var n = App.myDisplayName();
-        if (n) return String(n);
-      }
-    } catch (e) {}
-    try {
-      var u = JSON.parse(localStorage.getItem('uping_saved_user') || 'null');
-      if (u && u.u) return String(u.u);
-    } catch (e) {}
-    return '用户';
-  }
+  function currentTabName() { try { if (window.App && App.currentTab) return App.currentTab; } catch (e) {} return 'home'; }
   function fillUser() {
-    var n = currentUserName();
+    var n = '用户';
+    try { if (window.App && typeof App.myDisplayName === 'function') { var x = App.myDisplayName(); if (x) n = String(x); } } catch (e) {}
+    try { var u = JSON.parse(localStorage.getItem('uping_saved_user') || 'null'); if (u && u.u) n = String(u.u); } catch (e) {}
     var ava = n ? n.charAt(0).toUpperCase() : 'U';
-    var els = ['sb-user-name', 'topbar-user-name'];
-    for (var i = 0; i < els.length; i++) { var el = document.getElementById(els[i]); if (el) el.textContent = n; }
-    var av2 = ['sb-user-ava', 'topbar-user-ava'];
-    for (var j = 0; j < av2.length; j++) { var a2 = document.getElementById(av2[j]); if (a2) a2.textContent = ava; }
+    ['sb-user-name', 'topbar-user-name'].forEach(function (id) { var el = document.getElementById(id); if (el) el.textContent = n; });
+    ['sb-user-ava', 'topbar-user-ava'].forEach(function (id) { var el = document.getElementById(id); if (el) el.textContent = ava; });
+    return n;
   }
   function bindUserMenu() {
-    var trigger = document.getElementById('topbar-user');
-    var menu = document.getElementById('user-menu');
+    var trigger = document.getElementById('topbar-user'), menu = document.getElementById('user-menu');
     if (!trigger || !menu) return;
-    trigger.addEventListener('click', function (ev) {
-      ev.stopPropagation();
-      var r = trigger.getBoundingClientRect();
-      menu.style.top = (r.bottom + 6) + 'px';
-      menu.style.right = Math.max(12, window.innerWidth - r.right) + 'px';
-      menu.classList.toggle('open');
-    });
+    trigger.addEventListener('click', function (ev) { ev.stopPropagation(); var r = trigger.getBoundingClientRect(); menu.style.top = (r.bottom + 6) + 'px'; menu.style.right = Math.max(12, window.innerWidth - r.right) + 'px'; menu.classList.toggle('open'); });
     document.addEventListener('click', function () { menu.classList.remove('open'); });
     menu.addEventListener('click', function (ev) { ev.stopPropagation(); menu.classList.remove('open'); });
   }
 
+  /* ===== 手机导航：底部 Tab + App Bar 搜索/通知 + 标题同步 ===== */
+  function bindMobile() {
+    var tabs = document.querySelectorAll('#m-tabbar .m-tab');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].addEventListener('click', function () {
+        var t = this.getAttribute('data-tab');
+        if (t === 'message-inbox') App.showSubPage('message-inbox'); else App.switchTab(t);
+      });
+    }
+    var ms = document.getElementById('m-search');
+    if (ms) ms.addEventListener('click', openMobileSearch);
+    var mb = document.getElementById('m-bell');
+    if (mb) mb.addEventListener('click', function () { App.showSubPage('message-inbox'); });
+    var ssInput = document.getElementById('m-ss-input');
+    if (ssInput) ssInput.addEventListener('input', function () { renderMobileSearch(ssInput.value); });
+    var ssCancel = document.getElementById('m-ss-cancel');
+    if (ssCancel) ssCancel.addEventListener('click', closeMobileSearch);
+    var sheet = document.getElementById('m-search-sheet');
+    if (sheet) sheet.addEventListener('click', function (ev) { if (ev.target === sheet) closeMobileSearch(); });
+    // 包装 showSubPage：同步底部 Tab 高亮
+    var _sub = App.showSubPage;
+    App.showSubPage = function (type) {
+      _sub(type);
+      var map = { 'message-inbox': 'message-inbox', 'message-sendbox': 'message-inbox', 'message-draft': 'message-inbox', 'message-rubbish': 'message-inbox', 'customer': 'customer', 'customer-add': 'customer', 'contact-list': 'customer', 'chance-list': 'customer', 'trace-list': 'customer', 'order-my': 'customer', 'order-handle': 'customer', 'mine': 'mine', 'profile': 'mine', 'password': 'mine' };
+      syncMobileTabs(map[type] || null);
+    };
+    var _tab = App.switchTab;
+    App.switchTab = (function (orig) { return function (tab) { orig(tab); syncMobileTabs(tab); }; })(_tab);
+  }
+  function syncMobileTabs(active) {
+    var tabs = document.querySelectorAll('#m-tabbar .m-tab');
+    for (var i = 0; i < tabs.length; i++) tabs[i].classList.toggle('active', tabs[i].getAttribute('data-tab') === active);
+  }
+  function openMobileSearch() {
+    renderMobileSearch('');
+    var s = document.getElementById('m-search-sheet'); if (s) s.classList.add('open');
+    var inp = document.getElementById('m-ss-input'); if (inp) setTimeout(function () { inp.focus(); }, 80);
+  }
+  function closeMobileSearch() { var s = document.getElementById('m-search-sheet'); if (s) s.classList.remove('open'); }
+  function renderMobileSearch(kw) {
+    var list = document.getElementById('m-ss-list'); if (!list) return;
+    kw = (kw || '').replace(/^\s+|\s+$/g, '').toLowerCase();
+    var html = '', lastG = '', idx = 0;
+    for (var i = 0; i < MODULES.length; i++) {
+      var m = MODULES[i];
+      if (kw && m.n.toLowerCase().indexOf(kw) < 0 && m.g.toLowerCase().indexOf(kw) < 0) continue;
+      if (m.g !== lastG) { html += '<div class="m-ss-group">' + m.g + '</div>'; lastG = m.g; }
+      html += '<div class="m-ss-item" data-k="' + idx + '"><div class="m-ss-ic">' + svg(m.i) + '</div><div>' + m.n + '</div></div>';
+      idx++;
+    }
+    if (!idx) html = '<div class="m-ss-empty">没有匹配的模块</div>';
+    list.innerHTML = html;
+    var items = list.querySelectorAll('.m-ss-item');
+    for (var j = 0; j < items.length; j++) {
+      items[j].addEventListener('click', function () { var k = parseInt(this.getAttribute('data-k'), 10); if (MODULES[k] && MODULES[k].run) { closeMobileSearch(); MODULES[k].run(); } });
+    }
+  }
+  function syncBellBadge(n) {
+    n = n || 0;
+    var d = document.getElementById('bell-badge'), m = document.getElementById('m-bell-badge');
+    if (d) { if (n > 0) { d.style.display = 'inline-block'; d.textContent = n > 99 ? '99+' : n; } else d.style.display = 'none'; }
+    if (m) { if (n > 0) { m.style.display = 'inline-block'; m.textContent = n > 99 ? '99+' : n; } else m.style.display = 'none'; }
+  }
+  window.OA_SYNC_BELL = syncBellBadge;
+
+  /* ===== 移动端 App Bar 标题/返回 与桌面壳同步 =====
+     app.js 只写桌面 #topbar-title（DOM 中第一个），并把返回按钮插入隐藏的
+     .topbar-left；此处用观察者把标题镜像到 .m-title、按 #topbar-back-el 存在与否
+     显隐 #m-back（点击统一走 App.detailBack，兼容子页面与详情页返回）。 */
+  function bindMobileChrome() {
+    var mTitle = document.getElementById('m-title');
+    var mBack = document.getElementById('m-back');
+    var dTitle = document.getElementById('topbar-title');
+    function syncTitle() { if (mTitle && dTitle) mTitle.textContent = dTitle.textContent; }
+    if (dTitle && window.MutationObserver) {
+      new MutationObserver(syncTitle).observe(dTitle, { childList: true, characterData: true, subtree: true });
+    }
+    syncTitle();
+    function syncBack() {
+      var has = !!document.getElementById('topbar-back-el');
+      if (mBack) mBack.hidden = !has;
+    }
+    var av = document.getElementById('app-view');
+    if (av && window.MutationObserver) new MutationObserver(syncBack).observe(av, { childList: true, subtree: true });
+    syncBack();
+    if (mBack) mBack.addEventListener('click', function () { try { if (window.App && App.detailBack) App.detailBack(); } catch (e) {} });
+  }
+
+  /* ===== 启动 ===== */
   function boot() {
     try {
       paintIcons(document);
+      buildSidebar();
+      bindMobileChrome();
       if (OA.isLoggedIn()) {
         document.getElementById('app-view').style.display = 'flex';
         App.init();
         wrapNav();
         fillUser();
         bindUserMenu();
+        bindMobile();
         hideSplash();
-      } else {
-        location.replace('login.html');
-      }
+      } else { location.replace('login.html'); }
     } catch (e) {
       recordErr('主界面启动异常', e);
       try { localStorage.removeItem('uping_user'); localStorage.removeItem('uping_me'); } catch (_e) {}
       location.replace('login.html');
     }
   }
-  // 看门狗：3.5s 后若启动屏仍在（脚本异常/极端情况），强制恢复
   setTimeout(function () {
     if (!sp || sp.style.display === 'none') return;
     var logged = false;
@@ -446,7 +478,7 @@
     var av = document.getElementById('app-view');
     if (av && av.style.display === 'none') {
       av.style.display = 'flex';
-      try { App.init(); wrapNav(); fillUser(); bindUserMenu(); } catch (e) { recordErr('看门狗重试', e); }
+      try { paintIcons(document); buildSidebar(); bindMobileChrome(); App.init(); wrapNav(); fillUser(); bindUserMenu(); bindMobile(); } catch (e) { recordErr('看门狗重试', e); }
     }
   }, 3500);
   boot();

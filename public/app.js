@@ -800,6 +800,29 @@ var App = (function () {
         if (type) regReplay(function () { showSubPage(type); });
     }
 
+    /* 列表表格移动端卡片化：读取 thead th（移动端 display:none 但仍在 DOM），
+       按列序把列名写入各 td[data-label]，驱动 style.css 的卡片规则。
+       仅给尚未标注的 td 写 data-label，故加载更多追加的行也会自动补标。 */
+    function injectTableLabels(root) {
+        root = root || $('page-container');
+        if (!root) return;
+        var tables = root.querySelectorAll('.dt-table');
+        for (var ti = 0; ti < tables.length; ti++) {
+            var table = tables[ti];
+            var ths = table.querySelectorAll('thead th');
+            var labels = [];
+            for (var k = 0; k < ths.length; k++) labels.push((ths[k].textContent || '').replace(/\s+/g, ' ').trim());
+            var rows = table.querySelectorAll('tbody tr');
+            for (var r = 0; r < rows.length; r++) {
+                var cells = rows[r].querySelectorAll('td');
+                for (var ci = 0; ci < cells.length; ci++) {
+                    if (cells[ci].getAttribute('data-label') != null) continue;
+                    cells[ci].setAttribute('data-label', labels[ci] || '');
+                }
+            }
+        }
+    }
+
     function init() {
         // 加载更多统一事件委托兜底（主用内联 onclick，此处防漏）
         document.addEventListener('click', function (e) {
@@ -825,6 +848,7 @@ var App = (function () {
                     __deT = setTimeout(function () {
                         __deT = null;
                         try { deEmoji($('page-container')); } catch (e) {}
+                        try { injectTableLabels($('page-container')); } catch (e) {}
                     }, 80);
                 }).observe($('page-container'), { childList: true, subtree: true });
             }
@@ -836,14 +860,26 @@ var App = (function () {
         checkSession();
         fetchMyName(function (n) { webFillGreet(n); }); // v5：名字就绪后回填问候语/侧栏
         bindScrollAutoLoad();
-        // v5：跨断点（桌面↔手机）且当前在首页时重渲染，保证首页形态与视口一致
-        var __v5LastPhone = isPhone();
+        // v6：跨断点（桌面↔手机）整体重渲染——重新检测设备、更新 window.DEVICE 与
+        // html[data-device]，再整体重渲染当前页，保证两套设计彻底切换、绝不混合。
+        function __detectNow() {
+            var w = window.innerWidth || document.documentElement.clientWidth || 1280;
+            var ua = navigator.userAgent || '';
+            if (/Android|iPhone|iPod|Mobile|Windows Phone|webOS|BlackBerry/i.test(ua) && !/iPad|Tablet/i.test(ua)) return 'mobile';
+            return w < 820 ? 'mobile' : 'desktop';
+        }
+        var __v6LastDev = __detectNow();
         window.addEventListener('resize', function () {
-            var p = isPhone();
-            if (p !== __v5LastPhone) {
-                __v5LastPhone = p;
-                if ((currentTab || 'home') === 'home' && !inDetailShell) { try { renderHome(); } catch (e) {} }
-            }
+            var now = __detectNow();
+            if (now === __v6LastDev) return;
+            __v6LastDev = now;
+            window.DEVICE = now;
+            document.documentElement.setAttribute('data-device', now);
+            try {
+                if (currentPageType) showSubPage(currentPageType);
+                else if (currentTab) switchTab(currentTab);
+                else renderHome();
+            } catch (e) {}
         });
     }
 
@@ -1057,7 +1093,7 @@ var App = (function () {
     }
 
     // ===== 首页 =====
-    function isPhone() { return window.innerWidth < 992; }
+    function isPhone() { return (window.DEVICE || (window.innerWidth < 820 ? 'mobile' : 'desktop')) === 'mobile'; }
 
     function renderHome() {
         var c = $('page-container');
@@ -5654,6 +5690,7 @@ var App = (function () {
         return (me && me.name) || (savedU && savedU.u) || '未登录';
     }
     function renderMine() {
+        if (isPhone()) { renderMineMobile(); return; }
         var c = $('page-container');
         var savedU = null;
         try { savedU = JSON.parse(localStorage.getItem('uping_saved_user') || 'null'); } catch (e) {}
@@ -5710,6 +5747,70 @@ var App = (function () {
         c.innerHTML = html;
         deEmoji(c);
         // v1.1.62：还没有中文名缓存时拉一次桌面首页解析；拿到后若仍在"我的"页则重渲染
+        var hasName = false;
+        try { hasName = !!localStorage.getItem('uping_me_name'); } catch (e) {}
+        if (!hasName) {
+            fetchMyName(function (name) {
+                if (name && currentTab === 'mine' && $('page-container')) renderMine();
+            });
+        }
+    }
+
+    // ===== 移动端「我的」：原生 App 导航中枢（资料头 + 功能宫格 + 账号菜单） =====
+    function renderMineMobile() {
+        var c = $('page-container');
+        var savedU = null;
+        try { savedU = JSON.parse(localStorage.getItem('uping_saved_user') || 'null'); } catch (e) {}
+        var myName = myDisplayName();
+        var myUid = (savedU && savedU.u) ? ('优品OA · 账号 ' + savedU.u) : '';
+        var ava = myName ? myName.charAt(0).toUpperCase() : 'U';
+        var html = '';
+        // 个人资料头
+        html += '<div class="m-profile">' +
+            '<div class="m-profile-ava">' + esc(ava) + '</div>' +
+            '<div class="m-profile-name">' + esc(myName) + '</div>' +
+            '<div class="m-profile-sub">' + esc(myUid || '优品OA 网页版') + '</div>' +
+            '</div>';
+        // 财务管理宫格
+        html += '<div class="m-section-title">财务管理</div>';
+        html += '<div class="m-grid">';
+        var fin = [
+            { n: '预存款', i: 'wallet', run: "App.openFinance('/finance/advancedepositlog/index')" },
+            { n: '抵扣券', i: 'ticket', run: "App.openFinance('/finance/deductionlog/index')" },
+            { n: '抵扣券管理', i: 'ticket', run: "App.openFinance('/finance/deductionlog/checkedlist')" },
+            { n: '保证金', i: 'shield', run: "App.openFinance('/finance/margindepositlog/index')" },
+            { n: '发票(我申请)', i: 'receipt', run: "App.openFinance('/finance/invoice/index')" },
+            { n: '发票(我处理)', i: 'archive', run: "App.openFinance('/finance/invoice/list')" },
+            { n: '到账(发票)', i: 'file-text', run: "App.openFinance('/finance/income/index')" },
+            { n: '到账(订单)', i: 'trending-up', run: "App.openFinance('/finance/orderapply/index')" },
+            { n: '到账(处理)', i: 'settings', run: "App.openFinance('/finance/orderapply/list')" }
+        ];
+        for (var fi = 0; fi < fin.length; fi++) html += '<div class="m-grid-item" onclick="' + fin[fi].run + '"><div class="m-grid-ic">' + ic(fin[fi].i) + '</div><div class="m-grid-name">' + fin[fi].n + '</div></div>';
+        html += '</div>';
+        // 常用功能宫格
+        html += '<div class="m-section-title">常用功能</div>';
+        html += '<div class="m-grid">';
+        var common = [
+            { n: '消息中心', i: 'mail', run: "App.showSubPage('message-inbox')" },
+            { n: '通讯录', i: 'book', run: "App.showSubPage('mail')" },
+            { n: '我的审批', i: 'check-circle', run: "App.openFinance('/oa/approve/index')" },
+            { n: '企业公告', i: 'megaphone', run: "App.showSubPage('note')" },
+            { n: '附件管理', i: 'folder', run: "App.showSubPage('files')" },
+            { n: '工作台', i: 'layers', run: "App.openWorkbench()" },
+            { n: '基本资料', i: 'user-circle', run: "App.showSubPage('profile')" },
+            { n: '修改密码', i: 'lock', run: "App.showSubPage('password')" }
+        ];
+        for (var ci2 = 0; ci2 < common.length; ci2++) html += '<div class="m-grid-item" onclick="' + common[ci2].run + '"><div class="m-grid-ic">' + ic(common[ci2].i) + '</div><div class="m-grid-name">' + common[ci2].n + '</div></div>';
+        html += '</div>';
+        // 账号
+        html += '<div class="m-section-title">账号</div>';
+        html += '<div class="m-menu-list">' +
+            '<div class="menu-item" onclick="App.showSubPage(\'profile\')"><span class="mi-left"><span class="mli-ic">' + ic('user-circle') + '</span> 基本资料</span><span class="mi-right">›</span></div>' +
+            '<div class="menu-item" onclick="App.showSubPage(\'password\')"><span class="mi-left"><span class="mli-ic">' + ic('lock') + '</span> 修改密码</span><span class="mi-right">›</span></div>' +
+            '<div class="menu-item" onclick="App.logout()"><span class="mi-left" style="color:#F53F3F"><span class="mli-ic">' + ic('log-out') + '</span> 退出登录</span><span class="mi-right">›</span></div>' +
+            '</div>';
+        c.innerHTML = html;
+        deEmoji(c);
         var hasName = false;
         try { hasName = !!localStorage.getItem('uping_me_name'); } catch (e) {}
         if (!hasName) {
