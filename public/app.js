@@ -95,6 +95,39 @@ var DT_HEAD = {
         '</tr></thead><tbody>',
     msg: '<div class="dt-table-wrap"><table class="dt-table"><thead><tr>' +
         '<th style="min-width:280px">主题</th><th>联系人</th><th>时间</th><th style="min-width:80px">操作</th>' +
+        '</tr></thead><tbody>',
+    mail: '<div class="dt-table-wrap"><table class="dt-table"><thead><tr>' +
+        '<th style="min-width:150px">姓名</th><th>手机号</th><th style="min-width:140px">部门</th><th style="min-width:160px">邮箱</th>' +
+        '</tr></thead><tbody>',
+    note: '<div class="dt-table-wrap"><table class="dt-table"><thead><tr>' +
+        '<th style="min-width:320px">标题</th><th>分类</th><th>发布人</th><th>时间</th>' +
+        '</tr></thead><tbody>',
+    article: '<div class="dt-table-wrap"><table class="dt-table"><thead><tr>' +
+        '<th style="min-width:320px">标题</th><th>分类</th><th>提问人</th><th>时间</th>' +
+        '</tr></thead><tbody>',
+    files: '<div class="dt-table-wrap"><table class="dt-table"><thead><tr>' +
+        '<th style="min-width:280px">文件名</th><th>类型</th><th>大小</th><th style="min-width:140px">上传者</th><th>时间</th>' +
+        '</tr></thead><tbody>',
+    contact: '<div class="dt-table-wrap"><table class="dt-table"><thead><tr>' +
+        '<th style="min-width:120px">姓名</th><th>手机号</th><th style="min-width:160px">所属客户</th><th>部门</th><th>微信/邮箱</th><th style="min-width:60px">操作</th>' +
+        '</tr></thead><tbody>',
+    chance: '<div class="dt-table-wrap"><table class="dt-table"><thead><tr>' +
+        '<th style="min-width:220px">机会</th><th style="min-width:150px">客户</th><th>预计金额</th><th>状态</th><th>创建时间</th><th style="min-width:60px">操作</th>' +
+        '</tr></thead><tbody>',
+    trace: '<div class="dt-table-wrap"><table class="dt-table"><thead><tr>' +
+        '<th style="min-width:260px">客户 / 跟进内容</th><th>方式</th><th>跟进人</th><th>时间</th><th style="min-width:60px">操作</th>' +
+        '</tr></thead><tbody>',
+    sample: '<div class="dt-table-wrap"><table class="dt-table"><thead><tr>' +
+        '<th style="min-width:260px">样本 / 测样号</th><th>处理状态</th><th>下单时间</th><th>退回时间</th>' +
+        '</tr></thead><tbody>',
+    school: '<div class="dt-table-wrap"><table class="dt-table"><thead><tr>' +
+        '<th style="min-width:240px">标题 / 地区</th><th>状态</th><th>预算</th><th style="min-width:180px">起止时间</th><th style="min-width:60px">操作</th>' +
+        '</tr></thead><tbody>',
+    after: '<div class="dt-table-wrap"><table class="dt-table"><thead><tr>' +
+        '<th style="min-width:240px">单号 / 客户</th><th>解决状态</th><th>创建时间</th><th style="min-width:60px">操作</th>' +
+        '</tr></thead><tbody>',
+    platorder: '<div class="dt-table-wrap"><table class="dt-table"><thead><tr>' +
+        '<th style="min-width:200px">平台订单号</th><th style="min-width:150px">采购单位</th><th>成交金额</th><th>处理状态</th><th>负责人</th><th>下单时间</th>' +
         '</tr></thead><tbody>'
 };
 var DT_TAIL = '</tbody></table></div>';
@@ -153,7 +186,8 @@ function deEmoji(root) {
             var name = EMOJI_MAP[ch2];
             if (name) {
                 if (buf) { html += v3esc(buf); buf = ''; }
-                html += ic(name);
+                // v5.1 修复：包一层 .mli-ic，否则裸 SVG 无尺寸约束会按默认大小（巨大）渲染
+                html += '<span class="mli-ic">' + ic(name) + '</span>';
                 made = true;
             } else buf += ch2;
         }
@@ -1852,7 +1886,12 @@ var App = (function () {
     function renderNotePage() {
         markListPage('note');
         var c = $('page-container');
-        c.innerHTML = '<div id="note-list"></div>';
+        var shell = isPhone() ? '' :
+            '<div class="dt-toolbar"><div>' +
+            '<div class="dt-toolbar-title">企业公告</div>' +
+            '<div class="dt-toolbar-sub">公司发布的通知与动态</div>' +
+            '</div></div>';
+        c.innerHTML = shell + '<div id="note-list"></div>';
         listState.note = { page: 1, loading: false, done: false, rows: {} };
         loadNote();
     }
@@ -1871,15 +1910,25 @@ var App = (function () {
             if (!rows.length) { el2.innerHTML = '<div class="empty">暂无公告</div>'; st.done = true; return; }
                         for (var i = 0; i < rows.length; i++) { st.rows[rows[i].id] = rows[i]; }
             var html = '';
+            var phone = isPhone();
             var __rk = Object.keys(st.rows);
             for (var k2 = 0; k2 < __rk.length; k2++) {
                 var r = st.rows[__rk[k2]];
-                html += '<div class="card" onclick="App.openNoteDetail(' + r.id + ')">' +
-                '<div class="card-title">' + plain(r.title || '') + '</div>' +
-                '<div class="card-line"><span class="tag tag-pass">' + esc(r.cate_title || '公告') + '</span>　' + fmtTime(r.create_time) + '</div>' +
-                '</div>';
+                if (phone) {
+                    html += '<div class="card" onclick="App.openNoteDetail(' + r.id + ')">' +
+                    '<div class="card-title">' + plain(r.title || '') + '</div>' +
+                    '<div class="card-line"><span class="tag tag-pass">' + esc(r.cate_title || '公告') + '</span>　' + fmtTime(r.create_time) + '</div>' +
+                    '</div>';
+                } else {
+                    html += '<tr class="tr-click" onclick="App.openNoteDetail(' + r.id + ')">' +
+                    '<td><div class="td-strong">' + plain(r.title || '') + '</div></td>' +
+                    '<td>' + esc(r.cate_title || '公告') + '</td>' +
+                    '<td>' + esc(r.user || '-') + '</td>' +
+                    '<td>' + fmtTime(r.create_time) + '</td>' +
+                    '</tr>';
+                }
             }
-            el2.innerHTML = html;
+            el2.innerHTML = phone ? html : (DT_HEAD.note + html + DT_TAIL);
             st.page++;
             st.loading = false;
             st.done = rows.length < 15;
@@ -1903,7 +1952,12 @@ var App = (function () {
     function renderArticlePage() {
         markListPage('article');
         var c = $('page-container');
-        c.innerHTML = '<div id="article-list"></div>';
+        var shell = isPhone() ? '' :
+            '<div class="dt-toolbar"><div>' +
+            '<div class="dt-toolbar-title">问答知识</div>' +
+            '<div class="dt-toolbar-sub">产品与应用常见问题库</div>' +
+            '</div></div>';
+        c.innerHTML = shell + '<div id="article-list"></div>';
         listState.article = { page: 1, loading: false, done: false, rows: {} };
         loadArticle();
     }
@@ -1922,17 +1976,27 @@ var App = (function () {
             if (!rows.length) { el2.innerHTML = '<div class="empty">暂无内容</div>'; st.done = true; return; }
                         for (var i = 0; i < rows.length; i++) { st.rows[rows[i].id] = rows[i]; }
             var html = '';
+            var phone = isPhone();
             var __rk = Object.keys(st.rows);
             for (var k2 = 0; k2 < __rk.length; k2++) {
                 var r = st.rows[__rk[k2]];
                 var title = (r.title || '').split('\n')[0];
-                html += '<div class="card" onclick="App.openArticleDetail(' + r.id + ')">' +
-                '<div class="card-title">' + plain(title) + '</div>' +
-                '<div class="card-line"><span class="tag tag-pass">' + esc(r.cate_title || '问答') + '</span>　' + esc(r.user || '') + '</div>' +
-                '<div class="card-line">' + fmtTime(r.create_time) + '</div>' +
-                '</div>';
+                if (phone) {
+                    html += '<div class="card" onclick="App.openArticleDetail(' + r.id + ')">' +
+                    '<div class="card-title">' + plain(title) + '</div>' +
+                    '<div class="card-line"><span class="tag tag-pass">' + esc(r.cate_title || '问答') + '</span>　' + esc(r.user || '') + '</div>' +
+                    '<div class="card-line">' + fmtTime(r.create_time) + '</div>' +
+                    '</div>';
+                } else {
+                    html += '<tr class="tr-click" onclick="App.openArticleDetail(' + r.id + ')">' +
+                    '<td><div class="td-strong">' + plain(title) + '</div></td>' +
+                    '<td>' + esc(r.cate_title || '问答') + '</td>' +
+                    '<td>' + esc(r.user || '-') + '</td>' +
+                    '<td>' + fmtTime(r.create_time) + '</td>' +
+                    '</tr>';
+                }
             }
-            el2.innerHTML = html;
+            el2.innerHTML = phone ? html : (DT_HEAD.article + html + DT_TAIL);
             st.page++;
             st.loading = false;
             st.done = rows.length < 15;
@@ -1957,10 +2021,20 @@ var App = (function () {
     function renderProductPage() {
         markListPage('product');
         var c = $('page-container');
-        c.innerHTML = '<div class="fav-entry" onclick="App.openFavCenter()"><span class="fav-entry-icon">📚</span><span>说明书收藏夹</span><span class="mi-right">›</span></div>' +
-            '<div class="search-bar"><input id="prod-kw" type="text" placeholder="搜索货号/别称/基因名/标题/代码"><span class="search-btn" onclick="App.loadProduct()">搜索</span></div>' +
+        var phone = isPhone();
+        var head = phone
+            ? '<div class="fav-entry" onclick="App.openFavCenter()"><span class="fav-entry-icon">📚</span><span>说明书收藏夹</span><span class="mi-right">›</span></div>' +
+            '<div class="search-bar"><input id="prod-kw" type="text" placeholder="搜索货号/别称/基因名/标题/代码"><span class="search-btn" onclick="App.loadProduct()">搜索</span></div>'
+            : '<div class="dt-toolbar"><div>' +
+            '<div class="dt-toolbar-title">产品管理</div>' +
+            '<div class="dt-toolbar-sub">按货号 / 别称 / 基因名检索，组合筛选种属、应用与分类</div>' +
+            '</div><div class="dt-toolbar-ops">' +
+            '<div class="dt-search"><input id="prod-kw" type="text" placeholder="搜索货号/别称/基因名/标题/代码"><button class="dt-search-btn" onclick="App.loadProduct()">搜索</button></div>' +
+            '<span class="oa-btn" onclick="App.openFavCenter()">📚 说明书收藏夹</span>' +
+            '</div></div>';
+        c.innerHTML = head +
             '<div class="prod-filter" id="prod-filter">' +
-            '<div class="pf-title">产品筛选（与电脑版一致）</div>' +
+            '<div class="pf-title">产品筛选</div>' +
             '<div class="pf-cate-trigger" onclick="App.toggleCatePanel()"><span id="pf-cate-label">请选择产品分类</span><span class="pf-cate-arrow">▾</span></div>' +
             '<input type="hidden" id="pf-cate" value="">' +
             '<div class="cate-chips" id="cate-chips"></div>' +
@@ -2607,12 +2681,21 @@ var App = (function () {
     function renderFilesPage() {
         markListPage('files');
         var c = $('page-container');
-        c.innerHTML = '<div class="search-bar"><input id="file-kw" type="text" placeholder="搜索文件名"><span class="search-btn" onclick="App.loadFiles()">搜索</span></div>' +
+        var phone = isPhone();
+        var head = phone
+            ? '<div class="search-bar"><input id="file-kw" type="text" placeholder="搜索文件名"><span class="search-btn" onclick="App.loadFiles()">搜索</span></div>' +
             '<div class="files-up">' +
             '<div class="att-btn att-btn-main" onclick="App.pickFilesUpload(false)">＋ 上传文件</div>' +
             '<div class="att-btn att-btn-ghost" onclick="App.pickFilesUpload(true)">📷 拍照上传</div>' +
-            '</div>' +
-            '<div id="file-list"></div>';
+            '</div>'
+            : '<div class="dt-toolbar"><div>' +
+            '<div class="dt-toolbar-title">附件管理</div>' +
+            '<div class="dt-toolbar-sub">上传、检索与打开公司共享附件</div>' +
+            '</div><div class="dt-toolbar-ops">' +
+            '<div class="dt-search"><input id="file-kw" type="text" placeholder="搜索文件名"><button class="dt-search-btn" onclick="App.loadFiles()">搜索</button></div>' +
+            '<span class="oa-btn primary" onclick="App.pickFilesUpload(false)">＋ 上传文件</span>' +
+            '</div></div>';
+        c.innerHTML = head + '<div id="file-list"></div>';
         listState.files = { page: 1, loading: false, done: false, kw: '', rows: {} };
         loadFiles();
     }
@@ -2640,18 +2723,29 @@ var App = (function () {
             var rows = res.data || [];
             if (!rows.length) { el2.innerHTML = '<div class="empty">暂无附件</div>'; st.done = true; return; }
             var html = '';
+            var phone = isPhone();
             for (var i = 0; i < rows.length; i++) { st.rows[rows[i].id] = rows[i]; }
             var __rk = Object.keys(st.rows);
             for (var k2 = 0; k2 < __rk.length; k2++) {
                 var r = st.rows[__rk[k2]];
                 var ft = fileTypeInfo(r.name);
-                html += '<div class="card" onclick="App.openFile(' + r.id + ')">' +
-                    '<div class="card-title file-card-title"><span class="att-ft file-card-ft" style="background:' + ft.c + '">' + esc(ft.t) + '</span><span class="file-card-name">' + esc(r.name || '') + '</span></div>' +
-                    '<div class="card-line">' + fmtSize(r.filesize) + ' · ' + esc(r.fileext || '') + ' · ' + fmtTime(r.create_time) + '</div>' +
-                    (r.admin_name ? '<div class="card-line">上传者：' + esc(r.admin_name) + (r.group_title ? '（' + esc(r.group_title) + '）' : '') + '</div>' : '') +
-                    '</div>';
+                if (phone) {
+                    html += '<div class="card" onclick="App.openFile(' + r.id + ')">' +
+                        '<div class="card-title file-card-title"><span class="att-ft file-card-ft" style="background:' + ft.c + '">' + esc(ft.t) + '</span><span class="file-card-name">' + esc(r.name || '') + '</span></div>' +
+                        '<div class="card-line">' + fmtSize(r.filesize) + ' · ' + esc(r.fileext || '') + ' · ' + fmtTime(r.create_time) + '</div>' +
+                        (r.admin_name ? '<div class="card-line">上传者：' + esc(r.admin_name) + (r.group_title ? '（' + esc(r.group_title) + '）' : '') + '</div>' : '') +
+                        '</div>';
+                } else {
+                    html += '<tr class="tr-click" onclick="App.openFile(' + r.id + ')">' +
+                        '<td><div class="td-strong file-card-name">' + esc(r.name || '') + '</div></td>' +
+                        '<td><span class="att-ft" style="background:' + ft.c + '">' + esc(ft.t) + '</span></td>' +
+                        '<td class="td-num">' + fmtSize(r.filesize) + '</td>' +
+                        '<td>' + esc(r.admin_name || '-') + (r.group_title ? '（' + esc(r.group_title) + '）' : '') + '</td>' +
+                        '<td>' + fmtTime(r.create_time) + '</td>' +
+                        '</tr>';
+                }
             }
-            el2.innerHTML = html;
+            el2.innerHTML = phone ? html : (DT_HEAD.files + html + DT_TAIL);
             st.page++;
             st.loading = false;
             st.done = rows.length < 15;
@@ -3514,7 +3608,16 @@ var App = (function () {
         markListPage('mail');
         mailState = { page: 1, loading: false, done: false, rows: {} };
         var c = $('page-container');
-        c.innerHTML = '<div class="search-bar"><input id="mail-kw" type="text" placeholder="搜索姓名/手机号/部门"><span class="search-btn" onclick="App.loadMail()">搜索</span></div><div id="mail-list"></div>';
+        var phone = isPhone();
+        var shell = phone
+            ? '<div class="search-bar"><input id="mail-kw" type="text" placeholder="搜索姓名/手机号/部门"><span class="search-btn" onclick="App.loadMail()">搜索</span></div>'
+            : '<div class="dt-toolbar"><div>' +
+            '<div class="dt-toolbar-title">通讯录</div>' +
+            '<div class="dt-toolbar-sub">按姓名 / 手机号 / 部门检索同事联系方式</div>' +
+            '</div><div class="dt-toolbar-ops">' +
+            '<div class="dt-search"><input id="mail-kw" type="text" placeholder="搜索姓名/手机号/部门"><button class="dt-search-btn" onclick="App.loadMail()">搜索</button></div>' +
+            '</div></div>';
+        c.innerHTML = shell + '<div id="mail-list"></div>';
         loadMail();
     }
     function loadMail() {
@@ -3534,16 +3637,27 @@ var App = (function () {
             var rows = res.data || [];
             if (!rows.length) { box.innerHTML = '<div class="empty">暂无数据</div>'; st.done = true; return; }
             var html = '';
+            var phone = isPhone();
             for (var i = 0; i < rows.length; i++) { st.rows[rows[i].id] = rows[i]; }
             var __rk = Object.keys(st.rows);
             for (var k2 = 0; k2 < __rk.length; k2++) {
                 var r = st.rows[__rk[k2]];
-                html += '<div class="card"><div class="card-title">' + esc(r.name || r.username || '') + (r.mobile ? '　' + esc(r.mobile) : '') + '</div>' +
-                    '<div class="card-line">' + esc(r.position_id || '') + (r.email ? ' · ' + esc(r.email) : '') + '</div>' +
-                    (r.desc ? '<div class="card-line">' + esc(r.desc) + '</div>' : '') +
-                    '</div>';
+                if (phone) {
+                    html += '<div class="card"><div class="card-title">' + esc(r.name || r.username || '') + (r.mobile ? '　' + esc(r.mobile) : '') + '</div>' +
+                        '<div class="card-line">' + esc(r.position_id || '') + (r.email ? ' · ' + esc(r.email) : '') + '</div>' +
+                        (r.desc ? '<div class="card-line">' + esc(r.desc) + '</div>' : '') +
+                        '</div>';
+                } else {
+                    html += '<tr>' +
+                        '<td><div class="td-strong">' + esc(r.name || r.username || '-') + '</div>' +
+                        (r.desc ? '<div class="td-sub">' + esc(r.desc) + '</div>' : '') + '</td>' +
+                        '<td class="td-num">' + esc(r.mobile || '-') + '</td>' +
+                        '<td>' + esc(r.position_id || '-') + '</td>' +
+                        '<td>' + esc(r.email || '-') + '</td>' +
+                        '</tr>';
+                }
             }
-            box.innerHTML = html;
+            box.innerHTML = phone ? html : (DT_HEAD.mail + html + DT_TAIL);
             st.page++;
             st.loading = false;
             st.done = rows.length < 20;
@@ -3600,9 +3714,18 @@ var App = (function () {
         markListPage('contact-list');
         custSubState['contact'] = { page: 1, loading: false, done: false, rows: {} };
         var c = $('page-container');
-        c.innerHTML = '<div class="search-bar"><input id="ct-kw" type="text" placeholder="搜索联系人"><span class="search-btn" onclick="App.loadContactList()">搜索</span></div>' +
-            '<div style="display:flex;gap:8px;padding:0 14px 6px"><span class="act-btn" style="flex:1;text-align:center" onclick="App.openContactAdd()">＋ 新增联系人</span></div>' +
-            '<div id="contact-list"></div>';
+        var phone = isPhone();
+        var head = phone
+            ? '<div class="search-bar"><input id="ct-kw" type="text" placeholder="搜索联系人"><span class="search-btn" onclick="App.loadContactList()">搜索</span></div>' +
+            '<div style="display:flex;gap:8px;padding:0 14px 6px"><span class="act-btn" style="flex:1;text-align:center" onclick="App.openContactAdd()">＋ 新增联系人</span></div>'
+            : '<div class="dt-toolbar"><div>' +
+            '<div class="dt-toolbar-title">客户联系人</div>' +
+            '<div class="dt-toolbar-sub">全部客户的联系人档案</div>' +
+            '</div><div class="dt-toolbar-ops">' +
+            '<div class="dt-search"><input id="ct-kw" type="text" placeholder="搜索联系人"><button class="dt-search-btn" onclick="App.loadContactList()">搜索</button></div>' +
+            '<span class="oa-btn primary" onclick="App.openContactAdd()">＋ 新增联系人</span>' +
+            '</div></div>';
+        c.innerHTML = head + '<div id="contact-list"></div>';
         loadContactList();
     }
     function loadContactList() {
@@ -3623,16 +3746,29 @@ var App = (function () {
             if (!rows.length) { box.innerHTML = '<div class="empty">暂无数据</div>'; st.done = true; return; }
                         for (var i = 0; i < rows.length; i++) { st.rows[rows[i].id] = rows[i]; }
             var html = '';
+            var phone = isPhone();
             var __rk = Object.keys(st.rows);
             for (var k2 = 0; k2 < __rk.length; k2++) {
                 var r = st.rows[__rk[k2]];
-                html += '<div class="card"><div class="card-title">' + esc(r.name || '') + (r.mobile ? '　' + esc(r.mobile) : '') + '</div>' +
-                '<div class="card-line">' + esc(r.customer || '') + (r.department ? ' · ' + esc(r.department) : '') + (r.position ? ' · ' + esc(r.position) : '') + '</div>' +
-                (r.wechat ? '<div class="card-line">微信：' + esc(r.wechat) + '</div>' : '') +
-                '<div style="padding-top:6px"><span class="act-btn" onclick="App.delContact(' + r.id + ')">删除</span></div>' +
-                '</div>';
+                if (phone) {
+                    html += '<div class="card"><div class="card-title">' + esc(r.name || '') + (r.mobile ? '　' + esc(r.mobile) : '') + '</div>' +
+                    '<div class="card-line">' + esc(r.customer || '') + (r.department ? ' · ' + esc(r.department) : '') + (r.position ? ' · ' + esc(r.position) : '') + '</div>' +
+                    (r.wechat ? '<div class="card-line">微信：' + esc(r.wechat) + '</div>' : '') +
+                    '<div style="padding-top:6px"><span class="act-btn" onclick="App.delContact(' + r.id + ')">删除</span></div>' +
+                    '</div>';
+                } else {
+                    html += '<tr>' +
+                    '<td><div class="td-strong">' + esc(r.name || '-') + '</div>' +
+                    (r.position ? '<div class="td-sub">' + esc(r.position) + '</div>' : '') + '</td>' +
+                    '<td class="td-num">' + esc(r.mobile || '-') + '</td>' +
+                    '<td>' + esc(r.customer || '-') + '</td>' +
+                    '<td>' + esc(r.department || '-') + '</td>' +
+                    '<td>' + esc(r.wechat || r.email || '-') + '</td>' +
+                    '<td class="td-ops"><span class="dt-link" onclick="event.stopPropagation();App.delContact(' + r.id + ')">删除</span></td>' +
+                    '</tr>';
+                }
             }
-            box.innerHTML = html;
+            box.innerHTML = phone ? html : (DT_HEAD.contact + html + DT_TAIL);
             st.page++;
             st.loading = false;
             st.done = rows.length < 20;
@@ -3677,9 +3813,18 @@ var App = (function () {
         markListPage('chance-list');
         custSubState['chance'] = { page: 1, loading: false, done: false, rows: {} };
         var c = $('page-container');
-        c.innerHTML = '<div class="search-bar"><input id="ch-kw" type="text" placeholder="搜索机会"><span class="search-btn" onclick="App.loadChanceList()">搜索</span></div>' +
-            '<div style="display:flex;gap:8px;padding:0 14px 6px"><span class="act-btn" style="flex:1;text-align:center" onclick="App.openChanceAdd()">＋ 新增机会</span></div>' +
-            '<div id="chance-list"></div>';
+        var phone = isPhone();
+        var head = phone
+            ? '<div class="search-bar"><input id="ch-kw" type="text" placeholder="搜索机会"><span class="search-btn" onclick="App.loadChanceList()">搜索</span></div>' +
+            '<div style="display:flex;gap:8px;padding:0 14px 6px"><span class="act-btn" style="flex:1;text-align:center" onclick="App.openChanceAdd()">＋ 新增机会</span></div>'
+            : '<div class="dt-toolbar"><div>' +
+            '<div class="dt-toolbar-title">销售机会</div>' +
+            '<div class="dt-toolbar-sub">跟进中的商机与预计金额</div>' +
+            '</div><div class="dt-toolbar-ops">' +
+            '<div class="dt-search"><input id="ch-kw" type="text" placeholder="搜索机会"><button class="dt-search-btn" onclick="App.loadChanceList()">搜索</button></div>' +
+            '<span class="oa-btn primary" onclick="App.openChanceAdd()">＋ 新增机会</span>' +
+            '</div></div>';
+        c.innerHTML = head + '<div id="chance-list"></div>';
         loadChanceList();
     }
     function loadChanceList() {
@@ -3700,16 +3845,29 @@ var App = (function () {
             if (!rows.length) { box.innerHTML = '<div class="empty">暂无数据</div>'; st.done = true; return; }
                         for (var i = 0; i < rows.length; i++) { st.rows[rows[i].id] = rows[i]; }
             var html = '';
+            var phone = isPhone();
             var __rk = Object.keys(st.rows);
             for (var k2 = 0; k2 < __rk.length; k2++) {
                 var r = st.rows[__rk[k2]];
-                html += '<div class="card"><div class="card-title">' + esc(r.title || r.name || '') + (r.amount ? '　¥ ' + esc(r.amount) : '') + '</div>' +
-                '<div class="card-line">' + esc(r.customer || r.customer_name || '') + (r.cate_title ? ' · ' + esc(r.cate_title) : '') + '</div>' +
-                '<div class="card-line">' + esc(r.status_text || '') + ' · ' + fmtTime(r.create_time) + '</div>' +
-                '<div style="padding-top:6px"><span class="act-btn" onclick="App.delChance(' + r.id + ')">删除</span></div>' +
-                '</div>';
+                if (phone) {
+                    html += '<div class="card"><div class="card-title">' + esc(r.title || r.name || '') + (r.amount ? '　¥ ' + esc(r.amount) : '') + '</div>' +
+                    '<div class="card-line">' + esc(r.customer || r.customer_name || '') + (r.cate_title ? ' · ' + esc(r.cate_title) : '') + '</div>' +
+                    '<div class="card-line">' + esc(r.status_text || '') + ' · ' + fmtTime(r.create_time) + '</div>' +
+                    '<div style="padding-top:6px"><span class="act-btn" onclick="App.delChance(' + r.id + ')">删除</span></div>' +
+                    '</div>';
+                } else {
+                    html += '<tr>' +
+                    '<td><div class="td-strong">' + esc(r.title || r.name || '-') + '</div>' +
+                    (r.cate_title ? '<div class="td-sub">' + esc(r.cate_title) + '</div>' : '') + '</td>' +
+                    '<td>' + esc(r.customer || r.customer_name || '-') + '</td>' +
+                    '<td class="td-num">' + (r.amount ? '¥ ' + esc(r.amount) : '-') + '</td>' +
+                    '<td>' + esc(r.status_text || '-') + '</td>' +
+                    '<td>' + fmtTime(r.create_time) + '</td>' +
+                    '<td class="td-ops"><span class="dt-link" onclick="event.stopPropagation();App.delChance(' + r.id + ')">删除</span></td>' +
+                    '</tr>';
+                }
             }
-            box.innerHTML = html;
+            box.innerHTML = phone ? html : (DT_HEAD.chance + html + DT_TAIL);
             st.page++;
             st.loading = false;
             st.done = rows.length < 20;
@@ -3765,9 +3923,18 @@ var App = (function () {
         markListPage('trace-list');
         custSubState['trace'] = { page: 1, loading: false, done: false, rows: {} };
         var c = $('page-container');
-        c.innerHTML = '<div class="search-bar"><input id="tr-kw" type="text" placeholder="搜索跟进内容"><span class="search-btn" onclick="App.loadTraceList()">搜索</span></div>' +
-            '<div style="display:flex;gap:8px;padding:0 14px 6px"><span class="act-btn" style="flex:1;text-align:center" onclick="App.openTraceAdd()">＋ 新增跟进</span></div>' +
-            '<div id="trace-list"></div>';
+        var phone = isPhone();
+        var head = phone
+            ? '<div class="search-bar"><input id="tr-kw" type="text" placeholder="搜索跟进内容"><span class="search-btn" onclick="App.loadTraceList()">搜索</span></div>' +
+            '<div style="display:flex;gap:8px;padding:0 14px 6px"><span class="act-btn" style="flex:1;text-align:center" onclick="App.openTraceAdd()">＋ 新增跟进</span></div>'
+            : '<div class="dt-toolbar"><div>' +
+            '<div class="dt-toolbar-title">跟进记录</div>' +
+            '<div class="dt-toolbar-sub">客户跟进动态与下次联系安排</div>' +
+            '</div><div class="dt-toolbar-ops">' +
+            '<div class="dt-search"><input id="tr-kw" type="text" placeholder="搜索跟进内容"><button class="dt-search-btn" onclick="App.loadTraceList()">搜索</button></div>' +
+            '<span class="oa-btn primary" onclick="App.openTraceAdd()">＋ 新增跟进</span>' +
+            '</div></div>';
+        c.innerHTML = head + '<div id="trace-list"></div>';
         loadTraceList();
     }
     function loadTraceList() {
@@ -3788,16 +3955,28 @@ var App = (function () {
             if (!rows.length) { box.innerHTML = '<div class="empty">暂无数据</div>'; st.done = true; return; }
                         for (var i = 0; i < rows.length; i++) { st.rows[rows[i].id] = rows[i]; }
             var html = '';
+            var phone = isPhone();
             var __rk = Object.keys(st.rows);
             for (var k2 = 0; k2 < __rk.length; k2++) {
                 var r = st.rows[__rk[k2]];
-                html += '<div class="card"><div class="card-title">' + esc(r.content || r.remark || '跟进记录') + '</div>' +
-                '<div class="card-line">' + esc(r.customer || '') + (r.type_name ? ' · ' + esc(r.type_name) : '') + '</div>' +
-                '<div class="card-line">' + esc(r.admin_name || '') + ' · ' + fmtTime(r.create_time || r.follow_time) + '</div>' +
-                '<div style="padding-top:6px"><span class="act-btn" onclick="App.delTrace(' + r.id + ')">删除</span></div>' +
-                '</div>';
+                if (phone) {
+                    html += '<div class="card"><div class="card-title">' + esc(r.content || r.remark || '跟进记录') + '</div>' +
+                    '<div class="card-line">' + esc(r.customer || '') + (r.type_name ? ' · ' + esc(r.type_name) : '') + '</div>' +
+                    '<div class="card-line">' + esc(r.admin_name || '') + ' · ' + fmtTime(r.create_time || r.follow_time) + '</div>' +
+                    '<div style="padding-top:6px"><span class="act-btn" onclick="App.delTrace(' + r.id + ')">删除</span></div>' +
+                    '</div>';
+                } else {
+                    html += '<tr>' +
+                    '<td><div class="td-strong">' + esc(r.customer || '-') + '</div>' +
+                    '<div class="td-sub">' + esc(r.content || r.remark || '') + '</div></td>' +
+                    '<td>' + esc(r.type_name || '-') + '</td>' +
+                    '<td>' + esc(r.admin_name || '-') + '</td>' +
+                    '<td>' + fmtTime(r.create_time || r.follow_time) + '</td>' +
+                    '<td class="td-ops"><span class="dt-link" onclick="event.stopPropagation();App.delTrace(' + r.id + ')">删除</span></td>' +
+                    '</tr>';
+                }
             }
-            box.innerHTML = html;
+            box.innerHTML = phone ? html : (DT_HEAD.trace + html + DT_TAIL);
             st.page++;
             st.loading = false;
             st.done = rows.length < 20;
@@ -4735,7 +4914,16 @@ var App = (function () {
         markListPage('platform-order');
         platOrderState = { page: 1, loading: false, done: false, rows: {} };
         var c = $('page-container');
-        c.innerHTML = '<div class="search-bar"><input id="po-kw" type="text" placeholder="搜索平台订单号/采购单位"><span class="search-btn" onclick="App.loadPlatformOrder()">搜索</span></div><div id="po-list"></div>';
+        var phone = isPhone();
+        var head = phone
+            ? '<div class="search-bar"><input id="po-kw" type="text" placeholder="搜索平台订单号/采购单位"><span class="search-btn" onclick="App.loadPlatformOrder()">搜索</span></div>'
+            : '<div class="dt-toolbar"><div>' +
+            '<div class="dt-toolbar-title">平台订单</div>' +
+            '<div class="dt-toolbar-sub">第三方平台订单的登记与结算</div>' +
+            '</div><div class="dt-toolbar-ops">' +
+            '<div class="dt-search"><input id="po-kw" type="text" placeholder="搜索平台订单号/采购单位"><button class="dt-search-btn" onclick="App.loadPlatformOrder()">搜索</button></div>' +
+            '</div></div>';
+        c.innerHTML = head + '<div id="po-list"></div>';
         loadPlatformOrder();
     }
     function loadPlatformOrder() {
@@ -4756,18 +4944,32 @@ var App = (function () {
             if (!rows.length) { box.innerHTML = '<div class="empty">暂无数据</div>'; st.done = true; return; }
                         for (var i = 0; i < rows.length; i++) { st.rows[rows[i].id] = rows[i]; }
             var html = '';
+            var phone = isPhone();
             var __rk = Object.keys(st.rows);
             for (var k2 = 0; k2 < __rk.length; k2++) {
                 var r = st.rows[__rk[k2]];
-                html += '<div class="card" onclick="App.openPlatformOrderDetail(' + r.id + ')"><div class="card-title">' + esc(r.platform_order_no || '平台订单') +
-                (r.is_mark == 1 ? ' <span style="color:#e6a23c">★</span>' : '') + '</div>' +
-                '<div class="card-line">' + esc(r.platform || '') + ' · ' + esc(r.purchase_unit || '') + '</div>' +
-                '<div class="card-line">采购：' + esc(r.purchase_amount || '0') + ' · 成交：' + esc(r.deal_amount || '0') + '</div>' +
-                '<div class="card-line">' + esc(r.processing_status_msg || '') + ' · ' + esc(r.settlement_method_msg || '') + '</div>' +
-                '<div class="card-line">' + esc(r.director_name || '') + ' · ' + fmtTime(r.order_time) + '</div>' +
-                '</div>';
+                if (phone) {
+                    html += '<div class="card" onclick="App.openPlatformOrderDetail(' + r.id + ')"><div class="card-title">' + esc(r.platform_order_no || '平台订单') +
+                    (r.is_mark == 1 ? ' <span style="color:#e6a23c">★</span>' : '') + '</div>' +
+                    '<div class="card-line">' + esc(r.platform || '') + ' · ' + esc(r.purchase_unit || '') + '</div>' +
+                    '<div class="card-line">采购：' + esc(r.purchase_amount || '0') + ' · 成交：' + esc(r.deal_amount || '0') + '</div>' +
+                    '<div class="card-line">' + esc(r.processing_status_msg || '') + ' · ' + esc(r.settlement_method_msg || '') + '</div>' +
+                    '<div class="card-line">' + esc(r.director_name || '') + ' · ' + fmtTime(r.order_time) + '</div>' +
+                    '</div>';
+                } else {
+                    html += '<tr class="tr-click" onclick="App.openPlatformOrderDetail(' + r.id + ')">' +
+                    '<td><div class="td-strong">' + esc(r.platform_order_no || '-') +
+                    (r.is_mark == 1 ? ' <span style="color:#e6a23c">★</span>' : '') + '</div>' +
+                    '<div class="td-sub">' + esc(r.platform || '-') + '</div></td>' +
+                    '<td>' + esc(r.purchase_unit || '-') + '</td>' +
+                    '<td class="td-num">' + esc(r.deal_amount || r.purchase_amount || '-') + '</td>' +
+                    '<td>' + esc(r.processing_status_msg || '-') + '</td>' +
+                    '<td>' + esc(r.director_name || '-') + '</td>' +
+                    '<td>' + fmtTime(r.order_time) + '</td>' +
+                    '</tr>';
+                }
             }
-            box.innerHTML = html;
+            box.innerHTML = phone ? html : (DT_HEAD.platorder + html + DT_TAIL);
             st.page++;
             st.loading = false;
             st.done = rows.length < 20;
@@ -4830,7 +5032,16 @@ var App = (function () {
         markListPage('sample');
         orderState['sample'] = { page: 1, loading: false, done: false, rows: {} };
         var c = $('page-container');
-        c.innerHTML = '<div class="search-bar"><input id="smp-kw" type="text" placeholder="搜索样本/单号"><span class="search-btn" onclick="App.loadSample()">搜索</span></div><div id="sample-list"></div>';
+        var phone = isPhone();
+        var head = phone
+            ? '<div class="search-bar"><input id="smp-kw" type="text" placeholder="搜索样本/单号"><span class="search-btn" onclick="App.loadSample()">搜索</span></div>'
+            : '<div class="dt-toolbar"><div>' +
+            '<div class="dt-toolbar-title">样本管理</div>' +
+            '<div class="dt-toolbar-sub">测样样本的收退状态</div>' +
+            '</div><div class="dt-toolbar-ops">' +
+            '<div class="dt-search"><input id="smp-kw" type="text" placeholder="搜索样本/单号"><button class="dt-search-btn" onclick="App.loadSample()">搜索</button></div>' +
+            '</div></div>';
+        c.innerHTML = head + '<div id="sample-list"></div>';
         loadSample();
     }
     function loadSample() {
@@ -4850,16 +5061,27 @@ var App = (function () {
             var rows = res.data || [];
             if (!rows.length) { box.innerHTML = '<div class="empty">暂无数据</div>'; st.done = true; return; }
             var html = '';
+            var phone = isPhone();
             for (var i = 0; i < rows.length; i++) { st.rows[rows[i].id] = rows[i]; }
             var __rk = Object.keys(st.rows);
             for (var k2 = 0; k2 < __rk.length; k2++) {
                 var r = st.rows[__rk[k2]];
-                html += '<div class="card"><div class="card-title">' + esc(r.title || r.code || '样本') + '</div>' +
-                    '<div class="card-line">测样号：' + esc(r.measurement_no || '') + (r.processing_status ? ' · 处理：' + esc(r.processing_status) : '') + '</div>' +
-                    '<div class="card-line">' + fmtTime(r.order_time) + (r.return_time ? ' · 退回：' + fmtTime(r.return_time) : '') + '</div>' +
-                    '</div>';
+                if (phone) {
+                    html += '<div class="card"><div class="card-title">' + esc(r.title || r.code || '样本') + '</div>' +
+                        '<div class="card-line">测样号：' + esc(r.measurement_no || '') + (r.processing_status ? ' · 处理：' + esc(r.processing_status) : '') + '</div>' +
+                        '<div class="card-line">' + fmtTime(r.order_time) + (r.return_time ? ' · 退回：' + fmtTime(r.return_time) : '') + '</div>' +
+                        '</div>';
+                } else {
+                    html += '<tr>' +
+                    '<td><div class="td-strong">' + esc(r.title || r.code || '-') + '</div>' +
+                    '<div class="td-sub">测样号：' + esc(r.measurement_no || '-') + '</div></td>' +
+                    '<td>' + esc(r.processing_status || '-') + '</td>' +
+                    '<td>' + fmtTime(r.order_time) + '</td>' +
+                    '<td>' + (r.return_time ? fmtTime(r.return_time) : '-') + '</td>' +
+                    '</tr>';
+                }
             }
-            box.innerHTML = html;
+            box.innerHTML = phone ? html : (DT_HEAD.sample + html + DT_TAIL);
             st.page++;
             st.loading = false;
             st.done = rows.length < 20;
@@ -4871,13 +5093,22 @@ var App = (function () {
         markListPage('school');
         orderState['school'] = { page: 1, loading: false, done: false, rows: {} };
         var c = $('page-container');
-        c.innerHTML = '<div class="seg">' +
+        var phone = isPhone();
+        var seg = '<div class="seg">' +
             '<div class="seg-item' + (schoolTabCur === 0 ? ' active' : '') + '" data-s="0" onclick="App.schoolTab(0)">校展预名单</div>' +
             '<div class="seg-item' + (schoolTabCur === 1 ? ' active' : '') + '" data-s="1" onclick="App.schoolTab(1)">我处理的</div>' +
-            '</div>' +
-            '<div class="search-bar"><input id="sc-kw" type="text" placeholder="搜索校展"><span class="search-btn" onclick="App.loadSchool()">搜索</span></div>' +
-            (schoolTabCur === 0 ? '<div style="display:flex;gap:8px;padding:0 14px 6px"><span class="act-btn" style="flex:1;text-align:center" onclick="App.openSchoolAdd()">＋ 新增校展</span></div>' : '') +
-            '<div id="school-list"></div>';
+            '</div>';
+        var toolbar = phone
+            ? '<div class="search-bar"><input id="sc-kw" type="text" placeholder="搜索校展"><span class="search-btn" onclick="App.loadSchool()">搜索</span></div>' +
+            (schoolTabCur === 0 ? '<div style="display:flex;gap:8px;padding:0 14px 6px"><span class="act-btn" style="flex:1;text-align:center" onclick="App.openSchoolAdd()">＋ 新增校展</span></div>' : '')
+            : '<div class="dt-toolbar"><div>' +
+            '<div class="dt-toolbar-title">校展管理</div>' +
+            '<div class="dt-toolbar-sub">' + (schoolTabCur === 0 ? '我申请的校展预名单' : '待我处理的校展') + '</div>' +
+            '</div><div class="dt-toolbar-ops">' +
+            '<div class="dt-search"><input id="sc-kw" type="text" placeholder="搜索校展"><button class="dt-search-btn" onclick="App.loadSchool()">搜索</button></div>' +
+            (schoolTabCur === 0 ? '<span class="oa-btn primary" onclick="App.openSchoolAdd()">＋ 新增校展</span>' : '') +
+            '</div></div>';
+        c.innerHTML = toolbar + seg + '<div id="school-list"></div>';
         loadSchool();
     }
     function schoolTab(t) {
@@ -4905,16 +5136,28 @@ var App = (function () {
             if (!rows.length) { box.innerHTML = '<div class="empty">暂无数据</div>'; st.done = true; return; }
                         for (var i = 0; i < rows.length; i++) { st.rows[rows[i].id] = rows[i]; }
             var html = '';
+            var phone = isPhone();
             var __rk = Object.keys(st.rows);
             for (var k2 = 0; k2 < __rk.length; k2++) {
                 var r = st.rows[__rk[k2]];
-                html += '<div class="card" onclick="App.openSchoolDetail(' + r.id + ')"><div class="card-title">' + plain(r.title || '') + '　' + esc(r.status_msg || '') + '</div>' +
-                '<div class="card-line">' + esc(r.region || '') + (r.organizer ? ' · ' + esc(r.organizer) : '') + ' · ' + fmtTime(r.start_time) + (r.end_time ? ' ~ ' + fmtTime(r.end_time) : '') + '</div>' +
-                (r.budget ? '<div class="card-line">预算：' + esc(r.budget) + '</div>' : '') +
-                (schoolTabCur === 0 ? '<div style="padding-top:6px"><span class="act-btn" onclick="App.delSchool(' + r.id + ')">删除</span></div>' : '') +
-                '</div>';
+                if (phone) {
+                    html += '<div class="card" onclick="App.openSchoolDetail(' + r.id + ')"><div class="card-title">' + plain(r.title || '') + '　' + esc(r.status_msg || '') + '</div>' +
+                    '<div class="card-line">' + esc(r.region || '') + (r.organizer ? ' · ' + esc(r.organizer) : '') + ' · ' + fmtTime(r.start_time) + (r.end_time ? ' ~ ' + fmtTime(r.end_time) : '') + '</div>' +
+                    (r.budget ? '<div class="card-line">预算：' + esc(r.budget) + '</div>' : '') +
+                    (schoolTabCur === 0 ? '<div style="padding-top:6px"><span class="act-btn" onclick="App.delSchool(' + r.id + ')">删除</span></div>' : '') +
+                    '</div>';
+                } else {
+                    html += '<tr class="tr-click" onclick="App.openSchoolDetail(' + r.id + ')">' +
+                    '<td><div class="td-strong">' + plain(r.title || '') + '</div>' +
+                    '<div class="td-sub">' + esc(r.region || '-') + (r.organizer ? ' · ' + esc(r.organizer) : '') + '</div></td>' +
+                    '<td>' + esc(r.status_msg || '-') + '</td>' +
+                    '<td class="td-num">' + (r.budget ? '¥ ' + esc(r.budget) : '-') + '</td>' +
+                    '<td>' + fmtTime(r.start_time) + (r.end_time ? ' ~ ' + fmtTime(r.end_time) : '') + '</td>' +
+                    '<td class="td-ops">' + (schoolTabCur === 0 ? '<span class="dt-link" onclick="event.stopPropagation();App.delSchool(' + r.id + ')">删除</span>' : '-') + '</td>' +
+                    '</tr>';
+                }
             }
-            box.innerHTML = html;
+            box.innerHTML = phone ? html : (DT_HEAD.school + html + DT_TAIL);
             st.page++;
             st.loading = false;
             st.done = rows.length < 20;
@@ -4987,9 +5230,18 @@ var App = (function () {
         markListPage('after');
         orderState['after'] = { page: 1, loading: false, done: false, rows: {} };
         var c = $('page-container');
-        c.innerHTML = '<div class="search-bar"><input id="af-kw" type="text" placeholder="搜索售后"><span class="search-btn" onclick="App.loadAfter()">搜索</span></div>' +
-            '<div style="display:flex;gap:8px;padding:0 14px 6px"><span class="act-btn" style="flex:1;text-align:center" onclick="App.openAfterAdd()">＋ 新增售后</span></div>' +
-            '<div id="after-list"></div>';
+        var phone = isPhone();
+        var head = phone
+            ? '<div class="search-bar"><input id="af-kw" type="text" placeholder="搜索售后"><span class="search-btn" onclick="App.loadAfter()">搜索</span></div>' +
+            '<div style="display:flex;gap:8px;padding:0 14px 6px"><span class="act-btn" style="flex:1;text-align:center" onclick="App.openAfterAdd()">＋ 新增售后</span></div>'
+            : '<div class="dt-toolbar"><div>' +
+            '<div class="dt-toolbar-title">售后管理</div>' +
+            '<div class="dt-toolbar-sub">客户售后问题单与解决进度</div>' +
+            '</div><div class="dt-toolbar-ops">' +
+            '<div class="dt-search"><input id="af-kw" type="text" placeholder="搜索售后"><button class="dt-search-btn" onclick="App.loadAfter()">搜索</button></div>' +
+            '<span class="oa-btn primary" onclick="App.openAfterAdd()">＋ 新增售后</span>' +
+            '</div></div>';
+        c.innerHTML = head + '<div id="after-list"></div>';
         loadAfter();
     }
     function loadAfter() {
@@ -5010,16 +5262,27 @@ var App = (function () {
             if (!rows.length) { box.innerHTML = '<div class="empty">暂无数据</div>'; st.done = true; return; }
                         for (var i = 0; i < rows.length; i++) { st.rows[rows[i].id] = rows[i]; }
             var html = '';
+            var phone = isPhone();
             var __rk = Object.keys(st.rows);
             for (var k2 = 0; k2 < __rk.length; k2++) {
                 var r = st.rows[__rk[k2]];
-                html += '<div class="card" onclick="App.openAfterDetail(' + r.id + ')"><div class="card-title">' + esc(r.code || '售后') + (unboxField(r.is_solve, 'is_solve') === '是' ? '　✓已解决' : '') + '</div>' +
-                '<div class="card-line">' + esc(r.customer_name || '') + (r.customer_contact ? ' · ' + esc(r.customer_contact) : '') + '</div>' +
-                '<div class="card-line">' + fmtTime(r.create_time) + '</div>' +
-                '<div style="padding-top:6px"><span class="act-btn" onclick="App.delAfter(' + r.id + ')">删除</span></div>' +
-                '</div>';
+                if (phone) {
+                    html += '<div class="card" onclick="App.openAfterDetail(' + r.id + ')"><div class="card-title">' + esc(r.code || '售后') + (unboxField(r.is_solve, 'is_solve') === '是' ? '　✓已解决' : '') + '</div>' +
+                    '<div class="card-line">' + esc(r.customer_name || '') + (r.customer_contact ? ' · ' + esc(r.customer_contact) : '') + '</div>' +
+                    '<div class="card-line">' + fmtTime(r.create_time) + '</div>' +
+                    '<div style="padding-top:6px"><span class="act-btn" onclick="App.delAfter(' + r.id + ')">删除</span></div>' +
+                    '</div>';
+                } else {
+                    html += '<tr class="tr-click" onclick="App.openAfterDetail(' + r.id + ')">' +
+                    '<td><div class="td-strong">' + esc(r.code || '-') + '</div>' +
+                    '<div class="td-sub">' + esc(r.customer_name || '-') + (r.customer_contact ? ' · ' + esc(r.customer_contact) : '') + '</div></td>' +
+                    '<td>' + (unboxField(r.is_solve, 'is_solve') === '是' ? '<span class="tag tag-pass">已解决</span>' : '<span class="tag tag-warn">处理中</span>') + '</td>' +
+                    '<td>' + fmtTime(r.create_time) + '</td>' +
+                    '<td class="td-ops"><span class="dt-link" onclick="event.stopPropagation();App.delAfter(' + r.id + ')">删除</span></td>' +
+                    '</tr>';
+                }
             }
-            box.innerHTML = html;
+            box.innerHTML = phone ? html : (DT_HEAD.after + html + DT_TAIL);
             st.page++;
             st.loading = false;
             st.done = rows.length < 20;
