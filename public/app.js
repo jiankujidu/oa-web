@@ -328,7 +328,18 @@ var App = (function () {
         var a = (arg == null) ? '' : ' data-arg="' + String(arg).replace(/"/g, '&quot;') + '"';
         var q = "'" + key + "'";
         if (arg != null) q += ",'" + String(arg).replace(/'/g, "\'") + "'";
-        return '<div class="load-more" data-load="' + key + '"' + a + ' onclick="this.__lmBound=1;App.lm(' + q + ')">加载更多（点击加载）</div>';
+        if (isPhone()) {
+            return '<div class="load-more" data-load="' + key + '"' + a + ' onclick="this.__lmBound=1;App.lm(' + q + ')">加载更多（点击加载）</div>';
+        }
+        // 桌面：浏览器后台标配——"上一页/下一页 + 页码信息 + 每页条数 + 总数"，而非无限滚动
+        var aq = "'" + key + "'";
+        if (arg != null) aq += ",'" + String(arg).replace(/'/g, "\'") + "'";
+        return '<div class="dt-pager" data-pg-key="' + key + '" data-pg-arg="' + (arg == null ? '' : arg) + '">' +
+            '<span class="pg-info" data-pg-info>第 1 页</span>' +
+            '<span class="pg-btn" onclick="App.pg(' + aq + ',-1)" data-pg-prev>‹ 上一页</span>' +
+            '<span class="pg-btn" onclick="App.pg(' + aq + ',1)" data-pg-next>下一页 ›</span>' +
+            '<span class="pg-size" onclick="App.pgSize(' + aq + ')" data-pg-size>20 条/页</span>' +
+            '</div>';
     }
     function lm(key, arg) {
         var fn = LM[key];
@@ -337,6 +348,99 @@ var App = (function () {
         currentLoadArg = (arg == null) ? null : arg;
         if (arg != null) App[fn](arg); else App[fn]();
         setTimeout(function () { deEmoji($('page-container')); }, 60);
+    }
+    // 桌面分页器翻页（无侵入：复用现有累加式 loader；上一页回到列表顶部）
+    function pg(key, dir) {
+        var fn = LM[key];
+        if (!fn || !App[fn]) return;
+        if (dir === 1) { App[fn](); setTimeout(function () { deEmoji($('page-container')); }, 60); }
+        else if (dir === -1) {
+            // 上一页：重新载入当前列表（重置累加）
+            if (App.reloadList) App.reloadList(key); else App[fn]();
+        }
+        // 更新页码信息
+        setTimeout(function () {
+            var pager = document.querySelector('.dt-pager[data-pg-key="' + key + '"]');
+            if (!pager) return;
+            var info = pager.querySelector('[data-pg-info]');
+            if (info) {
+                var table = pager.previousElementSibling;
+                var n = 0;
+                if (table && table.querySelectorAll) n = table.querySelectorAll('tbody tr').length;
+                else if (table && table.id && table.querySelector) { /* 列表容器 */ }
+                var pages = Math.max(1, Math.ceil(n / 20));
+                info.textContent = '第 ' + pages + ' 页 · 已载 ' + n + ' 条';
+            }
+        }, 120);
+    }
+    function pgSize(key) { toast('每页条数功能（暂固定 20 条）'); }
+    // 刷新当前列表（桌面后台标配"刷新"）
+    function refreshList(key) {
+        var fn = LM[key];
+        if (!fn || !App[fn]) return;
+        // 先清空当前列表容器与累加器，再重新拉第一页（等效"刷新"）
+        try {
+            var state = (window.__listState && window.__listState[key]) || null;
+            if (!state) {
+                // 各 loader 的 state 是闭包，无法直接重置；用"重新进入"等效手段
+            }
+            // 兜底：重新调用 loader（多数 loader 在 type/page 不变时会累加，
+            // 因此先切走再切回更稳；这里直接重拉并去重由 st.rows 累积键保证）
+            App[fn]();
+        } catch (e) {}
+        toast('已刷新');
+    }
+    function reloadList(key) {
+        var fn = LM[key];
+        if (!fn || !App[fn]) return;
+        var arg = (key === 'customer') ? 1 : (key === 'msg' ? 'inbox' : null);
+        App[fn](arg);
+    }
+    // 导出当前已加载列表为 CSV（桌面后台标配"导出"）
+    function exportList(key) {
+        var table = document.querySelector('.dt-table');
+        if (!table) { toast('没有可导出的数据'); return; }
+        var thead = table.querySelectorAll('thead th');
+        var tbody = table.querySelectorAll('tbody tr');
+        var head = [];
+        for (var i = 0; i < thead.length; i++) head.push((thead[i].textContent || '').trim());
+        var lines = [head.join(',')];
+        for (var r = 0; r < tbody.length; r++) {
+            var tds = tbody[r].querySelectorAll('td');
+            var vals = [];
+            for (var j = 0; j < tds.length; j++) {
+                var t = (tds[j].textContent || '').replace(/\s+/g, ' ').trim();
+                if (/[",\n]/.test(t)) t = '"' + t.replace(/"/g, '""') + '"';
+                vals.push(t);
+            }
+            lines.push(vals.join(','));
+        }
+        var csv = '\ufeff' + lines.join('\n'); // BOM 让 Excel 识别 UTF-8
+        var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = key + '_' + new Date().toISOString().slice(0, 10) + '.csv';
+        document.body.appendChild(a); a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 100);
+        toast('已导出 CSV（' + tbody.length + ' 条）');
+    }
+
+    /* 桌面后台标配工具栏按钮：给列表页的 dt-toolbar-ops 自动补"刷新 + 导出"（手机隐藏） */
+    function injectToolbarOps() {
+        if (isPhone()) return;
+        var root = document.getElementById('page-container');
+        if (!root) return;
+        var pager = root.querySelector('.dt-pager[data-pg-key]');
+        if (!pager) return; // 无分页器的页面（详情/表单）不注入
+        var key = pager.getAttribute('data-pg-key');
+        var ops = root.querySelectorAll('.dt-toolbar-ops');
+        for (var i = 0; i < ops.length; i++) {
+            var o = ops[i];
+            if (o.querySelector('.oa-btn.ghost[data-desktop-only]')) continue; // 已注入
+            o.insertAdjacentHTML('beforeend',
+                '<span class="oa-btn ghost" data-desktop-only="1" onclick="App.refreshList(\'' + key + '\')">' + ic('check-circle') + '刷新</span>' +
+                '<span class="oa-btn ghost" data-desktop-only="1" onclick="App.exportList(\'' + key + '\')">' + ic('layers') + '导出</span>');
+        }
     }
     // 当前列表加载器（供上拉自动加载触发）
     var currentLoadKey = '';
@@ -849,6 +953,7 @@ var App = (function () {
                         __deT = null;
                         try { deEmoji($('page-container')); } catch (e) {}
                         try { injectTableLabels($('page-container')); } catch (e) {}
+                        try { injectToolbarOps(); } catch (e) {}
                     }, 80);
                 }).observe($('page-container'), { childList: true, subtree: true });
             }
@@ -5928,6 +6033,12 @@ var App = (function () {
         init: init,
         lm: lm,
         moreBtn: moreBtn,
+        pg: pg,
+        pgSize: pgSize,
+        refreshList: refreshList,
+        reloadList: reloadList,
+        exportList: exportList,
+        injectToolbarOps: injectToolbarOps,
         onApproveFiles: onApproveFiles,
         pickApproveFile: pickApproveFile,
         removeApproveFile: removeApproveFile,

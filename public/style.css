@@ -1643,3 +1643,44 @@ html[data-device="mobile"] .m-home-hero .mh-sub { font-size: 12.5px; color: rgba
 
 /* 让桌面端命令面板在移动端彻底不显示（DOM 也无，双保险） */
 html[data-device="mobile"] .cmdk-mask { display: none !important; }
+
+/* ============================================================
+   浏览器后台标配组件：分页器 + 工具栏刷新/导出（桌面专属）
+   手机保留"加载更多"无限滚动，分页器在移动端隐藏
+   ============================================================ */
+.dt-pager {
+  display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+  padding: 11px 16px; background: var(--bg-panel);
+  border: 1px solid var(--bd); border-top: none; border-radius: 0 0 var(--radius) var(--radius);
+  box-shadow: var(--sh-1); flex-wrap: wrap;
+}
+.dt-pager .pg-info { font-size: 12.5px; color: var(--tx-3); margin-right: 4px; }
+.dt-pager .pg-size {
+  font-size: 12.5px; color: var(--tx-2); cursor: pointer; user-select: none;
+  padding: 4px 6px; border-radius: 5px;
+}
+.dt-pager .pg-size:hover { background: var(--bg-hover); color: var(--c-primary); }
+.dt-pager .pg-btn {
+  min-width: 30px; height: 30px; padding: 0 9px; border: 1px solid var(--bd);
+  background: var(--bg-panel); border-radius: 6px; font-size: 13px; color: var(--tx-2);
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  transition: all .13s; user-select: none; gap: 3px;
+}
+.dt-pager .pg-btn:hover { border-color: var(--c-primary); color: var(--c-primary); }
+.dt-pager .pg-btn.active { background: var(--c-primary); border-color: var(--c-primary); color: #fff; font-weight: 600; }
+.dt-pager .pg-btn.disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
+.dt-pager .pg-ellipsis { min-width: 24px; height: 30px; display: inline-flex; align-items: center; justify-content: center; color: var(--tx-4); font-size: 13px; }
+/* 表格与分页器连体（分页器贴表格底） */
+.dt-pager-connected { border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+.dt-pager-connected + .dt-pager { border-top: 1px solid var(--bd); }
+/* 工具栏操作按钮（刷新 / 导出 / 列设置） */
+.dt-toolbar .oa-btn.ghost {
+  height: 32px; padding: 0 11px; font-size: 13px; border-radius: var(--radius-sm);
+  border: 1px solid var(--bd); background: var(--bg-panel); color: var(--tx-2);
+  display: inline-flex; align-items: center; gap: 5px; cursor: pointer; transition: all .13s;
+}
+.dt-toolbar .oa-btn.ghost:hover { border-color: var(--c-primary); color: var(--c-primary); background: var(--c-primary-light); }
+.dt-toolbar .oa-btn.ghost svg { width: 14px; height: 14px; }
+/* 手机端隐藏分页器与桌面专属工具栏按钮（手机保留"加载更多"） */
+html[data-device="mobile"] .dt-pager { display: none; }
+html[data-device="mobile"] .dt-toolbar .oa-btn.ghost[data-desktop-only] { display: none; }
