@@ -1320,6 +1320,12 @@ html[data-device="mobile"] .topbar,
 html[data-device="mobile"] .cmdk-mask,
 html[data-device="mobile"] .user-menu { display: none !important; }
 
+/* 桌面端彻底隐藏移动壳（App Bar / 底部 Tab / 搜索抽屉），
+   确保「电脑只像电脑、手机只像手机」两套形态绝无混合 —— 实测发现桌面态 mAppbar/mTabbar 仍为 flex，故补此兜底 */
+html[data-device="desktop"] .m-appbar,
+html[data-device="desktop"] .m-tabbar,
+html[data-device="desktop"] .m-search-sheet { display: none !important; }
+
 html[data-device="mobile"] .app-view {
   display: flex; flex-direction: column; height: 100vh; height: 100dvh;
   overflow: hidden;
