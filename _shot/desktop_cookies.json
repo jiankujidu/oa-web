@@ -1,0 +1,12 @@
+[
+  {
+    "name": "PHPSESSID",
+    "value": "8668b58456e7d613c834d583e2d8d117",
+    "domain": "oa.jk93.qzz.io",
+    "path": "/",
+    "expires": 1792384505.801536,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  }
+]

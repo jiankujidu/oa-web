@@ -467,8 +467,8 @@ html[data-device="desktop"] .main-col > .page-container { width: 100%; }
 
 /* 宽屏（≥1280）信息密度提升：字号/行高/间距收紧，更接近 1080p 浏览器观感 */
 @media (min-width: 1280px) {
-  html[data-device="desktop"] .topbar { height: 56px; }
-  html[data-device="desktop"] .sb-brand { height: 56px; }
+  html[data-device="desktop"] .topbar { height: 48px; }
+  html[data-device="desktop"] .sb-brand { height: 48px; }
   html[data-device="desktop"] .sb-item { height: 38px; font-size: 13.5px; }
   html[data-device="desktop"] .sb-item.active::before { top: 7px; bottom: 7px; }
   html[data-device="desktop"] .dt-toolbar-title { font-size: 20px; }
@@ -932,102 +932,119 @@ html[data-device="desktop"] .main-col > .page-container { width: 100%; }
 :focus-visible { outline: 2px solid var(--c-primary); outline-offset: 1px; border-radius: 4px; }
 
 /* ============================================================
-   桌面壳深色化（原站后台标配）
-   顶栏/侧栏改深灰蓝（#0F172A→#0B1220），文字反白；
-   手机壳（.m-appbar/.m-tabbar）保持原品牌蓝，零影响。
+   桌面壳配色（v7.3：主色蓝壳，用户明确喜欢）
+   顶栏/侧栏用品牌蓝渐变（#1A56DB→#1E6FFF），白字；
+   tab 条亮白底 + 蓝 active；手机壳（.m-appbar/.m-tabbar）保持原品牌蓝。
    ============================================================ */
 html[data-device="desktop"] .topbar {
-  background: linear-gradient(180deg, var(--bg-topbar) 0%, var(--bg-topbar-2) 100%);
-  border-bottom: 1px solid var(--bd-topbar);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+  background: linear-gradient(135deg, #1A56DB 0%, #1E6FFF 60%, #3B82F6 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, .12);
+  box-shadow: 0 1px 3px rgba(26, 86, 219, .18);
 }
 html[data-device="desktop"] .topbar-crumb,
 html[data-device="desktop"] .topbar-title {
-  color: var(--tx-topbar);
+  color: #fff;
 }
-html[data-device="desktop"] .topbar-crumb .crumb-link { color: var(--tx-topbar-2); }
+html[data-device="desktop"] .topbar-crumb .crumb-link { color: rgba(255, 255, 255, .72); }
 html[data-device="desktop"] .topbar-crumb .crumb-link:hover { color: #fff; }
 html[data-device="desktop"] .search-trigger {
-  background: rgba(255, 255, 255, .06);
-  border: 1px solid rgba(255, 255, 255, .08);
-  color: var(--tx-topbar-2);
+  background: rgba(255, 255, 255, .14);
+  border: 1px solid rgba(255, 255, 255, .2);
+  color: #fff;
 }
-html[data-device="desktop"] .search-trigger:hover { background: rgba(255, 255, 255, .10); color: var(--tx-topbar); }
+html[data-device="desktop"] .search-trigger:hover { background: rgba(255, 255, 255, .22); color: #fff; }
 html[data-device="desktop"] .search-trigger .st-text,
-html[data-device="desktop"] .search-trigger kbd { color: var(--tx-topbar-2); }
-html[data-device="desktop"] .bell-btn { color: var(--tx-topbar); }
-html[data-device="desktop"] .topbar-user { color: var(--tx-topbar); }
-html[data-device="desktop"] .topbar-user-name { color: var(--tx-topbar); }
-html[data-device="desktop"] .topbar-user-ava { background: linear-gradient(135deg, #1E6FFF, #4A9BFF); }
+html[data-device="desktop"] .search-trigger kbd { color: rgba(255, 255, 255, .72); }
+html[data-device="desktop"] .bell-btn { color: #fff; }
+html[data-device="desktop"] .topbar-user { color: #fff; }
+html[data-device="desktop"] .topbar-user-name { color: #fff; }
+html[data-device="desktop"] .topbar-user-ava { background: rgba(255, 255, 255, .22); border: 1px solid rgba(255, 255, 255, .4); }
 
-/* 桌面侧栏深色 */
+/* 桌面侧栏（主色蓝） */
 html[data-device="desktop"] .sidebar {
-  background: linear-gradient(180deg, var(--bg-sidebar-deep) 0%, var(--bg-sidebar-deep-2) 100%);
-  border-right: 1px solid var(--bd-sidebar-deep);
-  color: var(--tx-sidebar-deep);
+  background: linear-gradient(180deg, #1A56DB 0%, #1E6FFF 100%);
+  border-right: 1px solid rgba(255, 255, 255, .08);
+  color: #fff;
 }
-html[data-device="desktop"] .sb-brand { border-bottom: 1px solid var(--bd-sidebar-deep); }
-html[data-device="desktop"] .sb-name { color: var(--tx-sidebar-deep); }
-html[data-device="desktop"] .sb-name small { color: var(--tx-sidebar-deep-2); }
-html[data-device="desktop"] .sb-group { color: var(--tx-sidebar-deep-2); }
-html[data-device="desktop"] .sb-group::after { background: var(--bd-sidebar-deep); }
-html[data-device="desktop"] .sb-item { color: var(--tx-sidebar-deep); }
-html[data-device="desktop"] .sb-item:hover { background: var(--bg-sidebar-deep-hover); color: var(--tx-sidebar-deep); }
-html[data-device="desktop"] .sb-item.active { background: var(--bg-sidebar-deep-active); color: #fff; }
+html[data-device="desktop"] .sb-brand { border-bottom: 1px solid rgba(255, 255, 255, .12); background: rgba(255, 255, 255, .06); }
+html[data-device="desktop"] .sb-name { color: #fff; }
+html[data-device="desktop"] .sb-name small { color: rgba(255, 255, 255, .65); }
+html[data-device="desktop"] .sb-group { color: rgba(255, 255, 255, .55); }
+html[data-device="desktop"] .sb-group::after { background: rgba(255, 255, 255, .12); }
+html[data-device="desktop"] .sb-item { color: rgba(255, 255, 255, .85); }
+html[data-device="desktop"] .sb-item:hover { background: rgba(255, 255, 255, .10); color: #fff; }
+html[data-device="desktop"] .sb-item.active { background: rgba(255, 255, 255, .18); color: #fff; }
 html[data-device="desktop"] .sb-item.active .sbi-icon { color: #fff; }
-html[data-device="desktop"] .sbi-icon { color: var(--tx-sidebar-deep-2); }
-html[data-device="desktop"] .sb-item:hover .sbi-icon { color: var(--tx-sidebar-deep); }
-html[data-device="desktop"] .sb-foot { border-top: 1px solid var(--bd-sidebar-deep); }
-html[data-device="desktop"] .sb-user:hover { background: var(--bg-sidebar-deep-hover); }
-html[data-device="desktop"] .sb-user-name { color: var(--tx-sidebar-deep); }
-html[data-device="desktop"] .sb-user-sub { color: var(--tx-sidebar-deep-2); }
-html[data-device="desktop"] .sb-user-ava { background: linear-gradient(135deg, #1E6FFF, #4A9BFF); }
+html[data-device="desktop"] .sbi-icon { color: rgba(255, 255, 255, .65); }
+html[data-device="desktop"] .sb-item:hover .sbi-icon { color: #fff; }
+html[data-device="desktop"] .sb-foot { border-top: 1px solid rgba(255, 255, 255, .12); background: rgba(255, 255, 255, .04); }
+html[data-device="desktop"] .sb-user:hover { background: rgba(255, 255, 255, .08); }
+html[data-device="desktop"] .sb-user-name { color: #fff; }
+html[data-device="desktop"] .sb-user-sub { color: rgba(255, 255, 255, .6); }
+html[data-device="desktop"] .sb-user-ava { background: rgba(255, 255, 255, .25); border: 1px solid rgba(255, 255, 255, .4); }
 
-/* 桌面多标签并存条（原站后台标配） */
+/* 桌面多标签并存条（layui 亮色：白底 + 主色蓝 active） */
 .dt-tabstrip {
-  display: flex; align-items: center; gap: 6px;
-  height: 40px; padding: 0 16px; flex: none;
-  background: var(--bg-topbar-2);
-  border-bottom: 1px solid var(--bd-topbar);
+  display: flex; align-items: center; gap: 4px;
+  height: 32px; padding: 0 12px; flex: none;
+  background: #fff;
+  border-bottom: 1px solid #E8ECF2;
   overflow-x: auto; overflow-y: hidden;
   scrollbar-width: none;
 }
 .dt-tabstrip::-webkit-scrollbar { display: none; }
 .dts-tab {
-  display: inline-flex; align-items: center; gap: 7px;
-  height: 30px; padding: 0 12px; flex: none;
-  background: rgba(255, 255, 255, .04);
-  border: 1px solid rgba(255, 255, 255, .06);
-  border-radius: 6px; cursor: pointer;
-  font-size: 12.5px; color: var(--tx-topbar-2);
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 24px; padding: 0 9px; flex: none;
+  background: #F5F7FA;
+  border: 1px solid #E8ECF2;
+  border-radius: 5px; cursor: pointer;
+  font-size: 12px; color: var(--tx-2);
   transition: background .13s, color .13s, border-color .13s;
   white-space: nowrap;
 }
-.dts-tab:hover { background: rgba(255, 255, 255, .08); color: var(--tx-topbar); }
+.dts-tab:hover { background: #EEF2F7; color: var(--ink); }
 .dts-tab.active {
-  background: rgba(30, 111, 255, .28);
-  border-color: rgba(30, 111, 255, .4);
-  color: #fff; font-weight: 500;
+  background: rgba(30, 111, 255, .08);
+  border-color: rgba(30, 111, 255, .35);
+  color: var(--c-primary); font-weight: 500;
 }
 .dts-tab-ic { display: inline-flex; align-items: center; justify-content: center; }
-.dts-tab-ic svg { width: 14px; height: 14px; }
-.dts-tab-name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+.dts-tab-ic svg { width: 12px; height: 12px; }
+.dts-tab-name { max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dts-tab-close {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 16px; height: 16px; margin-left: 2px; border-radius: 4px;
-  cursor: pointer; color: var(--tx-topbar-2);
+  width: 14px; height: 14px; margin-left: 1px; border-radius: 3px;
+  cursor: pointer; color: var(--tx-4);
 }
-.dts-tab-close:hover { background: rgba(255, 255, 255, .12); color: #fff; }
-.dts-tab-close svg { width: 12px; height: 12px; }
+.dts-tab-close:hover { background: rgba(30, 111, 255, .12); color: var(--c-primary); }
+.dts-tab-close svg { width: 11px; height: 11px; }
 .dts-tab-add {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 28px; height: 28px; flex: none;
-  border: 1px dashed rgba(255, 255, 255, .18); border-radius: 6px;
-  background: transparent; color: var(--tx-topbar-2); cursor: pointer;
+  width: 22px; height: 22px; flex: none;
+  border: 1px dashed #C5CDD8; border-radius: 5px;
+  background: transparent; color: var(--tx-3); cursor: pointer;
   transition: background .13s, color .13s;
 }
-.dts-tab-add:hover { background: rgba(255, 255, 255, .08); color: var(--tx-topbar); }
-.dts-tab-add svg { width: 14px; height: 14px; }
+.dts-tab-add:hover { background: #F5F7FA; color: var(--c-primary); }
+.dts-tab-add svg { width: 12px; height: 12px; }
+
+/* 客户页横向 chip 行（layui 功能入口风格） */
+.cust-chips {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin: 12px 0 4px;
+}
+.cust-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 28px; padding: 0 10px;
+  background: #fff; border: 1px solid #E8ECF2; border-radius: 6px;
+  font-size: 12px; color: var(--tx-2); cursor: pointer;
+  transition: background .13s, color .13s, border-color .13s;
+  white-space: nowrap;
+}
+.cust-chip svg { width: 12px; height: 12px; }
+.cust-chip:hover { background: #F5F7FA; border-color: rgba(30, 111, 255, .35); color: var(--c-primary); }
+.cust-chip:active { background: rgba(30, 111, 255, .08); }
 /* 移动端隐藏标签条与悬浮组 */
 html[data-device="mobile"] .dt-tabstrip,
 html[data-device="mobile"] .dt-float-tools { display: none !important; }

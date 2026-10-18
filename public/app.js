@@ -597,10 +597,21 @@ var App = (function () {
         }
     }
 
-    /* ===== 桌面多标签并存条（tab-strip）：打开模块即加 tab，点 tab 切换，点 × 关闭 ===== */
+    /* ===== 桌面多标签并存条（tab-strip）：打开模块即加 tab，点 tab 切换，点 × 关闭 =====
+       v7.3：最多同时挂 6 个 tab，超出自动关掉最旧的非活跃 tab（layui 后台惯例） */
+    var DTS_MAX = 6;
     function tabEnsure(id, name, icon, run) {
         for (var i = 0; i < dtTabs.length; i++) if (dtTabs[i].id === id) return dtTabs[i];
         dtTabs.push({ id: id, name: name, icon: icon, run: run });
+        // 超限时关掉最旧的非活跃 tab（home 永远保留）
+        while (dtTabs.length > DTS_MAX) {
+            var rm = -1;
+            for (var j = 0; j < dtTabs.length; j++) {
+                if (dtTabs[j].id !== 'home' && dtTabs[j].id !== dtActiveTab) { rm = j; break; }
+            }
+            if (rm === -1) break;
+            dtTabs.splice(rm, 1);
+        }
         return dtTabs[dtTabs.length - 1];
     }
     var TYPE_META = {
@@ -3611,6 +3622,9 @@ var App = (function () {
             { name: '校展管理', icon: 'book', run: "App.showSubPage('school')" },
             { name: '售后管理', icon: 'tool', run: "App.showSubPage('after')" }
         ];
+        var chips = entries.map(function (e) {
+            return '<span class="cust-chip" onclick="' + e.run + '">' + ic(e.icon) + e.name + '</span>';
+        }).join('');
         c.innerHTML =
             '<div class="dt-toolbar"><div>' +
             '<div class="dt-toolbar-title">客户管理</div>' +
@@ -3619,20 +3633,13 @@ var App = (function () {
             '<div class="dt-search"><input id="cust-kw" type="text" placeholder="搜索客户名称"><button class="dt-search-btn" onclick="App.loadCustomer(' + (listState.customer ? listState.customer.type : 1) + ')">搜索</button></div>' +
             '<span class="oa-btn primary" onclick="App.showSubPage(\'customer-add\')">＋ 新增客户</span>' +
             '</div></div>' +
+            '<div class="cust-chips">' + chips + '</div>' +
             '<div class="seg">' +
             '<div class="seg-item active" data-t="1" onclick="App.loadCustomer(1)">我的客户</div>' +
             '<div class="seg-item" data-t="2" onclick="App.loadCustomer(2)">公海</div>' +
             '<div class="seg-item" data-t="3" onclick="App.loadCustomer(3)">废弃</div>' +
             '</div>' +
-            '<div class="dt-cols">' +
-            '<div id="customer-list"></div>' +
-            '<div class="dt-panel"><div class="dt-panel-head"><div class="dt-panel-title"><span class="pt-ic">' + ic('layers') + '</span>客户功能</div></div>' +
-            '<div class="dt-panel-body"><div class="dt-quick">' +
-            entries.map(function (e) {
-                return '<div class="dt-quick-btn" onclick="' + e.run + '">' + ic(e.icon) + e.name + '</div>';
-            }).join('') +
-            '</div></div></div>' +
-            '</div></div>';
+            '<div id="customer-list"></div>';
         listState.customer = { page: 1, type: 1, loading: false, done: false, rows: {} };
         loadCustomer(1);
         deEmoji(c);
