@@ -220,9 +220,9 @@ async function proxyApi(request, url) {
   return new Response(resp.body, { status: resp.status, headers: rh });
 }
 
-// /vendor/* → GitHub Pages（pages/vendor/）：服务端转发，浏览器无跨域、无额外 DNS
+// /vendor/* → GitHub Pages（pages/ 目录即站点根，故 URL 为 /oa-web/vendor/*）：服务端转发，浏览器无跨域、无额外 DNS
 async function proxyVendor(request, url) {
-  const target = VENDOR_ORIGIN + '/oa-web/pages' + url.pathname + url.search;
+  const target = VENDOR_ORIGIN + '/oa-web' + url.pathname + url.search;
   const hdr = new Headers(request.headers);
   hdr.delete('host');
   hdr.delete('origin');
