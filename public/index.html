@@ -31,7 +31,7 @@
       <div class="sb-item" data-page="article" onclick="App.showSubPage('article')"><span class="sbi-icon">💬</span>问答知识</div>
       <div class="sb-item" data-page="product" onclick="App.showSubPage('product')"><span class="sbi-icon">🧪</span>产品管理</div>
       <div class="sb-item" data-page="files" onclick="App.showSubPage('files')"><span class="sbi-icon">📁</span>附件管理</div>
-      <div class="sb-item" data-page="workbench" onclick="App.openWorkbench()"><span class="sbi-icon">🏠</span>工作台</div>
+      <div class="sb-item" data-page="workbench" onclick="App.openWorkbench()"><span class="sbi-icon">🗂️</span>工作台</div>
       <div class="sb-item" data-page="ai" onclick="App.openAiChat()"><span class="sbi-icon">🤖</span>AI 问答</div>
 
       <div class="sb-group">财务</div>
@@ -58,7 +58,13 @@
       <div class="sb-item" data-page="customer-add" onclick="App.showSubPage('customer-add')"><span class="sbi-icon">➕</span>新增客户</div>
     </nav>
     <div class="sb-foot">
-      <div class="sb-item" onclick="App.openDesktop()"><span class="sbi-icon">🖥️</span>系统桌面版</div>
+      <div class="sb-user" id="sb-user" title="进入个人中心" onclick="App.switchTab('mine')">
+        <div class="sb-user-ava" id="sb-user-ava">U</div>
+        <div class="sb-user-meta">
+          <div class="sb-user-name" id="sb-user-name">用户</div>
+          <div class="sb-user-sub">个人中心</div>
+        </div>
+      </div>
     </div>
   </aside>
   <!-- 主列：顶栏 + 内容 + 移动端底部 tab -->
@@ -66,9 +72,22 @@
     <div class="topbar">
       <div class="topbar-left" id="topbar-left"><div class="topbar-title" id="topbar-title">优品OA</div></div>
       <div class="topbar-right">
+        <input class="topbar-search" id="global-search" type="text" placeholder="全局搜索产品（货号/基因名/标题）">
         <div class="bell-btn" id="bell" title="消息中心" onclick="App.showSubPage('message-inbox')">🔔<span class="bell-badge" id="bell-badge" style="display:none">0</span></div>
-        <div class="topbar-btn" id="logout-btn" onclick="App.logout()">退出</div>
+        <div class="topbar-user" id="topbar-user">
+          <div class="topbar-user-ava" id="topbar-user-ava">U</div>
+          <span class="topbar-user-name" id="topbar-user-name">用户</span>
+          <span class="topbar-caret">▾</span>
+        </div>
       </div>
+    </div>
+    <!-- 用户下拉菜单 -->
+    <div class="user-menu" id="user-menu">
+      <div class="user-menu-item" onclick="App.showSubPage('profile')">👤 基本资料</div>
+      <div class="user-menu-item" onclick="App.showSubPage('password')">🔒 修改密码</div>
+      <div class="user-menu-item" onclick="App.switchTab('mine')">📋 个人中心</div>
+      <div class="user-menu-sep"></div>
+      <div class="user-menu-item danger" onclick="App.logout()">🚪 退出登录</div>
     </div>
     <!-- 内容 -->
     <div class="page-container" id="page-container"><div class="loading">加载中…</div></div>
@@ -112,7 +131,6 @@
     for (var i = 0; i < items.length; i++) {
       items[i].classList.toggle('active', items[i].getAttribute('data-page') === key);
     }
-    // 子页面时清除主 Tab 高亮
     var tabs = document.querySelectorAll('.tab-item[data-tab]');
     for (var j = 0; j < tabs.length; j++) tabs[j].classList.remove('active');
   }
@@ -130,12 +148,66 @@
     App.openAiChat = function () { _ai(); clearSidebarPages(); };
   }
 
+  /* ===== 顶栏用户信息 / 下拉菜单 / 全局搜索 ===== */
+  function currentUserName() {
+    try {
+      if (window.App && typeof App.myDisplayName === 'function') {
+        var n = App.myDisplayName();
+        if (n) return String(n);
+      }
+    } catch (e) {}
+    try {
+      var u = JSON.parse(localStorage.getItem('uping_saved_user') || 'null');
+      if (u && u.u) return String(u.u);
+    } catch (e) {}
+    return '用户';
+  }
+  function fillUser() {
+    var n = currentUserName();
+    var ava = n ? n.charAt(0).toUpperCase() : 'U';
+    var els = ['sb-user-name', 'topbar-user-name'];
+    for (var i = 0; i < els.length; i++) { var el = document.getElementById(els[i]); if (el) el.textContent = n; }
+    var av2 = ['sb-user-ava', 'topbar-user-ava'];
+    for (var j = 0; j < av2.length; j++) { var a2 = document.getElementById(av2[j]); if (a2) a2.textContent = ava; }
+  }
+  function bindUserMenu() {
+    var trigger = document.getElementById('topbar-user');
+    var menu = document.getElementById('user-menu');
+    if (!trigger || !menu) return;
+    trigger.addEventListener('click', function (ev) {
+      ev.stopPropagation();
+      var r = trigger.getBoundingClientRect();
+      menu.style.top = (r.bottom + 6) + 'px';
+      menu.style.right = Math.max(12, window.innerWidth - r.right) + 'px';
+      menu.classList.toggle('open');
+    });
+    document.addEventListener('click', function () { menu.classList.remove('open'); });
+    menu.addEventListener('click', function (ev) { ev.stopPropagation(); menu.classList.remove('open'); });
+  }
+  function bindGlobalSearch() {
+    var box = document.getElementById('global-search');
+    if (!box) return;
+    box.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'Enter') return;
+      var kw = box.value.replace(/^\s+|\s+$/g, '');
+      if (!kw) { box.blur(); return; }
+      App.showSubPage('product');
+      setTimeout(function () {
+        var input = document.getElementById('prod-kw');
+        if (input) { input.value = kw; App.loadProduct(); }
+      }, 60);
+    });
+  }
+
   function boot() {
     try {
       if (OA.isLoggedIn()) {
         document.getElementById('app-view').style.display = 'flex';
         App.init();
         wrapNav();
+        fillUser();
+        bindUserMenu();
+        bindGlobalSearch();
         hideSplash();
       } else {
         location.replace('login.html');
@@ -157,7 +229,7 @@
     var av = document.getElementById('app-view');
     if (av && av.style.display === 'none') {
       av.style.display = 'flex';
-      try { App.init(); wrapNav(); } catch (e) { recordErr('看门狗重试', e); }
+      try { App.init(); wrapNav(); fillUser(); bindUserMenu(); bindGlobalSearch(); } catch (e) { recordErr('看门狗重试', e); }
     }
   }, 3500);
   boot();

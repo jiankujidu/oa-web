@@ -172,7 +172,7 @@ function check(cond, msg) {
   // init：会 switchTab('home') → renderHome
   try { app.init(); check(true, 'App.init() 无异常'); } catch (e) { check(false, 'App.init() 抛错: ' + e.message); }
   const pc = registry['page-container'];
-  check(pc.innerHTML.indexOf('grid-item') >= 0, '首页宫格已渲染（' + pc.innerHTML.length + ' 字符）');
+  check(pc.innerHTML.indexOf('dt-app') >= 0 && pc.innerHTML.indexOf('dt-stat') >= 0, '首页仪表盘已渲染（' + pc.innerHTML.length + ' 字符）');
 
   const tabs = ['approve', 'customer', 'mine'];
   for (const t of tabs) {
