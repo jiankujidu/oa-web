@@ -937,9 +937,9 @@ html[data-device="desktop"] .main-col > .page-container { width: 100%; }
    tab 条亮白底 + 蓝 active；手机壳（.m-appbar/.m-tabbar）保持原品牌蓝。
    ============================================================ */
 html[data-device="desktop"] .topbar {
-  background: linear-gradient(135deg, #1A56DB 0%, #1E6FFF 60%, #3B82F6 100%);
-  border-bottom: 1px solid rgba(255, 255, 255, .12);
-  box-shadow: 0 1px 3px rgba(26, 86, 219, .18);
+  background: linear-gradient(180deg, #1F2D42 0%, #2B3B55 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .18);
 }
 html[data-device="desktop"] .topbar-crumb,
 html[data-device="desktop"] .topbar-title {
@@ -958,75 +958,75 @@ html[data-device="desktop"] .search-trigger kbd { color: rgba(255, 255, 255, .72
 html[data-device="desktop"] .bell-btn { color: #fff; }
 html[data-device="desktop"] .topbar-user { color: #fff; }
 html[data-device="desktop"] .topbar-user-name { color: #fff; }
-html[data-device="desktop"] .topbar-user-ava { background: rgba(255, 255, 255, .22); border: 1px solid rgba(255, 255, 255, .4); }
+html[data-device="desktop"] .topbar-user-ava { background: linear-gradient(135deg, #1E6FFF, #4A9BFF); }
 
 /* 桌面侧栏（主色蓝） */
 html[data-device="desktop"] .sidebar {
-  background: linear-gradient(180deg, #1A56DB 0%, #1E6FFF 100%);
-  border-right: 1px solid rgba(255, 255, 255, .08);
-  color: #fff;
+  background: linear-gradient(180deg, #1A2638 0%, #1F2D42 100%);
+  border-right: 1px solid rgba(255, 255, 255, .06);
+  color: #E2E8F0;
 }
 html[data-device="desktop"] .sb-brand { border-bottom: 1px solid rgba(255, 255, 255, .12); background: rgba(255, 255, 255, .06); }
 html[data-device="desktop"] .sb-name { color: #fff; }
-html[data-device="desktop"] .sb-name small { color: rgba(255, 255, 255, .65); }
-html[data-device="desktop"] .sb-group { color: rgba(255, 255, 255, .55); }
+html[data-device="desktop"] .sb-name small { color: rgba(255, 255, 255, .5); }
+html[data-device="desktop"] .sb-group { color: rgba(148, 163, 184, .85); }
 html[data-device="desktop"] .sb-group::after { background: rgba(255, 255, 255, .12); }
-html[data-device="desktop"] .sb-item { color: rgba(255, 255, 255, .85); }
+html[data-device="desktop"] .sb-item { color: rgba(226, 232, 240, .82); }
 html[data-device="desktop"] .sb-item:hover { background: rgba(255, 255, 255, .10); color: #fff; }
-html[data-device="desktop"] .sb-item.active { background: rgba(255, 255, 255, .18); color: #fff; }
-html[data-device="desktop"] .sb-item.active .sbi-icon { color: #fff; }
-html[data-device="desktop"] .sbi-icon { color: rgba(255, 255, 255, .65); }
-html[data-device="desktop"] .sb-item:hover .sbi-icon { color: #fff; }
-html[data-device="desktop"] .sb-foot { border-top: 1px solid rgba(255, 255, 255, .12); background: rgba(255, 255, 255, .04); }
+html[data-device="desktop"] .sb-item.active { background: rgba(30, 111, 255, .22); color: #fff; }
+html[data-device="desktop"] .sb-item.active .sbi-icon { color: #6BA5FF; }
+html[data-device="desktop"] .sbi-icon { color: rgba(148, 163, 184, .7); }
+html[data-device="desktop"] .sb-item:hover .sbi-icon { color: #E2E8F0; }
+html[data-device="desktop"] .sb-foot { border-top: 1px solid rgba(255, 255, 255, .08); background: rgba(0, 0, 0, .12); }
 html[data-device="desktop"] .sb-user:hover { background: rgba(255, 255, 255, .08); }
 html[data-device="desktop"] .sb-user-name { color: #fff; }
-html[data-device="desktop"] .sb-user-sub { color: rgba(255, 255, 255, .6); }
-html[data-device="desktop"] .sb-user-ava { background: rgba(255, 255, 255, .25); border: 1px solid rgba(255, 255, 255, .4); }
+html[data-device="desktop"] .sb-user-sub { color: rgba(148, 163, 184, .7); }
+html[data-device="desktop"] .sb-user-ava { background: linear-gradient(135deg, #1E6FFF, #4A9BFF); }
 
 /* 桌面多标签并存条（layui 亮色：白底 + 主色蓝 active） */
 .dt-tabstrip {
-  display: flex; align-items: center; gap: 4px;
-  height: 32px; padding: 0 12px; flex: none;
-  background: #fff;
-  border-bottom: 1px solid #E8ECF2;
+  display: flex; align-items: center; gap: 3px;
+  height: 28px; padding: 0 10px; flex: none;
+  background: #1A2638;
+  border-bottom: 1px solid rgba(255, 255, 255, .06);
   overflow-x: auto; overflow-y: hidden;
   scrollbar-width: none;
 }
 .dt-tabstrip::-webkit-scrollbar { display: none; }
 .dts-tab {
-  display: inline-flex; align-items: center; gap: 5px;
-  height: 24px; padding: 0 9px; flex: none;
-  background: #F5F7FA;
-  border: 1px solid #E8ECF2;
-  border-radius: 5px; cursor: pointer;
-  font-size: 12px; color: var(--tx-2);
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 22px; padding: 0 8px; flex: none;
+  background: rgba(255, 255, 255, .05);
+  border: 1px solid rgba(255, 255, 255, .07);
+  border-radius: 4px; cursor: pointer;
+  font-size: 11.5px; color: rgba(226, 232, 240, .72);
   transition: background .13s, color .13s, border-color .13s;
   white-space: nowrap;
 }
-.dts-tab:hover { background: #EEF2F7; color: var(--ink); }
+.dts-tab:hover { background: rgba(255, 255, 255, .10); color: #fff; }
 .dts-tab.active {
-  background: rgba(30, 111, 255, .08);
-  border-color: rgba(30, 111, 255, .35);
-  color: var(--c-primary); font-weight: 500;
+  background: rgba(30, 111, 255, .28);
+  border-color: rgba(30, 111, 255, .45);
+  color: #fff; font-weight: 500;
 }
 .dts-tab-ic { display: inline-flex; align-items: center; justify-content: center; }
 .dts-tab-ic svg { width: 12px; height: 12px; }
-.dts-tab-name { max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dts-tab-name { max-width: 88px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dts-tab-close {
   display: inline-flex; align-items: center; justify-content: center;
   width: 14px; height: 14px; margin-left: 1px; border-radius: 3px;
-  cursor: pointer; color: var(--tx-4);
+  cursor: pointer; color: rgba(226, 232, 240, .5);
 }
-.dts-tab-close:hover { background: rgba(30, 111, 255, .12); color: var(--c-primary); }
+.dts-tab-close:hover { background: rgba(255, 255, 255, .14); color: #fff; }
 .dts-tab-close svg { width: 11px; height: 11px; }
 .dts-tab-add {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 22px; height: 22px; flex: none;
-  border: 1px dashed #C5CDD8; border-radius: 5px;
-  background: transparent; color: var(--tx-3); cursor: pointer;
+  width: 20px; height: 20px; flex: none;
+  border: 1px dashed rgba(255, 255, 255, .22); border-radius: 4px;
+  background: transparent; color: rgba(226, 232, 240, .6); cursor: pointer;
   transition: background .13s, color .13s;
 }
-.dts-tab-add:hover { background: #F5F7FA; color: var(--c-primary); }
+.dts-tab-add:hover { background: rgba(255, 255, 255, .08); color: #fff; }
 .dts-tab-add svg { width: 12px; height: 12px; }
 
 /* 客户页横向 chip 行（layui 功能入口风格） */
@@ -1887,3 +1887,21 @@ html[data-device="mobile"] .dt-table th.pg-col { display: none; }
 }
 .pg-size-pop .pg-size-opt:hover { background: var(--bg-hover); color: var(--c-primary); }
 .pg-size-pop .pg-size-opt.active { color: var(--c-primary); font-weight: 600; background: var(--c-primary-light); }
+
+/* 工具栏按钮紧凑化（v7.4：间距 4，按钮高度 26，字号 11.5） */
+html[data-device="desktop"] .dt-toolbar-ops { gap: 4px; }
+html[data-device="desktop"] .dt-toolbar-ops .oa-btn {
+  height: 26px; padding: 0 8px; font-size: 11.5px; border-radius: 5px;
+}
+html[data-device="desktop"] .dt-toolbar-ops .oa-btn.primary {
+  background: #1E6FFF; border-color: #1E6FFF; color: #fff;
+}
+html[data-device="desktop"] .dt-toolbar-ops .oa-btn.primary:hover {
+  background: #1A56DB; border-color: #1A56DB;
+}
+html[data-device="desktop"] .dt-toolbar-ops .oa-btn.ghost {
+  background: #fff; border-color: #E8ECF2; color: var(--tx-2);
+}
+html[data-device="desktop"] .dt-toolbar-ops .oa-btn.ghost:hover {
+  border-color: rgba(30, 111, 255, .35); color: var(--c-primary);
+}

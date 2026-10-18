@@ -4241,6 +4241,8 @@ var App = (function () {
             '</div><div class="dt-toolbar-ops">' +
             '<div class="dt-search"><input id="ct-kw" type="text" placeholder="搜索联系人"><button class="dt-search-btn" onclick="App.loadContactList()">搜索</button></div>' +
             '<span class="oa-btn primary" onclick="App.openContactAdd()">＋ 新增联系人</span>' +
+            '<span class="oa-btn ghost" data-desktop-only="1" onclick="App.refreshList('contact-list')">刷新</span>' +
+            '<span class="oa-btn ghost" data-desktop-only="1" onclick="App.exportList('contact-list')">导出</span>' +
             '</div></div>';
         c.innerHTML = head + '<div id="contact-list"></div>';
         loadContactList();
@@ -4341,6 +4343,8 @@ var App = (function () {
             '</div><div class="dt-toolbar-ops">' +
             '<div class="dt-search"><input id="ch-kw" type="text" placeholder="搜索机会"><button class="dt-search-btn" onclick="App.loadChanceList()">搜索</button></div>' +
             '<span class="oa-btn primary" onclick="App.openChanceAdd()">＋ 新增机会</span>' +
+            '<span class="oa-btn ghost" data-desktop-only="1" onclick="App.refreshList('chance-list')">刷新</span>' +
+            '<span class="oa-btn ghost" data-desktop-only="1" onclick="App.exportList('chance-list')">导出</span>' +
             '</div></div>';
         c.innerHTML = head + '<div id="chance-list"></div>';
         loadChanceList();
@@ -4452,6 +4456,8 @@ var App = (function () {
             '</div><div class="dt-toolbar-ops">' +
             '<div class="dt-search"><input id="tr-kw" type="text" placeholder="搜索跟进内容"><button class="dt-search-btn" onclick="App.loadTraceList()">搜索</button></div>' +
             '<span class="oa-btn primary" onclick="App.openTraceAdd()">＋ 新增跟进</span>' +
+            '<span class="oa-btn ghost" data-desktop-only="1" onclick="App.refreshList('trace-list')">刷新</span>' +
+            '<span class="oa-btn ghost" data-desktop-only="1" onclick="App.exportList('trace-list')">导出</span>' +
             '</div></div>';
         c.innerHTML = head + '<div id="trace-list"></div>';
         loadTraceList();
