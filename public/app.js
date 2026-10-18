@@ -666,6 +666,27 @@ var App = (function () {
         startMsgPoll();
         checkSession();
         fetchMyName(); // 预热中文名缓存
+        bindScrollAutoLoad();
+    }
+
+    // ===== 上拉自动加载（原 App 尾部 DOMContentLoaded 的 page-container 滚动监听，折叠进 init） =====
+    // 触底：按当前列表"加载更多"按钮或产品列表对应的加载器自动加载（覆盖所有 Tab 与子页面）
+    function bindScrollAutoLoad() {
+        var pc = $('page-container');
+        if (!pc || pc.__autoLoadBound) return;
+        pc.__autoLoadBound = true;
+        var pcAutoTick = 0;
+        pc.addEventListener('scroll', function () {
+            if (pcAutoTick) return;
+            if (pc.scrollTop + pc.clientHeight < pc.scrollHeight - 40) return;
+            var moreEl = pc.querySelector('.load-more');
+            var prodEl = $('product-list');
+            if ((!moreEl && !prodEl) || !currentLoadKey || !LM[currentLoadKey]) return;
+            pcAutoTick = 1;
+            setTimeout(function () { pcAutoTick = 0; }, 1200);
+            if (currentLoadArg != null) App.lm(currentLoadKey, currentLoadArg);
+            else App.lm(currentLoadKey);
+        });
     }
 
     // ===== 上拉自动加载 =====
