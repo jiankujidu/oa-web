@@ -122,6 +122,8 @@ const sandbox = {
 sandbox.window = sandbox;
 sandbox.globalThis = sandbox;
 sandbox.window.OA_BASE = 'https://oa.jk93.qzz.io';
+sandbox.innerWidth = 1440; // v5：桌面视口（renderHome 分支依赖）
+sandbox.addEventListener = sandbox.addEventListener || function () {};
 
 const ctx = vm.createContext(sandbox);
 
@@ -172,7 +174,7 @@ function check(cond, msg) {
   // init：会 switchTab('home') → renderHome
   try { app.init(); check(true, 'App.init() 无异常'); } catch (e) { check(false, 'App.init() 抛错: ' + e.message); }
   const pc = registry['page-container'];
-  check(pc.innerHTML.indexOf('dt-panel') >= 0 && pc.innerHTML.indexOf('todo-ap') >= 0 && pc.innerHTML.indexOf('dt-app-grid') >= 0, '首页仪表盘已渲染（' + pc.innerHTML.length + ' 字符）');
+  check(pc.innerHTML.indexOf('dt-panel') >= 0 && pc.innerHTML.indexOf('todo-ap') >= 0 && pc.innerHTML.indexOf('dt-kpi') >= 0, '首页桌面仪表盘已渲染（' + pc.innerHTML.length + ' 字符）');
 
   const tabs = ['approve', 'customer', 'mine'];
   for (const t of tabs) {

@@ -58,9 +58,9 @@
     return v;
   }
 
-  // fetch 超时包装（默认 12s，避免弱网无限 pending）
+  // fetch 超时包装（默认 15s：Worker 反代首次连原站建连慢，12s 曾误杀冷启动请求）
   function fetchTimeout(url, opts, ms) {
-    ms = ms || 12000;
+    ms = ms || 15000;
     return new Promise(function (resolve, reject) {
       var done = false;
       var ctl = ('AbortController' in g) ? new AbortController() : null;
@@ -81,16 +81,21 @@
   }
 
   // 通用 GET JSON（带 XHR 头）
-  function apiGet(path, params) {
+  // v5：timeout 类网络错误自动重试一次（冷启动首次连原站超时是 Worker 反代建连慢，非业务错误）
+  function apiGet(path, params, _retry) {
     return fetchTimeout(fullUrl(path, qs(params)), {
       method: 'GET', credentials: 'include',
       headers: { 'X-Requested-With': 'XMLHttpRequest' }
     }).then(function (r) { return r.json(); })
-      .then(function (v) { return guardSession(v); });
+      .then(function (v) { return guardSession(v); },
+      function (e) {
+        if (!_retry && e && e.message === 'timeout') return apiGet(path, params, true);
+        throw e;
+      });
   }
 
   // 通用 GET 纯文本（页面型接口，不带 XHR 头）
-  function apiGetPlain(path, params) {
+  function apiGetPlain(path, params, _retry) {
     return fetchTimeout(fullUrl(path, qs(params)), { method: 'GET', credentials: 'include' })
       .then(function (r) { return r.text(); })
       .then(function (raw) {
@@ -98,6 +103,9 @@
           g.OA._onSessionExpired('页面接口返回未登录提示');
         }
         return raw;
+      }, function (e) {
+        if (!_retry && e && e.message === 'timeout') return apiGetPlain(path, params, true);
+        throw e;
       });
   }
 
@@ -411,7 +419,7 @@
       var fd = new FormData();
       fd.append('file', file);
       fd.append('name', file.name || 'file');
-      return fetchTimeout(fullUrl('/api/index/upload', ''), { method: 'POST', credentials: 'include', body: fd })
+      return fetchTimeout(fullUrl('/api/index/upload', ''), { method: 'POST', credentials: 'include', body: fd }, 60000)
         .then(function (r) { return r.json(); });
     },
     // base64 上传（对齐 App uploadFileBase64 契约：b64 为去前缀的纯 base64）
@@ -427,7 +435,7 @@
         var fd = new FormData();
         fd.append(field || 'file', blob, fileName || 'file');
         fd.append('name', fileName || 'file');
-        fetchTimeout(fullUrl(apiPath || '/api/index/upload', ''), { method: 'POST', credentials: 'include', body: fd })
+        fetchTimeout(fullUrl(apiPath || '/api/index/upload', ''), { method: 'POST', credentials: 'include', body: fd }, 60000)
           .then(function (r) { return r.json(); })
           .then(resolve, reject);
       });

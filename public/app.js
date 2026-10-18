@@ -18,6 +18,29 @@ function webToast(msg) {
     t.__timer = setTimeout(function () { t.style.opacity = '0'; }, 1800);
 }
 
+/* ===== v5：全局「点击重试」委托（App 源码的 empty retry div 无 onclick，网页版补上） ===== */
+document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t && t.classList && t.classList.contains('retry')) {
+        e.stopPropagation();
+        if (window.App && typeof App.reloadPage === 'function') { App.reloadPage(); }
+        else { location.reload(); }
+    }
+});
+
+/* ===== v5：用户名就绪后回填首页问候语（App 源码 fetchMyName 成功后不重渲染，问候语停在"未登录"） ===== */
+function webFillGreet(name) {
+    if (!name) return;
+    var el = document.getElementById('home-greet');
+    if (el) {
+        var h = new Date().getHours();
+        var greet = h < 6 ? '凌晨好' : (h < 9 ? '早上好' : (h < 12 ? '上午好' : (h < 14 ? '中午好' : (h < 18 ? '下午好' : '晚上好'))));
+        el.textContent = greet + '，' + name;
+    }
+    var sb = document.getElementById('sb-user-name');
+    if (sb) sb.textContent = name;
+}
+
 /* ===== 网页版下载（替代 AndroidBridge.downloadFile / shareFile） ===== */
 function webDownload(url, name) {
     try {
@@ -777,8 +800,17 @@ var App = (function () {
         switchTab('home');
         startMsgPoll();
         checkSession();
-        fetchMyName(); // 预热中文名缓存
+        fetchMyName(function (n) { webFillGreet(n); }); // v5：名字就绪后回填问候语/侧栏
         bindScrollAutoLoad();
+        // v5：跨断点（桌面↔手机）且当前在首页时重渲染，保证首页形态与视口一致
+        var __v5LastPhone = isPhone();
+        window.addEventListener('resize', function () {
+            var p = isPhone();
+            if (p !== __v5LastPhone) {
+                __v5LastPhone = p;
+                if ((currentTab || 'home') === 'home' && !inDetailShell) { try { renderHome(); } catch (e) {} }
+            }
+        });
     }
 
     // ===== 上拉自动加载（原 App 尾部 DOMContentLoaded 的 page-container 滚动监听，折叠进 init） =====
@@ -991,6 +1023,8 @@ var App = (function () {
     }
 
     // ===== 首页 =====
+    function isPhone() { return window.innerWidth < 992; }
+
     function renderHome() {
         var c = $('page-container');
         var now = new Date();
@@ -1000,11 +1034,19 @@ var App = (function () {
         var greet = hour < 6 ? '凌晨好' : (hour < 9 ? '早上好' : (hour < 12 ? '上午好' : (hour < 14 ? '中午好' : (hour < 18 ? '下午好' : '晚上好'))));
         var html = '';
         html += '<div class="dt-toolbar"><div>' +
-            '<div class="dt-toolbar-title">' + greet + '，' + esc(myDisplayName()) + '</div>' +
-            '<div class="dt-toolbar-sub">' + dateStr + ' · 优品OA 电脑版</div>' +
+            '<div class="dt-toolbar-title" id="home-greet">' + greet + '，' + esc(myDisplayName()) + '</div>' +
+            '<div class="dt-toolbar-sub">' + dateStr + ' · 优品OA ' + (isPhone() ? '手机版' : '电脑版') + '</div>' +
             '</div><div class="dt-toolbar-ops">' +
             '<span class="oa-btn primary" onclick="App.openApproveType()">' + ic('plus-circle') + '发起审批</span>' +
             '</div></div>';
+        if (isPhone()) { renderHomeMobile(html); return; }
+        // ===== 桌面版：仪表盘（KPI 真实统计 + 待办表格 + 紧凑侧栏，无应用抽屉） =====
+        html += '<div class="dt-kpi" id="home-kpi">' +
+            '<div class="dt-kpi-card" onclick="App.switchTab(\'approve\')"><div class="dt-kpi-ic" style="background:#EEF4FF;color:#1E6FFF">' + ic('check-circle') + '</div><div><div class="dt-kpi-num" id="kpi-ap">…</div><div class="dt-kpi-label">待我审批</div></div></div>' +
+            '<div class="dt-kpi-card" onclick="App.showSubPage(\'order-handle\')"><div class="dt-kpi-ic" style="background:#FDF6EC;color:#E6A23C">' + ic('wrench') + '</div><div><div class="dt-kpi-num" id="kpi-ord">…</div><div class="dt-kpi-label">待处理订单</div></div></div>' +
+            '<div class="dt-kpi-card" onclick="App.showSubPage(\'message-inbox\')"><div class="dt-kpi-ic" style="background:#EDF9E6;color:#52C41A">' + ic('mail') + '</div><div><div class="dt-kpi-num" id="kpi-msg">…</div><div class="dt-kpi-label">未读消息</div></div></div>' +
+            '<div class="dt-kpi-card" onclick="App.switchTab(\'approve\')"><div class="dt-kpi-ic" style="background:#F9F0FF;color:#722ED1">' + ic('clipboard-check') + '</div><div><div class="dt-kpi-num" id="kpi-my">…</div><div class="dt-kpi-label">我的申请</div></div></div>' +
+            '</div>';
         html += '<div class="dt-cols-wide">';
         // 左栏：真实待办（异步加载）
         html += '<div>';
@@ -1018,10 +1060,56 @@ var App = (function () {
             '<div class="dt-panel-ops"><span class="dt-link" onclick="App.showSubPage(\'order-handle\')">订单处理 ›</span></div></div>' +
             '<div id="todo-ord"><div class="loading">加载中…</div></div></div>';
         html += '</div>';
-        // 右栏：快捷审批 + 应用中心
+        // 右栏：快捷审批（紧凑按钮组）+ 常用功能
         html += '<div>';
         html += '<div class="dt-panel"><div class="dt-panel-head"><div class="dt-panel-title"><span class="pt-ic">' + ic('clipboard-check') + '</span>快捷审批</div>' +
             '<div class="dt-panel-ops"><span class="dt-link" onclick="App.openApproveType()">全部类型 ›</span></div></div>' +
+            '<div class="dt-panel-body"><div class="dt-quick">';
+        for (var i = 0; i < APPROVE_TYPES.length; i++) {
+            var at = APPROVE_TYPES[i];
+            html += '<div class="dt-quick-btn" onclick="App.launchApprove(' + at.type + ')">' + ic(EMOJI_MAP[at.icon] || 'clipboard-check') + at.name + '</div>';
+        }
+        html += '</div></div></div>';
+        html += '<div class="dt-panel"><div class="dt-panel-head"><div class="dt-panel-title"><span class="pt-ic">' + ic('layers') + '</span>常用功能</div></div><div class="dt-panel-body"><div class="dt-quick">';
+        var quickEntries = [
+            { name: '客户列表', icon: 'users', run: "App.switchTab('customer')" },
+            { name: '订单处理', icon: 'wrench', run: "App.openMobile('order-handle')" },
+            { name: '消息中心', icon: 'mail', run: "App.openMobile('message-inbox')" },
+            { name: '通讯录', icon: 'book', run: "App.openMobile('mail')" },
+            { name: '工作台', icon: 'layers', run: 'App.openWorkbench()' },
+            { name: '产品管理', icon: 'flask', run: "App.openMobile('product')" }
+        ];
+        for (var q = 0; q < quickEntries.length; q++) {
+            var e = quickEntries[q];
+            html += '<div class="dt-quick-btn" onclick="' + e.run + '">' + ic(e.icon) + e.name + '</div>';
+        }
+        html += '</div></div></div>';
+        html += '</div></div>';
+        c.innerHTML = html;
+        loadHomeTodos();
+        loadHomeKpi();
+    }
+
+    // ===== 手机版首页：App 原生风（待办卡 + 快捷宫格 + 应用中心，宫格是手机原生 pattern） =====
+    function renderHomeMobile(headHtml) {
+        var c = $('page-container');
+        var html = headHtml;
+        html += '<div class="m-todo-grid">' +
+            '<div class="m-todo-card" onclick="App.switchTab(\'approve\')"><div class="m-todo-ic" style="background:#EEF4FF;color:#1E6FFF">' + ic('check-circle') + '</div><div><div class="m-todo-num" id="kpi-ap">…</div><div class="m-todo-label">待我审批</div></div></div>' +
+            '<div class="m-todo-card" onclick="App.showSubPage(\'order-handle\')"><div class="m-todo-ic" style="background:#FDF6EC;color:#E6A23C">' + ic('wrench') + '</div><div><div class="m-todo-num" id="kpi-ord">…</div><div class="m-todo-label">待处理订单</div></div></div>' +
+            '<div class="m-todo-card" onclick="App.showSubPage(\'message-inbox\')"><div class="m-todo-ic" style="background:#EDF9E6;color:#52C41A">' + ic('mail') + '</div><div><div class="m-todo-num" id="kpi-msg">…</div><div class="m-todo-label">未读消息</div></div></div>' +
+            '</div>';
+        html += '<div class="dt-panel"><div class="dt-panel-head"><div class="dt-panel-title"><span class="pt-ic">' + ic('check-circle') + '</span>待审审批<span class="pt-count" id="todo-ap-count">…</span></div>' +
+            '<div class="dt-panel-ops"><span class="dt-link" onclick="App.switchTab(\'approve\')">更多 ›</span></div></div>' +
+            '<div id="todo-ap"><div class="loading">加载中…</div></div></div>';
+        html += '<div class="dt-panel"><div class="dt-panel-head"><div class="dt-panel-title"><span class="pt-ic">' + ic('mail') + '</span>最新消息<span class="pt-count" id="todo-msg-count">…</span></div>' +
+            '<div class="dt-panel-ops"><span class="dt-link" onclick="App.showSubPage(\'message-inbox\')">更多 ›</span></div></div>' +
+            '<div id="todo-msg"><div class="loading">加载中…</div></div></div>';
+        html += '<div class="dt-panel"><div class="dt-panel-head"><div class="dt-panel-title"><span class="pt-ic">' + ic('wrench') + '</span>待处理订单<span class="pt-count" id="todo-ord-count">…</span></div>' +
+            '<div class="dt-panel-ops"><span class="dt-link" onclick="App.showSubPage(\'order-handle\')">更多 ›</span></div></div>' +
+            '<div id="todo-ord"><div class="loading">加载中…</div></div></div>';
+        html += '<div class="dt-panel"><div class="dt-panel-head"><div class="dt-panel-title"><span class="pt-ic">' + ic('clipboard-check') + '</span>快捷审批</div>' +
+            '<div class="dt-panel-ops"><span class="dt-link" onclick="App.openApproveType()">全部 ›</span></div></div>' +
             '<div class="dt-panel-body"><div class="dt-app-grid">';
         for (var i = 0; i < APPROVE_TYPES.length; i++) {
             var at = APPROVE_TYPES[i];
@@ -1037,7 +1125,6 @@ var App = (function () {
             { name: '附件管理', icon: 'folder', run: "App.openMobile('files')", bg: '#FDF6EC', fg: '#E6A23C' },
             { name: '消息中心', icon: 'mail', run: "App.openMobile('message-inbox')", bg: '#EEF4FF', fg: '#1E6FFF' },
             { name: '通讯录', icon: 'book', run: "App.openMobile('mail')", bg: '#EEF4FF', fg: '#1E6FFF' },
-            { name: '发起审批', icon: 'clipboard-check', run: 'App.openApproveType()', bg: '#EEF4FF', fg: '#1E6FFF' },
             { name: '客户列表', icon: 'users', run: "App.switchTab('customer')", bg: '#EDF9E6', fg: '#52C41A' },
             { name: '工作台', icon: 'layers', run: 'App.openWorkbench()', bg: '#F7F8FA', fg: '#4E5969' },
             { name: '预存款', icon: 'wallet', run: "App.openMobile('finance-advance')", bg: '#F9F0FF', fg: '#722ED1' },
@@ -1064,12 +1151,21 @@ var App = (function () {
             html += '<div class="dt-app" onclick="' + e.run + '"><div class="dt-app-ico" style="background:' + e.bg + ';color:' + e.fg + '">' + ic(e.icon) + '</div><div class="dt-app-name">' + e.name + '</div></div>';
         }
         html += '</div></div></div>';
-        html += '</div></div>';
         c.innerHTML = html;
         loadHomeTodos();
+        loadHomeKpi();
     }
 
-    // v3 首页待办：真实数据（待审审批/最新消息/待处理订单各取前 5 条）
+    // v5 首页 KPI：真实总数（列表接口 limit=1 取 count 字段，不造假）
+    function loadHomeKpi() {
+        function setNum(id, n) { var el = $(id); if (el) el.textContent = (n == null ? '—' : (n > 99 ? '99+' : String(n))); }
+        API.approveList(1, 1, 1).then(function (res) { setNum('kpi-ap', res && res.code === 0 ? (res.count || 0) : null); }).catch(function () { setNum('kpi-ap', null); });
+        API.orderHandleList(1, 1, '').then(function (res) { setNum('kpi-ord', res && res.code === 0 ? (res.count || 0) : null); }).catch(function () { setNum('kpi-ord', null); });
+        API.messageList('inbox', 1, 1).then(function (res) { setNum('kpi-msg', res && res.code === 0 ? (res.count || 0) : null); }).catch(function () { setNum('kpi-msg', null); });
+        API.approveList(1, 1, '').then(function (res) { setNum('kpi-my', res && res.code === 0 ? (res.count || 0) : null); }).catch(function () { setNum('kpi-my', null); });
+    }
+
+    // 首页待办：真实数据（待审审批/最新消息/待处理订单各取前 5 条）
     function loadHomeTodos() {
         function row(iconName, title, sub, click) {
             return '<div class="menu-item" onclick="' + click + '">' +
@@ -1091,19 +1187,19 @@ var App = (function () {
             panel('todo-ap', 'todo-ap-count', rows, function (r) {
                 return row('clock', r.name || r.content || '审批', fmtTime(r.create_time || r.detail_time || r.start_time), 'App.openApproveDetail(' + r.id + ')');
             }, '暂无待审审批');
-        }).catch(function () { var b = $('todo-ap'); if (b) b.innerHTML = '<div class="empty">加载失败</div>'; });
+        }).catch(function () { var b = $('todo-ap'); if (b) b.innerHTML = '<div class="empty retry">加载失败，点击重试</div>'; });
         API.messageList('inbox', 1, 5).then(function (res) {
             var rows = (res && res.code === 0 && res.data) || [];
             panel('todo-msg', 'todo-msg-count', rows, function (r) {
                 return row('mail', r.title || '（无主题）', fmtTime(r.send_time || r.create_time), 'App.openMsgDetail(' + r.id + ')');
             }, '暂无新消息');
-        }).catch(function () { var b = $('todo-msg'); if (b) b.innerHTML = '<div class="empty">加载失败</div>'; });
+        }).catch(function () { var b = $('todo-msg'); if (b) b.innerHTML = '<div class="empty retry">加载失败，点击重试</div>'; });
         API.orderHandleList(1, 5, '').then(function (res) {
             var rows = (res && res.code === 0 && res.data) || [];
             panel('todo-ord', 'todo-ord-count', rows, function (r) {
-                return row('package', r.title || r.code || r.order_code || '订单', fmtTime(r.create_time || r.deal_time || r.time), 'App.openOrderDetail(' + r.id + ',\'handle\')');
+                return row('package', r.title || r.code || r.order_code || '订单', fmtTime(r.create_time || r.deal_time || r.time), 'App.openOrderDetail(' + r.id + ',' + "'handle'" + ')');
             }, '暂无待处理订单');
-        }).catch(function () { var b = $('todo-ord'); if (b) b.innerHTML = '<div class="empty">加载失败</div>'; });
+        }).catch(function () { var b = $('todo-ord'); if (b) b.innerHTML = '<div class="empty retry">加载失败，点击重试</div>'; });
     }
 
     function launchApprove(type, from) { approveFrom = (from === 'type') ? 'type' : 'home'; openApproveForm(type); }
